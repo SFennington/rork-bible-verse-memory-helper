@@ -120,9 +120,9 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     const todaysSessions = updatedSessions.filter(s => isToday(s.completedAt));
     const completedGamesToday = todaysSessions.length;
     
-    const newTotalCorrectWords = verseProgress.totalCorrectWords + session.correctWords;
-    const newTotalWords = verseProgress.totalWords + session.totalWords;
-    const overallProgress = Math.round((newTotalCorrectWords / newTotalWords) * 100);
+    const totalPossibleGames = 16;
+    const successfulGames = updatedSessions.filter(s => s.accuracy >= 80).length;
+    const overallProgress = Math.min(100, Math.round((successfulGames / totalPossibleGames) * 100));
 
     const allGamesCompletedToday = completedGamesToday >= 3;
     const avgAccuracyToday = todaysSessions.reduce((sum, s) => sum + s.accuracy, 0) / todaysSessions.length;
@@ -155,8 +155,8 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         completedGamesToday,
         streakDays: newStreakDays,
         overallProgress,
-        totalCorrectWords: newTotalCorrectWords,
-        totalWords: newTotalWords,
+        totalCorrectWords: 0,
+        totalWords: 0,
       },
     };
 
