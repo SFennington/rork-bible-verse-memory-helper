@@ -182,7 +182,7 @@ export default function FirstLetterGameScreen() {
             </View>
           )}
 
-          {!showResult && isComplete && (
+          {!showResult && (
             <TouchableOpacity
               style={styles.checkButton}
               onPress={handleCheck}

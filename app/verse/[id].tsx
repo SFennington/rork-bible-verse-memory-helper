@@ -181,8 +181,8 @@ export default function VerseDetailScreen() {
                 </View>
                 <Text style={styles.gamesSubtitle}>
                   {verseProgress.completedGamesToday >= 3
-                    ? 'Great job! You can continue practicing or come back tomorrow.'
-                    : `Complete ${3 - verseProgress.completedGamesToday} more ${3 - verseProgress.completedGamesToday === 1 ? 'game' : 'games'} today`}
+                    ? `Level ${verseProgress.difficultyLevel} Complete! Continue practicing to advance.`
+                    : `Complete ${3 - verseProgress.completedGamesToday} more ${3 - verseProgress.completedGamesToday === 1 ? 'game' : 'games'} to finish Level ${verseProgress.difficultyLevel}`}
                 </Text>
 
                 <View style={styles.gamesGrid}>
