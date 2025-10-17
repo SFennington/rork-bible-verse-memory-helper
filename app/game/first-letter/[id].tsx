@@ -17,7 +17,7 @@ import { CATEGORIES } from '@/mocks/verses';
 export default function FirstLetterGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, completeGameSession } = useVerses();
+  const { verses, completeGameSession, getVerseProgress } = useVerses();
   const [inputs, setInputs] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
   const [startTime] = useState(Date.now());
@@ -43,11 +43,6 @@ export default function FirstLetterGameScreen() {
     Keyboard.dismiss();
     setShowResult(true);
 
-    const isCorrect = words.every((word, index) => {
-      const input = inputs[index]?.trim().toLowerCase();
-      return input === word.toLowerCase();
-    });
-
     const correctCount = words.filter((word, index) => {
       const input = inputs[index]?.trim().toLowerCase();
       return input === word.toLowerCase();
@@ -55,13 +50,17 @@ export default function FirstLetterGameScreen() {
     const accuracy = Math.round((correctCount / words.length) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
-    if (isCorrect) {
+    if (accuracy === 100) {
+      const verseProgress = getVerseProgress(id || '');
       completeGameSession(id || '', {
         gameType: 'first-letter',
         completedAt: new Date().toISOString(),
         accuracy,
         timeSpent,
-        mistakeCount: 0,
+        mistakeCount: words.length - correctCount,
+        correctWords: correctCount,
+        totalWords: words.length,
+        difficultyLevel: verseProgress?.difficultyLevel || 1,
       });
     }
   };
@@ -79,6 +78,12 @@ export default function FirstLetterGameScreen() {
     const input = inputs[index]?.trim().toLowerCase();
     return input === word.toLowerCase();
   });
+  const accuracy = showResult ? Math.round(
+    (words.filter((word, index) => {
+      const input = inputs[index]?.trim().toLowerCase();
+      return input === word.toLowerCase();
+    }).length / words.length) * 100
+  ) : 0;
 
   return (
     <View style={styles.container}>
@@ -166,13 +171,13 @@ export default function FirstLetterGameScreen() {
                   <XCircle color="#f87171" size={32} />
                 )}
                 <Text style={styles.resultTitle}>
-                  {isCorrect ? 'Perfect!' : 'Not quite right'}
+                  {isCorrect ? 'Perfect!' : `${accuracy}% Complete`}
                 </Text>
               </View>
               <Text style={styles.resultText}>
                 {isCorrect
                   ? 'You completed this memory game!'
-                  : 'Try again to master this verse'}
+                  : 'Keep practicing to master this verse'}
               </Text>
             </View>
           )}
