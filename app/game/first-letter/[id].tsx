@@ -94,8 +94,9 @@ export default function FirstLetterGameScreen() {
   };
 
   const isCorrect = showResult && words.every((word, index) => {
-    const input = preFilledIndices.has(index) ? word : inputs[index]?.trim();
-    return input?.toLowerCase() === word.toLowerCase();
+    if (preFilledIndices.has(index)) return true;
+    const input = inputs[index]?.trim() || '';
+    return input.toLowerCase() === word.toLowerCase();
   });
   const accuracy = showResult ? Math.round(
     (words.filter((word, index) => {
