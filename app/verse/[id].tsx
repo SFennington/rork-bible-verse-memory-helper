@@ -79,8 +79,9 @@ export default function VerseDetailScreen() {
   };
 
   const currentPathGames = verseProgress?.currentDayGames || [];
-  const isDue = verseProgress ? verseProgress.completedGamesToday < 3 : false;
-  const isDayComplete = verseProgress ? verseProgress.completedGamesToday >= 3 : false;
+  const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
+  const isDue = verseProgress ? verseProgress.completedGamesToday < requiredGames : false;
+  const isDayComplete = verseProgress ? verseProgress.completedGamesToday >= requiredGames : false;
 
   const handleAdvanceLevel = () => {
     if (id) {
@@ -186,7 +187,7 @@ export default function VerseDetailScreen() {
                 <View style={styles.gamesSectionHeader}>
                   <Text style={styles.gamesTitle}>Today&apos;s Games</Text>
                   <View style={styles.gamesCountBadge}>
-                    <Text style={styles.gamesCountText}>{verseProgress.completedGamesToday}/3</Text>
+                    <Text style={styles.gamesCountText}>{verseProgress.completedGamesToday}/{requiredGames}</Text>
                   </View>
                 </View>
                 {isDayComplete ? (
@@ -214,7 +215,7 @@ export default function VerseDetailScreen() {
                   </View>
                 ) : (
                   <Text style={styles.gamesSubtitle}>
-                    Complete {3 - verseProgress.completedGamesToday} more {3 - verseProgress.completedGamesToday === 1 ? 'game' : 'games'} to finish Level {verseProgress.difficultyLevel}
+                    Complete {requiredGames - verseProgress.completedGamesToday} more {requiredGames - verseProgress.completedGamesToday === 1 ? 'game' : 'games'} to finish Level {verseProgress.difficultyLevel}
                   </Text>
                 )}
 

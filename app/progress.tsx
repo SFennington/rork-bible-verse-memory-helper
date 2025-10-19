@@ -31,8 +31,14 @@ export default function ProgressScreen() {
   const { versesInProgress, dueVersesCount } = useVerses();
   const { theme } = useTheme();
 
-  const incompleteVerses = versesInProgress.filter(item => item.progress.completedGamesToday < 3);
-  const completedVerses = versesInProgress.filter(item => item.progress.completedGamesToday >= 3);
+  const incompleteVerses = versesInProgress.filter(item => {
+    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    return item.progress.completedGamesToday < requiredGames;
+  });
+  const completedVerses = versesInProgress.filter(item => {
+    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    return item.progress.completedGamesToday >= requiredGames;
+  });
 
   const totalStreak = versesInProgress.reduce((sum, item) => sum + item.progress.streakDays, 0);
   const avgProgress = versesInProgress.length > 0
@@ -92,6 +98,7 @@ export default function ProgressScreen() {
             {incompleteVerses.map(({ verse, progress }) => {
               const category = CATEGORIES.find(c => c.name === verse.category);
               const difficultyLabel = DIFFICULTY_LABELS[progress.difficultyLevel];
+              const requiredGames = progress.difficultyLevel === 5 ? 1 : 3;
               
               const completedGames = progress.gameSessions
                 .filter(s => {
@@ -143,7 +150,7 @@ export default function ProgressScreen() {
                           <Text style={styles.masteryBadgeText}>{difficultyLabel}</Text>
                         </View>
                         <View style={styles.gamesBadge}>
-                          <Text style={styles.gamesBadgeText}>{progress.completedGamesToday}/3 today</Text>
+                          <Text style={styles.gamesBadgeText}>{progress.completedGamesToday}/{requiredGames} today</Text>
                         </View>
                       </View>
                     </View>

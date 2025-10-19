@@ -180,7 +180,8 @@ export default function HomeScreen() {
               ) : (
                 versesInProgress.map(({ verse, progress: verseProgress }) => {
                   const category = CATEGORIES.find(c => c.name === verse.category);
-                  const isDue = verseProgress.completedGamesToday < 3;
+                  const requiredGames = verseProgress.difficultyLevel === 5 ? 1 : 3;
+                  const isDue = verseProgress.completedGamesToday < requiredGames;
 
                   return (
                     <TouchableOpacity

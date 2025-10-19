@@ -120,18 +120,28 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     const todaysSessions = updatedSessions.filter(s => isToday(s.completedAt));
     const completedGamesToday = todaysSessions.length;
     
-    const totalPossibleGames = 16;
+    const requiredGamesPerLevel = [
+      0,
+      3,
+      3,
+      3,
+      3,
+      1,
+    ];
+    
+    const totalRequiredGames = requiredGamesPerLevel.reduce((sum, count) => sum + count, 0);
     const successfulGames = updatedSessions.filter(s => s.accuracy >= 80).length;
-    const overallProgress = Math.min(100, Math.round((successfulGames / totalPossibleGames) * 100));
+    const overallProgress = Math.min(100, Math.round((successfulGames / totalRequiredGames) * 100));
 
-    const allGamesCompletedToday = completedGamesToday >= 3;
+    const requiredGames = requiredGamesPerLevel[verseProgress.difficultyLevel];
+    const allGamesCompletedToday = completedGamesToday >= requiredGames;
     const avgAccuracyToday = todaysSessions.reduce((sum, s) => sum + s.accuracy, 0) / todaysSessions.length;
     
     let newDifficultyLevel = verseProgress.difficultyLevel;
     let newStreakDays = verseProgress.streakDays;
     let newReviewCount = verseProgress.reviewCount;
 
-    const wasCompletedBefore = verseProgress.completedGamesToday >= 3;
+    const wasCompletedBefore = verseProgress.completedGamesToday >= requiredGames;
     if (allGamesCompletedToday && !wasCompletedBefore) {
       newStreakDays = verseProgress.streakDays + 1;
       newReviewCount = verseProgress.reviewCount + 1;
@@ -192,7 +202,8 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
     Object.keys(updatedProgress).forEach(verseId => {
       const verseProgress = updatedProgress[verseId];
-      if (verseProgress.completedGamesToday >= 3 && !isToday(verseProgress.lastReviewedAt)) {
+      const requiredGames = verseProgress.difficultyLevel === 5 ? 1 : 3;
+      if (verseProgress.completedGamesToday >= requiredGames && !isToday(verseProgress.lastReviewedAt)) {
         const newDifficultyLevel = Math.min(5, verseProgress.difficultyLevel + 1) as DifficultyLevel;
         updatedProgress[verseId] = {
           ...verseProgress,
@@ -273,8 +284,10 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       })
       .filter((item): item is { verse: BibleVerse; progress: VerseProgress } => item !== null)
       .sort((a, b) => {
-        const aIncomplete = a.progress.completedGamesToday < 3;
-        const bIncomplete = b.progress.completedGamesToday < 3;
+        const aRequiredGames = a.progress.difficultyLevel === 5 ? 1 : 3;
+        const bRequiredGames = b.progress.difficultyLevel === 5 ? 1 : 3;
+        const aIncomplete = a.progress.completedGamesToday < aRequiredGames;
+        const bIncomplete = b.progress.completedGamesToday < bRequiredGames;
         if (aIncomplete && !bIncomplete) return -1;
         if (!aIncomplete && bIncomplete) return 1;
         return b.progress.overallProgress - a.progress.overallProgress;
@@ -282,7 +295,10 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   }, [progress, allVerses]);
 
   const dueVersesCount = useMemo(() => {
-    return Object.values(progress).filter(p => p.completedGamesToday < 3).length;
+    return Object.values(progress).filter(p => {
+      const requiredGames = p.difficultyLevel === 5 ? 1 : 3;
+      return p.completedGamesToday < requiredGames;
+    }).length;
   }, [progress]);
 
   return useMemo(() => ({

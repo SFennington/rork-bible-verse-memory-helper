@@ -7,7 +7,7 @@ export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
   2: ['fill-blank', 'word-order', 'first-letter'],
   3: ['word-order', 'first-letter', 'fill-blank'],
   4: ['first-letter', 'fill-blank', 'word-order'],
-  5: ['full-verse', 'full-verse', 'full-verse'],
+  5: ['full-verse'],
 };
 
 export type DifficultyLevel = 1 | 2 | 3 | 4 | 5;
