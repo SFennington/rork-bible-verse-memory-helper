@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,17 @@ import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { CATEGORIES } from '@/mocks/verses';
 
+const getPreFillPercentage = (level: number): number => {
+  switch (level) {
+    case 1: return 0.65;
+    case 2: return 0.45;
+    case 3: return 0.25;
+    case 4: return 0.12;
+    case 5: return 0;
+    default: return 0.65;
+  }
+};
+
 export default function FirstLetterGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -24,6 +35,25 @@ export default function FirstLetterGameScreen() {
 
   const verse = verses.find(v => v.id === id);
   const category = CATEGORIES.find(c => c.name === verse?.category);
+  const verseProgress = getVerseProgress(id || '');
+  const difficultyLevel = verseProgress?.difficultyLevel || 1;
+
+  const words = useMemo(() => verse?.text.split(' ') || [], [verse?.text]);
+
+  const preFilledIndices = useMemo(() => {
+    const percentage = getPreFillPercentage(difficultyLevel);
+    const numToPreFill = Math.floor(words.length * percentage);
+    const indices = new Set<number>();
+    
+    const allIndices = words.map((_, i) => i);
+    const shuffled = [...allIndices].sort(() => Math.random() - 0.5);
+    
+    for (let i = 0; i < numToPreFill && i < shuffled.length; i++) {
+      indices.add(shuffled[i]);
+    }
+    
+    return indices;
+  }, [words, difficultyLevel]);
 
   if (!verse) {
     return (
@@ -33,9 +63,8 @@ export default function FirstLetterGameScreen() {
     );
   }
 
-  const words = verse.text.split(' ');
-
   const handleInputChange = (index: number, value: string) => {
+    if (preFilledIndices.has(index)) return;
     setInputs(prev => ({ ...prev, [index]: value }));
   };
 
@@ -44,14 +73,13 @@ export default function FirstLetterGameScreen() {
     setShowResult(true);
 
     const correctCount = words.filter((word, index) => {
-      const input = inputs[index]?.trim().toLowerCase();
-      return input === word.toLowerCase();
+      const input = preFilledIndices.has(index) ? word : inputs[index]?.trim();
+      return input?.toLowerCase() === word.toLowerCase();
     }).length;
     const accuracy = Math.round((correctCount / words.length) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
 
     if (accuracy === 100) {
-      const verseProgress = getVerseProgress(id || '');
       completeGameSession(id || '', {
         gameType: 'first-letter',
         completedAt: new Date().toISOString(),
@@ -65,6 +93,17 @@ export default function FirstLetterGameScreen() {
     }
   };
 
+  const isCorrect = showResult && words.every((word, index) => {
+    const input = preFilledIndices.has(index) ? word : inputs[index]?.trim();
+    return input?.toLowerCase() === word.toLowerCase();
+  });
+  const accuracy = showResult ? Math.round(
+    (words.filter((word, index) => {
+      const input = preFilledIndices.has(index) ? word : inputs[index]?.trim();
+      return input?.toLowerCase() === word.toLowerCase();
+    }).length / words.length) * 100
+  ) : 0;
+
   const handleContinue = () => {
     if (isCorrect) {
       router.push(`/verse/${id}`);
@@ -72,18 +111,6 @@ export default function FirstLetterGameScreen() {
       router.replace(`/game/first-letter/${id}`);
     }
   };
-
-  const isComplete = words.every((_, index) => inputs[index]?.trim());
-  const isCorrect = showResult && words.every((word, index) => {
-    const input = inputs[index]?.trim().toLowerCase();
-    return input === word.toLowerCase();
-  });
-  const accuracy = showResult ? Math.round(
-    (words.filter((word, index) => {
-      const input = inputs[index]?.trim().toLowerCase();
-      return input === word.toLowerCase();
-    }).length / words.length) * 100
-  ) : 0;
 
   return (
     <View style={styles.container}>
@@ -121,9 +148,20 @@ export default function FirstLetterGameScreen() {
             <Text style={styles.verseReference}>{verse.reference}</Text>
             <View style={styles.wordsContainer}>
               {words.map((word, index) => {
+                const isPreFilled = preFilledIndices.has(index);
                 const input = inputs[index] || '';
-                const isWrong = showResult && input.trim().toLowerCase() !== word.toLowerCase();
-                const isRight = showResult && input.trim().toLowerCase() === word.toLowerCase();
+                const isWrong = showResult && !isPreFilled && input.trim().toLowerCase() !== word.toLowerCase();
+                const isRight = showResult && (isPreFilled || input.trim().toLowerCase() === word.toLowerCase());
+
+                if (isPreFilled) {
+                  return (
+                    <View key={index} style={styles.wordInputContainer}>
+                      <View style={[styles.wordInput, styles.wordInputPreFilled]}>
+                        <Text style={styles.preFilledText}>{word}</Text>
+                      </View>
+                    </View>
+                  );
+                }
 
                 return (
                   <View key={index} style={styles.wordInputContainer}>
@@ -296,6 +334,18 @@ const styles = StyleSheet.create({
   wordInputWrong: {
     backgroundColor: '#fee2e2',
     borderColor: '#f87171',
+  },
+  wordInputPreFilled: {
+    backgroundColor: '#d1fae5',
+    borderColor: '#86efac',
+    justifyContent: 'center',
+  },
+  preFilledText: {
+    fontSize: 16,
+    color: '#15803d',
+    fontWeight: '600' as const,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
   correctAnswer: {
     fontSize: 14,
