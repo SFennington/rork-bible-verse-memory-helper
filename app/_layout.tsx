@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { VerseProvider } from "@/contexts/VerseContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { BibleVersionProvider } from "@/contexts/BibleVersionContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -31,11 +32,13 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <VerseProvider>
-          <GestureHandlerRootView>
-            <RootLayoutNav />
-          </GestureHandlerRootView>
-        </VerseProvider>
+        <BibleVersionProvider>
+          <VerseProvider>
+            <GestureHandlerRootView>
+              <RootLayoutNav />
+            </GestureHandlerRootView>
+          </VerseProvider>
+        </BibleVersionProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

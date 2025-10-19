@@ -5,7 +5,7 @@ export type Theme = {
   textSecondary: string;
   textTertiary: string;
   border: string;
-  gradient: string[];
+  gradient: [string, string, ...string[]];
   gradientStart: { x: number; y: number };
   gradientEnd: { x: number; y: number };
 };
@@ -23,13 +23,13 @@ export const lightTheme: Theme = {
 };
 
 export const darkTheme: Theme = {
-  background: '#111827',
-  cardBackground: 'rgba(31, 41, 55, 0.95)',
+  background: '#0f0f23',
+  cardBackground: 'rgba(20, 20, 40, 0.95)',
   text: '#f9fafb',
   textSecondary: '#d1d5db',
   textTertiary: '#9ca3af',
   border: '#374151',
-  gradient: ['#1e293b', '#334155', '#475569'],
+  gradient: ['#0f0f23', '#1a1a3e', '#2d1b69', '#5b21b6', '#7c3aed'],
   gradientStart: { x: 0, y: 0 },
-  gradientEnd: { x: 1, y: 1 },
+  gradientEnd: { x: 0.5, y: 1 },
 };

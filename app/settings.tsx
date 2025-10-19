@@ -10,13 +10,18 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Moon, Sun, ArrowLeft } from 'lucide-react-native';
+import { Moon, Sun, ArrowLeft, Book, ChevronRight, Database } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useBibleVersion } from '@/contexts/BibleVersionContext';
+import { useVerses } from '@/contexts/VerseContext';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { theme, themeMode, toggleTheme } = useTheme();
+  const { selectedVersion, setSelectedVersion, availableVersions } = useBibleVersion();
+  const { customVerses, chapters, versesInProgress } = useVerses();
   const insets = useSafeAreaInsets();
+  const [showVersionPicker, setShowVersionPicker] = React.useState(false);
 
   return (
     <View style={styles.container}>
@@ -43,6 +48,64 @@ export default function SettingsScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
+          <View style={[styles.section, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Bible
+            </Text>
+
+            <TouchableOpacity
+              style={styles.settingRow}
+              onPress={() => setShowVersionPicker(!showVersionPicker)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.settingLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#10b981' }]}>
+                  <Book color="#fff" size={20} />
+                </View>
+                <View style={styles.settingTextContainer}>
+                  <Text style={[styles.settingTitle, { color: theme.text }]}>
+                    Bible Version
+                  </Text>
+                  <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>
+                    {selectedVersion.abbreviation}
+                  </Text>
+                </View>
+              </View>
+              <ChevronRight color={theme.textSecondary} size={20} />
+            </TouchableOpacity>
+
+            {showVersionPicker && (
+              <View style={[styles.versionPicker, { borderTopColor: theme.border }]}>
+                {availableVersions.map((version) => (
+                  <TouchableOpacity
+                    key={version.id}
+                    style={[
+                      styles.versionItem,
+                      { borderBottomColor: theme.border },
+                    ]}
+                    onPress={() => {
+                      setSelectedVersion(version);
+                      setShowVersionPicker(false);
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View>
+                      <Text style={[styles.versionName, { color: theme.text }]}>
+                        {version.name}
+                      </Text>
+                      <Text style={[styles.versionAbbr, { color: theme.textSecondary }]}>
+                        {version.abbreviation}
+                      </Text>
+                    </View>
+                    {selectedVersion.id === version.id && (
+                      <View style={styles.selectedIndicator} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
           <View style={[styles.section, { backgroundColor: theme.cardBackground }]}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
               Appearance
@@ -72,6 +135,55 @@ export default function SettingsScreen() {
                 trackColor={{ false: '#d1d5db', true: '#3b82f6' }}
                 thumbColor="#fff"
               />
+            </View>
+          </View>
+
+          <View style={[styles.section, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              Storage
+            </Text>
+
+            <View style={styles.settingRow}>
+              <View style={styles.settingLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#6366f1' }]}>
+                  <Database color="#fff" size={20} />
+                </View>
+                <View style={styles.settingTextContainer}>
+                  <Text style={[styles.settingTitle, { color: theme.text }]}>
+                    Offline Storage
+                  </Text>
+                  <Text style={[styles.settingDescription, { color: theme.textSecondary }]}>
+                    All verses saved locally
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            <View style={[styles.storageStats, { borderTopColor: theme.border }]}>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: theme.text }]}>
+                  {versesInProgress.length}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+                  Verses in Progress
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: theme.text }]}>
+                  {customVerses.length}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+                  Custom Verses
+                </Text>
+              </View>
+              <View style={styles.statItem}>
+                <Text style={[styles.statValue, { color: theme.text }]}>
+                  {chapters.length}
+                </Text>
+                <Text style={[styles.statLabel, { color: theme.textSecondary }]}>
+                  Chapters
+                </Text>
+              </View>
             </View>
           </View>
 
@@ -194,5 +306,50 @@ const styles = StyleSheet.create({
   infoValue: {
     fontSize: 15,
     fontWeight: '600' as const,
+  },
+  versionPicker: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    paddingTop: 12,
+  },
+  versionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  versionName: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    marginBottom: 2,
+  },
+  versionAbbr: {
+    fontSize: 13,
+  },
+  selectedIndicator: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#10b981',
+  },
+  storageStats: {
+    marginTop: 12,
+    borderTopWidth: 1,
+    paddingTop: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
