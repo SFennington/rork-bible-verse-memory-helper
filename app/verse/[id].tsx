@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Modal,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, CheckCircle2, Flame, TrendingUp, Play } from 'lucide-react-native';
+import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -45,8 +46,9 @@ const DIFFICULTY_LABELS = [
 export default function VerseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, getVerseProgress, addToProgress } = useVerses();
+  const { verses, getVerseProgress, addToProgress, advanceToNextLevel } = useVerses();
   const { theme } = useTheme();
+  const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
 
   const verse = verses.find(v => v.id === id);
   const verseProgress = getVerseProgress(id || '');
@@ -78,6 +80,14 @@ export default function VerseDetailScreen() {
 
   const currentPathGames = verseProgress?.currentDayGames || [];
   const isDue = verseProgress ? verseProgress.completedGamesToday < 3 : false;
+  const isDayComplete = verseProgress ? verseProgress.completedGamesToday >= 3 : false;
+
+  const handleAdvanceLevel = () => {
+    if (id) {
+      advanceToNextLevel(id);
+      setShowDayCompleteModal(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -179,11 +189,34 @@ export default function VerseDetailScreen() {
                     <Text style={styles.gamesCountText}>{verseProgress.completedGamesToday}/3</Text>
                   </View>
                 </View>
-                <Text style={styles.gamesSubtitle}>
-                  {verseProgress.completedGamesToday >= 3
-                    ? `Level ${verseProgress.difficultyLevel} Complete! Continue practicing to advance.`
-                    : `Complete ${3 - verseProgress.completedGamesToday} more ${3 - verseProgress.completedGamesToday === 1 ? 'game' : 'games'} to finish Level ${verseProgress.difficultyLevel}`}
-                </Text>
+                {isDayComplete ? (
+                  <View style={styles.dayCompleteSection}>
+                    <View style={styles.dayCompleteCard}>
+                      <Trophy color="#f59e0b" size={48} />
+                      <Text style={styles.dayCompleteTitle}>Level {verseProgress.difficultyLevel} Complete!</Text>
+                      <Text style={styles.dayCompleteText}>
+                        Great job! You&apos;ve completed all games for today.
+                      </Text>
+                      {verseProgress.difficultyLevel < 5 && (
+                        <TouchableOpacity
+                          style={styles.advanceButton}
+                          onPress={() => setShowDayCompleteModal(true)}
+                          activeOpacity={0.9}
+                        >
+                          <Text style={styles.advanceButtonText}>Continue to Next Level</Text>
+                          <ArrowRight color="#fff" size={20} />
+                        </TouchableOpacity>
+                      )}
+                      {verseProgress.difficultyLevel === 5 && (
+                        <Text style={styles.masteredText}>You&apos;ve mastered this verse! 🎉</Text>
+                      )}
+                    </View>
+                  </View>
+                ) : (
+                  <Text style={styles.gamesSubtitle}>
+                    Complete {3 - verseProgress.completedGamesToday} more {3 - verseProgress.completedGamesToday === 1 ? 'game' : 'games'} to finish Level {verseProgress.difficultyLevel}
+                  </Text>
+                )}
 
                 <View style={styles.gamesGrid}>
                   {currentPathGames.map((gameType, index) => {
@@ -226,6 +259,42 @@ export default function VerseDetailScreen() {
           )}
         </ScrollView>
       </LinearGradient>
+
+      <Modal
+        visible={showDayCompleteModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDayCompleteModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <Trophy color="#f59e0b" size={64} />
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Day Complete!</Text>
+            <Text style={[styles.modalText, { color: theme.textSecondary }]}>
+              You&apos;ve completed Level {verseProgress?.difficultyLevel}. Ready to advance?
+            </Text>
+            <Text style={[styles.modalSubtext, { color: theme.textTertiary }]}>
+              If you don&apos;t continue now, the next level will unlock tomorrow morning.
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary, { backgroundColor: theme.border }]}
+                onPress={() => setShowDayCompleteModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.text }]}>Wait Until Tomorrow</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonPrimary]}
+                onPress={handleAdvanceLevel}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalButtonTextPrimary}>Continue Now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -474,5 +543,113 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     lineHeight: 20,
     marginLeft: 44,
+  },
+  dayCompleteSection: {
+    marginBottom: 20,
+  },
+  dayCompleteCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  dayCompleteTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  dayCompleteText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  advanceButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#667eea',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  advanceButtonText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#fff',
+  },
+  masteredText: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: '#10b981',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  modalTitle: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+  },
+  modalText: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  modalSubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  modalButtons: {
+    width: '100%',
+    gap: 12,
+    marginTop: 8,
+  },
+  modalButton: {
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  modalButtonSecondary: {
+    backgroundColor: '#e5e7eb',
+  },
+  modalButtonPrimary: {
+    backgroundColor: '#667eea',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  modalButtonTextPrimary: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#fff',
   },
 });

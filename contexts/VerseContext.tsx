@@ -163,15 +163,41 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     saveProgress(updatedProgress);
   }, [progress]);
 
+  const advanceToNextLevel = useCallback((verseId: string) => {
+    const verseProgress = progress[verseId];
+    if (!verseProgress) {
+      console.error('Verse not in progress');
+      return;
+    }
+
+    const newDifficultyLevel = Math.min(5, verseProgress.difficultyLevel + 1) as DifficultyLevel;
+    
+    const updatedProgress = {
+      ...progress,
+      [verseId]: {
+        ...verseProgress,
+        difficultyLevel: newDifficultyLevel,
+        currentDayGames: DIFFICULTY_LEVELS[newDifficultyLevel],
+        completedGamesToday: 0,
+        lastReviewedAt: new Date().toISOString(),
+      },
+    };
+
+    saveProgress(updatedProgress);
+  }, [progress]);
+
   const resetDailyProgress = useCallback(() => {
     const updatedProgress = { ...progress };
     let hasChanges = false;
 
     Object.keys(updatedProgress).forEach(verseId => {
       const verseProgress = updatedProgress[verseId];
-      if (verseProgress.completedGamesToday > 0 && !isToday(verseProgress.lastReviewedAt)) {
+      if (verseProgress.completedGamesToday >= 3 && !isToday(verseProgress.lastReviewedAt)) {
+        const newDifficultyLevel = Math.min(5, verseProgress.difficultyLevel + 1) as DifficultyLevel;
         updatedProgress[verseId] = {
           ...verseProgress,
+          difficultyLevel: newDifficultyLevel,
+          currentDayGames: DIFFICULTY_LEVELS[newDifficultyLevel],
           completedGamesToday: 0,
         };
         hasChanges = true;
@@ -273,7 +299,8 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     addChapter,
     chapters,
     customVerses,
-  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses]);
+    advanceToNextLevel,
+  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses, advanceToNextLevel]);
 });
 
 export const useFilteredVerses = (category: VerseCategory | null) => {
