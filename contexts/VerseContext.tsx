@@ -131,14 +131,14 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     let newStreakDays = verseProgress.streakDays;
     let newReviewCount = verseProgress.reviewCount;
 
-    if (allGamesCompletedToday && avgAccuracyToday >= 85 && verseProgress.difficultyLevel < 5) {
-      newDifficultyLevel = (verseProgress.difficultyLevel + 1) as DifficultyLevel;
-    }
-
     const wasCompletedBefore = verseProgress.completedGamesToday >= 3;
     if (allGamesCompletedToday && !wasCompletedBefore) {
       newStreakDays = verseProgress.streakDays + 1;
       newReviewCount = verseProgress.reviewCount + 1;
+      
+      if (avgAccuracyToday >= 85 && verseProgress.difficultyLevel < 5) {
+        newDifficultyLevel = (verseProgress.difficultyLevel + 1) as DifficultyLevel;
+      }
     }
 
     const lastReviewedAt = now.toISOString();

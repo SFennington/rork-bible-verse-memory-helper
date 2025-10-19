@@ -92,6 +92,16 @@ export default function ProgressScreen() {
             {incompleteVerses.map(({ verse, progress }) => {
               const category = CATEGORIES.find(c => c.name === verse.category);
               const difficultyLabel = DIFFICULTY_LABELS[progress.difficultyLevel];
+              
+              const completedGames = progress.gameSessions
+                .filter(s => {
+                  const sessionDate = new Date(s.completedAt);
+                  const today = new Date();
+                  return sessionDate.toDateString() === today.toDateString();
+                })
+                .map(s => s.gameType);
+              
+              const nextGame = progress.currentDayGames.find(game => !completedGames.includes(game)) || progress.currentDayGames[0];
 
               return (
                 <TouchableOpacity
@@ -108,9 +118,15 @@ export default function ProgressScreen() {
                   >
                     <View style={styles.verseHeader}>
                       <Text style={styles.verseReference}>{verse.reference}</Text>
-                      <View style={styles.playButton}>
+                      <TouchableOpacity 
+                        style={styles.playButton}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          router.push(`/game/${nextGame}/${verse.id}`);
+                        }}
+                      >
                         <Play color="#fff" size={16} fill="#fff" />
-                      </View>
+                      </TouchableOpacity>
                     </View>
                     <Text style={styles.verseText} numberOfLines={2}>
                       {verse.text}
