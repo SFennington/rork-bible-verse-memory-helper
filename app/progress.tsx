@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, Flame, Calendar, TrendingUp, Play } from 'lucide-react-native';
+import { Target, Flame, Calendar, TrendingUp, Play, Crown } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -139,20 +139,29 @@ export default function ProgressScreen() {
                       {verse.text}
                     </Text>
                     <View style={styles.verseFooter}>
-                      <View style={styles.progressRow}>
-                        <View style={styles.progressBarContainer}>
-                          <View style={[styles.progressBar, { width: `${progress.overallProgress}%` }]} />
+                      {progress.overallProgress === 100 ? (
+                        <View style={styles.masteredContainer}>
+                          <Crown color="#10b981" size={24} fill="#10b981" />
+                          <Text style={styles.masteredText}>Mastered</Text>
                         </View>
-                        <Text style={styles.progressPercentage}>{progress.overallProgress}%</Text>
-                      </View>
-                      <View style={styles.badgeRow}>
-                        <View style={styles.masteryBadge}>
-                          <Text style={styles.masteryBadgeText}>{difficultyLabel}</Text>
-                        </View>
-                        <View style={styles.gamesBadge}>
-                          <Text style={styles.gamesBadgeText}>{progress.completedGamesToday}/{requiredGames} today</Text>
-                        </View>
-                      </View>
+                      ) : (
+                        <>
+                          <View style={styles.progressRow}>
+                            <View style={styles.progressBarContainer}>
+                              <View style={[styles.progressBar, { width: `${progress.overallProgress}%` }]} />
+                            </View>
+                            <Text style={styles.progressPercentage}>{progress.overallProgress}%</Text>
+                          </View>
+                          <View style={styles.badgeRow}>
+                            <View style={styles.masteryBadge}>
+                              <Text style={styles.masteryBadgeText}>{difficultyLabel}</Text>
+                            </View>
+                            <View style={styles.gamesBadge}>
+                              <Text style={styles.gamesBadgeText}>{progress.completedGamesToday}/{requiredGames} today</Text>
+                            </View>
+                          </View>
+                        </>
+                      )}
                     </View>
                   </LinearGradient>
                 </TouchableOpacity>
@@ -184,12 +193,21 @@ export default function ProgressScreen() {
                       {verse.text}
                     </Text>
                     <View style={styles.upcomingFooter}>
-                      <View style={[styles.upcomingMasteryBadge, { backgroundColor: theme.border }]}>
-                        <Text style={[styles.upcomingMasteryText, { color: theme.textSecondary }]}>{difficultyLabel}</Text>
-                      </View>
-                      <Text style={[styles.nextReviewText, { color: theme.textTertiary }]}>
-                        {progress.overallProgress}% memorized
-                      </Text>
+                      {progress.overallProgress === 100 ? (
+                        <View style={styles.masteredBadge}>
+                          <Crown color="#10b981" size={16} fill="#10b981" />
+                          <Text style={styles.masteredBadgeText}>Mastered</Text>
+                        </View>
+                      ) : (
+                        <>
+                          <View style={[styles.upcomingMasteryBadge, { backgroundColor: theme.border }]}>
+                            <Text style={[styles.upcomingMasteryText, { color: theme.textSecondary }]}>{difficultyLabel}</Text>
+                          </View>
+                          <Text style={[styles.nextReviewText, { color: theme.textTertiary }]}>
+                            {progress.overallProgress}% memorized
+                          </Text>
+                        </>
+                      )}
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -446,5 +464,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 32,
+  },
+  masteredContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  masteredText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#10b981',
+  },
+  masteredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  masteredBadgeText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#10b981',
   },
 });
