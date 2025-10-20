@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,8 +15,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 import { VerseCategory } from '@/types/verse';
 
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = width - 48;
+
 
 type TabType = 'browse' | 'progress';
 
@@ -395,12 +393,11 @@ const styles = StyleSheet.create({
   },
   versesContainer: {
     padding: 24,
-    gap: 16,
+    gap: 12,
     paddingBottom: 40,
   },
   verseCard: {
-    width: CARD_WIDTH,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
@@ -409,14 +406,13 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   verseGradient: {
-    padding: 20,
-    minHeight: 160,
+    padding: 16,
   },
   verseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   verseReference: {
     fontSize: 16,
@@ -504,10 +500,10 @@ const styles = StyleSheet.create({
     color: '#667eea',
   },
   verseText: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
     color: '#fff',
-    marginBottom: 12,
+    marginBottom: 8,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -522,8 +518,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   addCustomCard: {
-    width: CARD_WIDTH,
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderWidth: 2,
@@ -531,10 +526,9 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed' as const,
   },
   addCustomContent: {
-    padding: 32,
+    padding: 24,
     alignItems: 'center',
-    gap: 12,
-    minHeight: 160,
+    gap: 10,
     justifyContent: 'center',
   },
   addCustomTitle: {
@@ -552,11 +546,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 12,
+    borderRadius: 10,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
@@ -564,7 +558,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   masteredText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700' as const,
     color: '#10b981',
   },
