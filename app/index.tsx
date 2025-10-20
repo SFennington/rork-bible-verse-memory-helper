@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Book, Target, Settings, Plus, Play, PlusCircle, Crown, Archive } from 'lucide-react-native';
+import { Book, Target, Settings, Plus, Play, PlusCircle, Crown, Archive, TrendingUp, Flame, CheckCircle2, Award } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -41,6 +41,33 @@ export default function HomeScreen() {
     setSelectedTab('progress');
   };
 
+  const stats = useMemo(() => {
+    const completedVerses = versesInProgress.filter(v => v.progress.overallProgress === 100).length;
+    const completedArchived = archivedVerses.filter(v => v.progress.overallProgress === 100).length;
+    const totalCompleted = completedVerses + completedArchived;
+    
+    const allProgress = Object.values(progress);
+    const totalDaysInProgress = allProgress.reduce((max, p) => 
+      Math.max(max, p.daysInProgress || 0), 0
+    );
+    
+    const currentStreak = allProgress.reduce((max, p) => 
+      Math.max(max, p.streakDays || 0), 0
+    );
+    
+    const totalReviews = allProgress.reduce((sum, p) => 
+      sum + (p.reviewCount || 0), 0
+    );
+    
+    return {
+      totalCompleted,
+      totalDaysInProgress,
+      currentStreak,
+      totalReviews,
+      activeVerses: versesInProgress.length,
+    };
+  }, [versesInProgress, archivedVerses, progress]);
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -66,6 +93,35 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.subtitle}>Hide God&apos;s Word in your heart</Text>
           
+          {selectedTab === 'progress' && (versesInProgress.length > 0 || archivedVerses.length > 0) && (
+            <View style={styles.statsContainer}>
+              <View style={styles.statRow}>
+                <View style={styles.statCard}>
+                  <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
+                  <Text style={styles.statValue}>{stats.totalCompleted}</Text>
+                  <Text style={styles.statLabel}>Completed</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Flame color="#f59e0b" size={20} fill="#f59e0b" />
+                  <Text style={styles.statValue}>{stats.currentStreak}</Text>
+                  <Text style={styles.statLabel}>Day Streak</Text>
+                </View>
+              </View>
+              <View style={styles.statRow}>
+                <View style={styles.statCard}>
+                  <TrendingUp color="#3b82f6" size={20} />
+                  <Text style={styles.statValue}>{stats.totalDaysInProgress}</Text>
+                  <Text style={styles.statLabel}>Days Active</Text>
+                </View>
+                <View style={styles.statCard}>
+                  <Award color="#8b5cf6" size={20} />
+                  <Text style={styles.statValue}>{stats.totalReviews}</Text>
+                  <Text style={styles.statLabel}>Total Reviews</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[
@@ -422,6 +478,39 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700' as const,
     color: '#fff',
+  },
+  statsContainer: {
+    gap: 10,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  statRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+    gap: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  statValue: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#6b7280',
+    textAlign: 'center',
   },
   categoriesContainer: {
     marginBottom: 16,
