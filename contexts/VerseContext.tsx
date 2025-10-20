@@ -130,8 +130,17 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     ];
     
     const totalRequiredGames = requiredGamesPerLevel.reduce((sum, count) => sum + count, 0);
-    const successfulGames = updatedSessions.filter(s => s.accuracy >= 80).length;
-    const overallProgress = Math.min(100, Math.round((successfulGames / totalRequiredGames) * 100));
+    const verse = [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
+    const totalWordsInVerse = verse ? verse.text.split(' ').length : 0;
+    
+    const totalCorrectWordsAccumulated = updatedSessions.reduce((sum, s) => {
+      return sum + (s.correctWords || 0);
+    }, 0);
+    
+    const totalPossibleWords = totalRequiredGames * totalWordsInVerse;
+    const overallProgress = totalPossibleWords > 0 
+      ? Math.min(100, Math.round((totalCorrectWordsAccumulated / totalPossibleWords) * 100))
+      : 0;
 
     const requiredGames = requiredGamesPerLevel[verseProgress.difficultyLevel];
     const allGamesCompletedToday = completedGamesToday >= requiredGames;
@@ -165,8 +174,8 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         completedGamesToday,
         streakDays: newStreakDays,
         overallProgress,
-        totalCorrectWords: 0,
-        totalWords: 0,
+        totalCorrectWords: totalCorrectWordsAccumulated,
+        totalWords: totalPossibleWords,
       },
     };
 

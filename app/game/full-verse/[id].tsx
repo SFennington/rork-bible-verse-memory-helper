@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -18,7 +18,7 @@ import { CATEGORIES } from '@/mocks/verses';
 export default function FullVerseGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, completeGameSession } = useVerses();
+  const { verses, completeGameSession, getVerseProgress } = useVerses();
   const [userInput, setUserInput] = useState('');
   const [showResult, setShowResult] = useState(false);
   const [startTime] = useState(Date.now());
@@ -63,16 +63,22 @@ export default function FullVerseGameScreen() {
   const handleCheck = () => {
     const accuracy = calculateAccuracy();
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
+    const totalWords = verse.text.split(' ').length;
+    const correctWords = Math.round((accuracy / 100) * totalWords);
     
     setShowResult(true);
     
     if (accuracy >= 80) {
+      const verseProgress = getVerseProgress(id || '');
       completeGameSession(id || '', {
         gameType: 'full-verse',
         completedAt: new Date().toISOString(),
         accuracy,
         timeSpent,
         mistakeCount: mistakes,
+        correctWords,
+        totalWords,
+        difficultyLevel: verseProgress?.difficultyLevel || 1,
       });
     }
   };

@@ -44,7 +44,7 @@ function levenshteinDistance(str1: string, str2: string): number {
 export default function WordOrderGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, completeGameSession } = useVerses();
+  const { verses, completeGameSession, getVerseProgress } = useVerses();
   const [orderedWords, setOrderedWords] = useState<string[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
@@ -116,14 +116,20 @@ export default function WordOrderGameScreen() {
     const maxLength = Math.max(userText.length, correctText.length);
     const accuracy = Math.round(((maxLength - distance) / maxLength) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
+    const totalWords = correctWords.length;
+    const correctWordCount = isCorrect ? totalWords : Math.round((accuracy / 100) * totalWords);
 
     if (accuracy >= 80) {
+      const verseProgress = getVerseProgress(id || '');
       completeGameSession(id || '', {
         gameType: 'word-order',
         completedAt: new Date().toISOString(),
         accuracy,
         timeSpent,
         mistakeCount: mistakes,
+        correctWords: correctWordCount,
+        totalWords,
+        difficultyLevel: verseProgress?.difficultyLevel || 1,
       });
     }
   };

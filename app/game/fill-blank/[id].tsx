@@ -74,12 +74,14 @@ export default function FillBlankGameScreen() {
       (blankIdx, i) => selectedWords[i] === gameData.words[blankIdx]
     );
 
-    const correctCount = gameData.blanks.filter(
+    const correctBlankCount = gameData.blanks.filter(
       (blankIdx, i) => selectedWords[i] === gameData.words[blankIdx]
     ).length;
-    const accuracy = Math.round((correctCount / gameData.blanks.length) * 100);
+    const accuracy = Math.round((correctBlankCount / gameData.blanks.length) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
     const totalWords = gameData.words.length;
+    
+    const correctWords = isCorrect ? totalWords : Math.round((correctBlankCount / gameData.blanks.length) * totalWords);
 
     if (isCorrect) {
       const verseProgress = getVerseProgress(id || '');
@@ -89,7 +91,7 @@ export default function FillBlankGameScreen() {
         accuracy,
         timeSpent,
         mistakeCount: 0,
-        correctWords: correctCount,
+        correctWords,
         totalWords,
         difficultyLevel: verseProgress?.difficultyLevel || 1,
       });
