@@ -405,6 +405,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
     gap: 8,
+    maxWidth: '100%',
   },
   scrambledWordCard: {
     backgroundColor: '#fef3c7',
@@ -432,7 +433,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    minWidth: 80,
+    minWidth: 60,
+    maxWidth: 120,
     justifyContent: 'center',
   },
   inputBoxFilled: {
@@ -454,7 +456,7 @@ const styles = StyleSheet.create({
     fontWeight: '500' as const,
     textAlign: 'center',
     padding: 0,
-    minWidth: 60,
+    minWidth: 40,
   },
   inputTextFilled: {
     color: '#374151',

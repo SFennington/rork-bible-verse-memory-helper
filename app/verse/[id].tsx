@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw } from 'lucide-react-native';
+import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -54,10 +54,13 @@ const DIFFICULTY_LABELS = [
 export default function VerseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel } = useVerses();
+  const { verses, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse } = useVerses();
   const { theme } = useTheme();
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
   const [showIncompleteWarning, setShowIncompleteWarning] = useState(false);
+  const [showOptionsModal, setShowOptionsModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
   const verse = verses.find(v => v.id === id);
   const verseProgress = getVerseProgress(id || '');
@@ -126,6 +129,20 @@ export default function VerseDetailScreen() {
     }
   };
 
+  const handleDeleteVerse = async () => {
+    if (id) {
+      await deleteVerse(id);
+      router.back();
+    }
+  };
+
+  const handleArchiveVerse = async () => {
+    if (id) {
+      await archiveVerse(id);
+      router.back();
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -138,6 +155,14 @@ export default function VerseDetailScreen() {
           headerTitleStyle: {
             fontWeight: '700' as const,
           },
+          headerRight: verseProgress ? () => (
+            <TouchableOpacity
+              style={styles.optionsButton}
+              onPress={() => setShowOptionsModal(true)}
+            >
+              <MoreVertical color="#fff" size={24} />
+            </TouchableOpacity>
+          ) : undefined,
         }}
       />
       <LinearGradient
@@ -200,8 +225,8 @@ export default function VerseDetailScreen() {
                   </View>
                   <View style={styles.statItem}>
                     <TrendingUp color="#10b981" size={20} />
-                    <Text style={[styles.statValue, { color: theme.text }]}>{verseProgress.reviewCount}</Text>
-                    <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Reviews</Text>
+                    <Text style={[styles.statValue, { color: theme.text }]}>{verseProgress.daysInProgress || 0}</Text>
+                    <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Days</Text>
                   </View>
                   <View style={styles.statItem}>
                     <CheckCircle2 color="#8b5cf6" size={20} />
@@ -373,6 +398,111 @@ export default function VerseDetailScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={styles.modalButtonTextPrimary}>Go to Level {firstIncompleteLevel}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showOptionsModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowOptionsModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowOptionsModal(false)}
+        >
+          <View style={[styles.optionsContent, { backgroundColor: theme.cardBackground }]}>
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={() => {
+                setShowOptionsModal(false);
+                setShowArchiveConfirm(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Archive color="#3b82f6" size={22} />
+              <Text style={[styles.optionText, { color: theme.text }]}>Archive Verse</Text>
+            </TouchableOpacity>
+            <View style={[styles.optionDivider, { backgroundColor: theme.border }]} />
+            <TouchableOpacity
+              style={styles.optionItem}
+              onPress={() => {
+                setShowOptionsModal(false);
+                setShowDeleteConfirm(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Trash2 color="#ef4444" size={22} />
+              <Text style={[styles.optionText, { color: '#ef4444' }]}>Delete Verse</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      <Modal
+        visible={showDeleteConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDeleteConfirm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <AlertCircle color="#ef4444" size={64} />
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Delete Verse?</Text>
+            <Text style={[styles.modalText, { color: theme.textSecondary }]}>
+              This will permanently delete all progress for this verse. This action cannot be undone.
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary, { backgroundColor: theme.border }]}
+                onPress={() => setShowDeleteConfirm(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: '#ef4444' }]}
+                onPress={handleDeleteVerse}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalButtonTextPrimary}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showArchiveConfirm}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowArchiveConfirm(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <Archive color="#3b82f6" size={64} />
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Archive Verse?</Text>
+            <Text style={[styles.modalText, { color: theme.textSecondary }]}>
+              This verse will be moved to your archived list. You can unarchive it later from the Progress screen.
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary, { backgroundColor: theme.border }]}
+                onPress={() => setShowArchiveConfirm(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, { backgroundColor: '#3b82f6' }]}
+                onPress={handleArchiveVerse}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalButtonTextPrimary}>Archive</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -772,5 +902,35 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#fff',
+  },
+  optionsButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  optionsContent: {
+    marginTop: 'auto',
+    marginBottom: 'auto',
+    marginHorizontal: 24,
+    borderRadius: 16,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 16,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+    padding: 20,
+  },
+  optionDivider: {
+    height: 1,
+    backgroundColor: '#e5e7eb',
+  },
+  optionText: {
+    fontSize: 17,
+    fontWeight: '600' as const,
   },
 });

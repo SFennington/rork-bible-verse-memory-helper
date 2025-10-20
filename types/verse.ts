@@ -55,4 +55,9 @@ export interface VerseProgress {
   totalWords: number;
   isChapter?: boolean;
   chapterId?: string;
+  lastStreakDate?: string;
+  daysInProgress: number;
+  uniqueDaysWorked: string[];
+  isArchived?: boolean;
+  archivedAt?: string;
 }
