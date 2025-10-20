@@ -401,8 +401,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   wordPairContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+    gap: 8,
   },
   scrambledWordCard: {
     backgroundColor: '#fef3c7',
@@ -420,7 +422,7 @@ const styles = StyleSheet.create({
   arrowText: {
     fontSize: 18,
     color: '#6b7280',
-    marginVertical: 4,
+    marginHorizontal: 4,
   },
   inputBox: {
     backgroundColor: '#f3f4f6',

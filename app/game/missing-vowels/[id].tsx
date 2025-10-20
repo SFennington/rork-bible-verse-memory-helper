@@ -354,8 +354,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   wordContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
+    gap: 8,
   },
   displayWordCard: {
     backgroundColor: '#ddd6fe',
@@ -374,7 +376,7 @@ const styles = StyleSheet.create({
   arrowText: {
     fontSize: 18,
     color: '#6b7280',
-    marginVertical: 4,
+    marginHorizontal: 4,
   },
   inputBox: {
     backgroundColor: '#f3f4f6',
