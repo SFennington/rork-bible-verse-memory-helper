@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Home } from 'lucide-react-native';
+import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Home, ArrowLeft } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { CATEGORIES } from '@/mocks/verses';
 
@@ -139,6 +139,14 @@ export default function FullVerseGameScreen() {
           headerTitleStyle: {
             fontWeight: '700' as const,
           },
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.push(`/verse/${id}`)}
+              style={{ marginLeft: 8 }}
+            >
+              <ArrowLeft color="#fff" size={24} />
+            </TouchableOpacity>
+          ),
         }}
       />
       <LinearGradient
