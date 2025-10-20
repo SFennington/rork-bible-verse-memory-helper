@@ -9,7 +9,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Book, Target, Settings, Plus, Play, PlusCircle, Crown, Archive, TrendingUp, Flame, CheckCircle2, Award } from 'lucide-react-native';
+import { Book, Target, Settings, Plus, Play, PlusCircle, Crown, Archive, TrendingUp, Flame, CheckCircle2 } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -22,7 +22,7 @@ type TabType = 'browse' | 'progress';
 export default function HomeScreen() {
   const router = useRouter();
   const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses } = useVerses();
-  const { theme } = useTheme();
+  const { theme, themeMode } = useTheme();
   const [selectedTab, setSelectedTab] = useState<TabType>('progress');
   const [selectedCategory, setSelectedCategory] = useState<VerseCategory | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -55,15 +55,10 @@ export default function HomeScreen() {
       Math.max(max, p.streakDays || 0), 0
     );
     
-    const totalReviews = allProgress.reduce((sum, p) => 
-      sum + (p.reviewCount || 0), 0
-    );
-    
     return {
       totalCompleted,
       totalDaysInProgress,
       currentStreak,
-      totalReviews,
       activeVerses: versesInProgress.length,
     };
   }, [versesInProgress, archivedVerses, progress]);
@@ -96,27 +91,20 @@ export default function HomeScreen() {
           {selectedTab === 'progress' && (versesInProgress.length > 0 || archivedVerses.length > 0) && (
             <View style={styles.statsContainer}>
               <View style={styles.statRow}>
-                <View style={styles.statCard}>
-                  <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
-                  <Text style={styles.statValue}>{stats.totalCompleted}</Text>
-                  <Text style={styles.statLabel}>Completed</Text>
+                <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
+                  <CheckCircle2 color="#10b981" size={16} fill="#10b981" />
+                  <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{stats.totalCompleted}</Text>
+                  <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Completed</Text>
                 </View>
-                <View style={styles.statCard}>
-                  <Flame color="#f59e0b" size={20} fill="#f59e0b" />
-                  <Text style={styles.statValue}>{stats.currentStreak}</Text>
-                  <Text style={styles.statLabel}>Day Streak</Text>
+                <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
+                  <Flame color="#f59e0b" size={16} fill="#f59e0b" />
+                  <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{stats.currentStreak}</Text>
+                  <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Day Streak</Text>
                 </View>
-              </View>
-              <View style={styles.statRow}>
-                <View style={styles.statCard}>
-                  <TrendingUp color="#3b82f6" size={20} />
-                  <Text style={styles.statValue}>{stats.totalDaysInProgress}</Text>
-                  <Text style={styles.statLabel}>Days Active</Text>
-                </View>
-                <View style={styles.statCard}>
-                  <Award color="#8b5cf6" size={20} />
-                  <Text style={styles.statValue}>{stats.totalReviews}</Text>
-                  <Text style={styles.statLabel}>Total Reviews</Text>
+                <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
+                  <TrendingUp color="#3b82f6" size={16} />
+                  <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{stats.totalDaysInProgress}</Text>
+                  <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Days Active</Text>
                 </View>
               </View>
             </View>
@@ -480,37 +468,45 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   statsContainer: {
-    gap: 10,
     marginTop: 16,
     marginBottom: 8,
   },
   statRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: 8,
   },
   statCard: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 12,
-    padding: 14,
+    borderRadius: 10,
+    padding: 8,
     alignItems: 'center',
-    gap: 6,
+    gap: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
+  statCardDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
   statValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700' as const,
     color: '#1f2937',
   },
+  statValueDark: {
+    color: '#fff',
+  },
   statLabel: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '600' as const,
     color: '#6b7280',
     textAlign: 'center',
+  },
+  statLabelDark: {
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   categoriesContainer: {
     marginBottom: 16,
