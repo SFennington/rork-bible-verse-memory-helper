@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight } from 'lucide-react-native';
+import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -54,9 +54,10 @@ const DIFFICULTY_LABELS = [
 export default function VerseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, getVerseProgress, addToProgress, advanceToNextLevel } = useVerses();
+  const { verses, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel } = useVerses();
   const { theme } = useTheme();
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
+  const [showIncompleteWarning, setShowIncompleteWarning] = useState(false);
 
   const verse = verses.find(v => v.id === id);
   const verseProgress = getVerseProgress(id || '');
@@ -98,11 +99,30 @@ export default function VerseDetailScreen() {
   const isDayComplete = verseProgress ? areAllGamesCompleted() : false;
   const isMastered = verseProgress ? verseProgress.difficultyLevel === 5 && verseProgress.overallProgress === 100 : false;
   const canAdvanceToNextLevel = verseProgress ? isDayComplete && verseProgress.completedGamesToday >= requiredGames : false;
+  const firstIncompleteLevel = id ? getFirstIncompleteLevel(id) : null;
+  const hasIncompleteLevels = firstIncompleteLevel !== null && verseProgress && firstIncompleteLevel < verseProgress.difficultyLevel;
+  const isStuck = hasIncompleteLevels && isDayComplete;
 
   const handleAdvanceLevel = () => {
     if (id) {
+      const firstIncompleteLevel = getFirstIncompleteLevel(id);
+      if (firstIncompleteLevel && firstIncompleteLevel < (verseProgress?.difficultyLevel || 1)) {
+        setShowIncompleteWarning(true);
+        setShowDayCompleteModal(false);
+        return;
+      }
       advanceToNextLevel(id);
       setShowDayCompleteModal(false);
+    }
+  };
+
+  const handleResetToIncompleteLevel = () => {
+    if (id) {
+      const firstIncompleteLevel = getFirstIncompleteLevel(id);
+      if (firstIncompleteLevel) {
+        resetToLevel(id, firstIncompleteLevel);
+        setShowIncompleteWarning(false);
+      }
     }
   };
 
@@ -198,7 +218,25 @@ export default function VerseDetailScreen() {
                     <Text style={styles.gamesCountText}>{verseProgress.completedGamesToday}/{requiredGames}</Text>
                   </View>
                 </View>
-                {isDayComplete ? (
+                {isStuck ? (
+                  <View style={styles.dayCompleteSection}>
+                    <View style={styles.warningCard}>
+                      <AlertCircle color="#f59e0b" size={48} />
+                      <Text style={styles.warningTitle}>Level Incomplete</Text>
+                      <Text style={styles.warningText}>
+                        You&apos;re at Level {verseProgress.difficultyLevel} but Level {firstIncompleteLevel} isn&apos;t fully complete ({verseProgress.overallProgress}% overall).
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.resetButton}
+                        onPress={handleResetToIncompleteLevel}
+                        activeOpacity={0.9}
+                      >
+                        <RotateCcw color="#fff" size={20} />
+                        <Text style={styles.resetButtonText}>Go Back to Level {firstIncompleteLevel}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : isDayComplete ? (
                   <View style={styles.dayCompleteSection}>
                     <View style={styles.dayCompleteCard}>
                       <Trophy color="#f59e0b" size={48} />
@@ -299,6 +337,42 @@ export default function VerseDetailScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={styles.modalButtonTextPrimary}>Continue Now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showIncompleteWarning}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowIncompleteWarning(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <AlertCircle color="#f59e0b" size={64} />
+            <Text style={[styles.modalTitle, { color: theme.text }]}>Previous Level Incomplete</Text>
+            <Text style={[styles.modalText, { color: theme.textSecondary }]}>
+              You need to complete Level {firstIncompleteLevel} before advancing further. Your progress is {verseProgress?.overallProgress}%.
+            </Text>
+            <Text style={[styles.modalSubtext, { color: theme.textTertiary }]}>
+              Would you like to go back to Level {firstIncompleteLevel} and complete it?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonSecondary, { backgroundColor: theme.border }]}
+                onPress={() => setShowIncompleteWarning(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.text }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalButtonPrimary]}
+                onPress={handleResetToIncompleteLevel}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.modalButtonTextPrimary}>Go to Level {firstIncompleteLevel}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -600,6 +674,44 @@ const styles = StyleSheet.create({
     color: '#10b981',
     textAlign: 'center',
     marginTop: 8,
+  },
+  warningCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 32,
+    alignItems: 'center',
+    gap: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  warningTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  warningText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  resetButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#f59e0b',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  resetButtonText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#fff',
   },
   modalOverlay: {
     flex: 1,

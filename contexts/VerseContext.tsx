@@ -207,6 +207,52 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     saveProgress(updatedProgress);
   }, [progress]);
 
+  const getFirstIncompleteLevel = useCallback((verseId: string): DifficultyLevel | null => {
+    const verseProgress = progress[verseId];
+    if (!verseProgress) return null;
+
+    const verse = [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
+    if (!verse) return null;
+
+    const totalWordsInVerse = verse.text.split(' ').length;
+    const requiredGamesPerLevel = [0, 3, 3, 3, 3, 1];
+
+    for (let level = 1; level <= 5; level++) {
+      const levelSessions = verseProgress.gameSessions.filter(s => s.difficultyLevel === level);
+      const requiredGames = requiredGamesPerLevel[level];
+      const totalPossibleWords = requiredGames * totalWordsInVerse;
+      const totalCorrectWords = levelSessions.reduce((sum, s) => sum + (s.correctWords || 0), 0);
+      const levelProgress = totalPossibleWords > 0 ? (totalCorrectWords / totalPossibleWords) * 100 : 0;
+
+      if (levelProgress < 100) {
+        return level as DifficultyLevel;
+      }
+    }
+
+    return null;
+  }, [progress, customVerses, chapters]);
+
+  const resetToLevel = useCallback((verseId: string, targetLevel: DifficultyLevel) => {
+    const verseProgress = progress[verseId];
+    if (!verseProgress) {
+      console.error('Verse not in progress');
+      return;
+    }
+
+    const updatedProgress = {
+      ...progress,
+      [verseId]: {
+        ...verseProgress,
+        difficultyLevel: targetLevel,
+        currentDayGames: DIFFICULTY_LEVELS[targetLevel],
+        completedGamesToday: 0,
+        lastReviewedAt: new Date().toISOString(),
+      },
+    };
+
+    saveProgress(updatedProgress);
+  }, [progress]);
+
   const resetDailyProgress = useCallback(() => {
     const updatedProgress = { ...progress };
     let hasChanges = false;
@@ -327,7 +373,9 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     chapters,
     customVerses,
     advanceToNextLevel,
-  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses, advanceToNextLevel]);
+    getFirstIncompleteLevel,
+    resetToLevel,
+  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel]);
 });
 
 export const useFilteredVerses = (category: VerseCategory | null) => {
