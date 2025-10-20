@@ -143,6 +143,17 @@ export default function VerseDetailScreen() {
     }
   };
 
+  const handlePlayNextIncomplete = () => {
+    if (!verseProgress || !id) return;
+    
+    const currentGames = verseProgress.currentDayGames;
+    const firstIncompleteGame = currentGames.find(gameType => !isGameCompleted(gameType));
+    
+    if (firstIncompleteGame) {
+      router.push(`/game/${firstIncompleteGame}/${id}`);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -221,9 +232,13 @@ export default function VerseDetailScreen() {
                     )}
                   </View>
                   {isDue && verseProgress.overallProgress < 100 && (
-                    <View style={styles.dueIndicator}>
+                    <TouchableOpacity 
+                      style={styles.dueIndicator}
+                      onPress={handlePlayNextIncomplete}
+                      activeOpacity={0.8}
+                    >
                       <Play color="#fff" size={16} fill="#fff" />
-                    </View>
+                    </TouchableOpacity>
                   )}
                 </View>
                 <View style={styles.statsRow}>
