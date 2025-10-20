@@ -59,12 +59,21 @@ export default function WordOrderGameScreen() {
 
   const verse = verses.find(v => v.id === id);
   const category = CATEGORIES.find(c => c.name === verse?.category);
+  const verseProgress = getVerseProgress(id || '');
+  const difficultyLevel = verseProgress?.difficultyLevel || 1;
 
   const scrambledWords = useMemo(() => {
     if (!verse) return [];
     const words = verse.text.split(' ');
-    return [...words].sort(() => Math.random() - 0.5);
-  }, [verse]);
+    let scrambledArray = [...words];
+    
+    const scrambleIterations = difficultyLevel;
+    for (let i = 0; i < scrambleIterations; i++) {
+      scrambledArray = scrambledArray.sort(() => Math.random() - 0.5);
+    }
+    
+    return scrambledArray;
+  }, [verse, difficultyLevel]);
 
   const [availableWords, setAvailableWords] = useState<string[]>(scrambledWords);
 

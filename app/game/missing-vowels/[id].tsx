@@ -45,10 +45,23 @@ export default function MissingVowelsGameScreen() {
       const vowelCount = vowels.length;
       
       let vowelsToRemove = vowelCount;
-      if (difficultyLevel === 1) {
-        vowelsToRemove = Math.ceil(vowelCount * 0.5);
-      } else if (difficultyLevel === 2) {
-        vowelsToRemove = Math.ceil(vowelCount * 0.7);
+      
+      switch (difficultyLevel) {
+        case 1:
+          vowelsToRemove = Math.ceil(vowelCount * 0.4);
+          break;
+        case 2:
+          vowelsToRemove = Math.ceil(vowelCount * 0.6);
+          break;
+        case 3:
+          vowelsToRemove = Math.ceil(vowelCount * 0.8);
+          break;
+        case 4:
+        case 5:
+          vowelsToRemove = vowelCount;
+          break;
+        default:
+          vowelsToRemove = Math.ceil(vowelCount * 0.5);
       }
 
       const vowelIndices = [];

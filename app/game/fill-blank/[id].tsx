@@ -31,11 +31,36 @@ export default function FillBlankGameScreen() {
   const verse = verses.find(v => v.id === id);
   const category = CATEGORIES.find(c => c.name === verse?.category);
 
+  const verseProgress = getVerseProgress(id || '');
+  const difficultyLevel = verseProgress?.difficultyLevel || 1;
+
   const gameData = useMemo(() => {
     if (!verse) return null;
 
     const words = verse.text.split(' ');
-    const blanksCount = Math.max(3, Math.floor(words.length * 0.3));
+    let blankPercentage = 0.3;
+    
+    switch (difficultyLevel) {
+      case 1:
+        blankPercentage = 0.25;
+        break;
+      case 2:
+        blankPercentage = 0.35;
+        break;
+      case 3:
+        blankPercentage = 0.5;
+        break;
+      case 4:
+        blankPercentage = 0.65;
+        break;
+      case 5:
+        blankPercentage = 0.8;
+        break;
+      default:
+        blankPercentage = 0.3;
+    }
+
+    const blanksCount = Math.max(2, Math.floor(words.length * blankPercentage));
     const blankIndices = new Set<number>();
 
     while (blankIndices.size < blanksCount) {
@@ -47,7 +72,7 @@ export default function FillBlankGameScreen() {
     const options = blanks.map(i => words[i]).sort(() => Math.random() - 0.5);
 
     return { words, blanks, options };
-  }, [verse]);
+  }, [verse, difficultyLevel]);
 
   if (!verse || !gameData) {
     return (

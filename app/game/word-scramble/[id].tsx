@@ -58,24 +58,34 @@ export default function WordScrambleGameScreen() {
       const words = phrase.split(' ');
       
       let scrambledWords: string[];
-      if (difficultyLevel === 1) {
-        scrambledWords = [...words];
-        if (words.length >= 4) {
-          const indices = Array.from({ length: words.length }, (_, i) => i);
-          const toScrambleCount = Math.ceil(words.length * 0.5);
-          const scrambleIndices = indices.sort(() => Math.random() - 0.5).slice(0, toScrambleCount);
-          
-          scrambleIndices.forEach(idx => {
-            scrambledWords[idx] = scrambleWord(words[idx]);
-          });
-        } else if (words.length >= 2) {
-          scrambledWords = words.map(w => scrambleWord(w));
-        }
-      } else if (difficultyLevel === 2 || difficultyLevel === 3) {
-        scrambledWords = words.map(w => scrambleWord(w));
-      } else {
-        scrambledWords = words.map(w => scrambleWord(w));
+      let scramblePercentage = 1.0;
+      
+      switch (difficultyLevel) {
+        case 1:
+          scramblePercentage = 0.4;
+          break;
+        case 2:
+          scramblePercentage = 0.6;
+          break;
+        case 3:
+          scramblePercentage = 0.8;
+          break;
+        case 4:
+        case 5:
+          scramblePercentage = 1.0;
+          break;
+        default:
+          scramblePercentage = 0.5;
       }
+      
+      scrambledWords = [...words];
+      const toScrambleCount = Math.ceil(words.length * scramblePercentage);
+      const indices = Array.from({ length: words.length }, (_, i) => i);
+      const scrambleIndices = indices.sort(() => Math.random() - 0.5).slice(0, toScrambleCount);
+      
+      scrambleIndices.forEach(idx => {
+        scrambledWords[idx] = scrambleWord(words[idx]);
+      });
 
       return { original: words, scrambled: scrambledWords };
     });
