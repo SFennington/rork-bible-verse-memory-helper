@@ -10,9 +10,15 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react-native';
+import { CheckCircle2, XCircle, ArrowRight, Home } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { CATEGORIES } from '@/mocks/verses';
+
+function isToday(dateString: string): boolean {
+  const date = new Date(dateString);
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+}
 
 export default function WordScrambleGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -162,10 +168,27 @@ export default function WordScrambleGameScreen() {
     );
 
     if (allCorrect) {
-      router.push(`/verse/${id}`);
+      const verseProgress = getVerseProgress(id || '');
+      const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
+      const games = verseProgress?.currentDayGames || [];
+      const completedGames = verseProgress?.gameSessions
+        .filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress?.difficultyLevel)
+        .map(s => s.gameType) || [];
+      
+      const nextGame = games.find(g => !completedGames.includes(g));
+      
+      if (nextGame && completedGames.length < requiredGames) {
+        router.push(`/game/${nextGame}/${id}`);
+      } else {
+        router.push(`/verse/${id}`);
+      }
     } else {
       router.replace(`/game/word-scramble/${id}`);
     }
+  };
+
+  const handleExit = () => {
+    router.push(`/verse/${id}`);
   };
 
   const totalWords = gameData.scrambledPhrases.reduce((sum, p) => sum + p.original.length, 0);
@@ -296,15 +319,28 @@ export default function WordScrambleGameScreen() {
           )}
 
           {showResult && (
-            <TouchableOpacity
-              style={styles.continueButton}
-              onPress={handleContinue}
-              activeOpacity={0.9}
-            >
-              <Text style={styles.continueButtonText}>
-                {allCorrect ? 'Continue' : 'Try Again'}
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.buttonGroup}>
+              {allCorrect && (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.exitButton]}
+                  onPress={handleExit}
+                  activeOpacity={0.9}
+                >
+                  <Home color="#6b7280" size={20} />
+                  <Text style={styles.exitButtonText}>Exit</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.actionButton, styles.continueButton, !allCorrect && styles.fullWidthButton]}
+                onPress={handleContinue}
+                activeOpacity={0.9}
+              >
+                <Text style={styles.continueButtonText}>
+                  {allCorrect ? 'Continue' : 'Try Again'}
+                </Text>
+                <ArrowRight color="#1f2937" size={20} />
+              </TouchableOpacity>
+            </View>
           )}
         </ScrollView>
       </LinearGradient>
@@ -479,20 +515,43 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#1f2937',
   },
-  continueButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  buttonGroup: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
     paddingVertical: 16,
     borderRadius: 16,
-    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
   },
+  continueButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+  },
+  exitButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.9)',
+  },
+  fullWidthButton: {
+    flex: 1,
+  },
   continueButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
     color: '#1f2937',
+  },
+  exitButtonText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#6b7280',
   },
 });
