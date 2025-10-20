@@ -1,0 +1,25 @@
+{
+  "cli": {
+    "version": ">=16.0.0"
+  },
+  "build": {
+    "production": {
+      "android": {
+        "buildType": "app-bundle",
+        "developmentClient": false,
+        "credentialsSource": "remote"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./google-play-service-account.json",
+        "track": "alpha",
+        "releaseStatus": "draft"
+      }
+    }
+  }
+}
+
+
