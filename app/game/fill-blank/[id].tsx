@@ -151,7 +151,7 @@ export default function FillBlankGameScreen() {
   };
 
   const handleExit = () => {
-    router.push(`/verse/${id}`);
+    router.push('/');
   };
 
   const isComplete = gameData.blanks.every((_, i) => selectedWords[i]);
@@ -173,7 +173,7 @@ export default function FillBlankGameScreen() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push(`/verse/${id}`)}
+              onPress={() => router.push('/')}
               style={{ marginLeft: 8 }}
             >
               <ArrowLeft color="#fff" size={24} />

@@ -171,7 +171,7 @@ export default function WordOrderGameScreen() {
   };
 
   const handleExit = () => {
-    router.push(`/verse/${id}`);
+    router.push('/');
   };
 
   const isComplete = orderedWords.length === correctWords.length;
@@ -191,7 +191,7 @@ export default function WordOrderGameScreen() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push(`/verse/${id}`)}
+              onPress={() => router.push('/')}
               style={{ marginLeft: 8 }}
             >
               <ArrowLeft color="#fff" size={24} />

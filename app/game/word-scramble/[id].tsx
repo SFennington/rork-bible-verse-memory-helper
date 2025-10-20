@@ -197,7 +197,7 @@ export default function WordScrambleGameScreen() {
   };
 
   const handleExit = () => {
-    router.push(`/verse/${id}`);
+    router.push('/');
   };
 
   const totalWords = gameData.scrambledPhrases.reduce((sum, p) => sum + p.original.length, 0);
@@ -226,7 +226,7 @@ export default function WordScrambleGameScreen() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push(`/verse/${id}`)}
+              onPress={() => router.push('/')}
               style={{ marginLeft: 8 }}
             >
               <ArrowLeft color="#fff" size={24} />

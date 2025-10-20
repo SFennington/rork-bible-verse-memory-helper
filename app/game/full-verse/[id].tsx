@@ -117,7 +117,7 @@ export default function FullVerseGameScreen() {
   };
 
   const handleExit = () => {
-    router.push(`/verse/${id}`);
+    router.push('/');
   };
 
   const accuracy = calculateAccuracy();
@@ -141,7 +141,7 @@ export default function FullVerseGameScreen() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push(`/verse/${id}`)}
+              onPress={() => router.push('/')}
               style={{ marginLeft: 8 }}
             >
               <ArrowLeft color="#fff" size={24} />

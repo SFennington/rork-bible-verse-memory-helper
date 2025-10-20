@@ -133,7 +133,7 @@ export default function FirstLetterGameScreen() {
   };
 
   const handleExit = () => {
-    router.push(`/verse/${id}`);
+    router.push('/');
   };
 
   return (
@@ -150,7 +150,7 @@ export default function FirstLetterGameScreen() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push(`/verse/${id}`)}
+              onPress={() => router.push('/')}
               style={{ marginLeft: 8 }}
             >
               <ArrowLeft color="#fff" size={24} />
