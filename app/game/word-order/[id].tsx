@@ -151,7 +151,7 @@ export default function WordOrderGameScreen() {
       
       const nextGame = games.find(g => !completedGames.includes(g));
       
-      if (nextGame && completedGames.length < requiredGames) {
+      if (nextGame) {
         router.push(`/game/${nextGame}/${id}`);
       } else {
         router.push(`/verse/${id}`);
