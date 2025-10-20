@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
+  TextInput,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -228,27 +229,25 @@ export default function WordScrambleGameScreen() {
                           <Text style={styles.scrambledWord}>{scrambledWord}</Text>
                         </View>
                         <Text style={styles.arrowText}>↓</Text>
-                        <TouchableOpacity
+                        <View
                           style={[
                             styles.inputBox,
                             userWord && styles.inputBoxFilled,
                             isWrong && styles.inputBoxWrong,
                             isCorrect && styles.inputBoxCorrect,
                           ]}
-                          onPress={() => {
-                            if (!showResult) {
-                              const newWord = prompt('Enter word:', userWord);
-                              if (newWord !== null) {
-                                handleWordInput(phraseIndex, wordIndex, newWord);
-                              }
-                            }
-                          }}
-                          disabled={showResult}
                         >
-                          <Text style={[styles.inputText, userWord && styles.inputTextFilled]}>
-                            {userWord || 'Tap to type'}
-                          </Text>
-                        </TouchableOpacity>
+                          <TextInput
+                            style={[styles.inputText, userWord && styles.inputTextFilled]}
+                            value={userWord}
+                            onChangeText={(text) => handleWordInput(phraseIndex, wordIndex, text)}
+                            placeholder="Tap to type"
+                            placeholderTextColor="#9ca3af"
+                            editable={!showResult}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                          />
+                        </View>
                       </View>
                     );
                   })}
@@ -396,7 +395,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     minWidth: 80,
-    alignItems: 'center',
+    justifyContent: 'center',
   },
   inputBoxFilled: {
     backgroundColor: '#e0e7ff',
@@ -415,6 +414,9 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#9ca3af',
     fontWeight: '500' as const,
+    textAlign: 'center',
+    padding: 0,
+    minWidth: 60,
   },
   inputTextFilled: {
     color: '#374151',
