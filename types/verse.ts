@@ -1,12 +1,12 @@
 export type VerseCategory = 'Comfort' | 'Strength' | 'Peace' | 'Love' | 'Faith' | 'Hope';
 
-export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse';
+export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse' | 'word-scramble' | 'missing-vowels';
 
 export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
   1: ['fill-blank', 'word-order', 'first-letter'],
-  2: ['fill-blank', 'word-order', 'first-letter'],
-  3: ['word-order', 'first-letter', 'fill-blank'],
-  4: ['first-letter', 'fill-blank', 'word-order'],
+  2: ['word-scramble', 'missing-vowels', 'fill-blank'],
+  3: ['word-order', 'first-letter', 'missing-vowels'],
+  4: ['first-letter', 'word-scramble', 'fill-blank'],
   5: ['full-verse'],
 };
 

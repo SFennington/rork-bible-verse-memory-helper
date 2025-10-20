@@ -1,0 +1,496 @@
+import React, { useState, useMemo } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+} from 'react-native';
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react-native';
+import { useVerses } from '@/contexts/VerseContext';
+import { CATEGORIES } from '@/mocks/verses';
+
+export default function WordScrambleGameScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const { verses, completeGameSession, getVerseProgress } = useVerses();
+  const [selectedWords, setSelectedWords] = useState<Record<number, string>>({});
+  const [showResult, setShowResult] = useState(false);
+  const [scaleAnim] = useState(new Animated.Value(1));
+  const [startTime] = useState(Date.now());
+
+  const verse = verses.find(v => v.id === id);
+  const category = CATEGORIES.find(c => c.name === verse?.category);
+  const verseProgress = getVerseProgress(id || '');
+  const difficultyLevel = verseProgress?.difficultyLevel || 1;
+
+  const gameData = useMemo(() => {
+    if (!verse) return null;
+
+    const phrases = verse.text.split(/([,.;:!?])/g).filter(p => p.trim());
+    const phrasesWithoutPunctuation: string[] = [];
+    const punctuationMap: Record<number, string> = {};
+
+    let phraseIndex = 0;
+    for (let i = 0; i < phrases.length; i++) {
+      const phrase = phrases[i].trim();
+      if (/[,.;:!?]/.test(phrase)) {
+        if (phraseIndex > 0) {
+          punctuationMap[phraseIndex - 1] = phrase;
+        }
+      } else if (phrase) {
+        phrasesWithoutPunctuation.push(phrase);
+        phraseIndex++;
+      }
+    }
+
+    const scrambledPhrases = phrasesWithoutPunctuation.map((phrase) => {
+      const words = phrase.split(' ');
+      
+      let scrambledWords: string[];
+      if (difficultyLevel === 1) {
+        scrambledWords = [...words];
+        if (words.length >= 4) {
+          const indices = Array.from({ length: words.length }, (_, i) => i);
+          const toScrambleCount = Math.ceil(words.length * 0.5);
+          const scrambleIndices = indices.sort(() => Math.random() - 0.5).slice(0, toScrambleCount);
+          
+          scrambleIndices.forEach(idx => {
+            scrambledWords[idx] = scrambleWord(words[idx]);
+          });
+        } else if (words.length >= 2) {
+          scrambledWords = words.map(w => scrambleWord(w));
+        }
+      } else if (difficultyLevel === 2 || difficultyLevel === 3) {
+        scrambledWords = words.map(w => scrambleWord(w));
+      } else {
+        const shuffled = [...words].sort(() => Math.random() - 0.5);
+        scrambledWords = shuffled.map(w => scrambleWord(w));
+      }
+
+      return { original: words, scrambled: scrambledWords };
+    });
+
+    return { phrases: phrasesWithoutPunctuation, scrambledPhrases, punctuationMap };
+  }, [verse, difficultyLevel]);
+
+  function scrambleWord(word: string): string {
+    if (word.length <= 2) return word;
+    
+    const arr = word.split('');
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    
+    const scrambled = arr.join('');
+    return scrambled === word ? scrambleWord(word) : scrambled;
+  }
+
+  if (!verse || !gameData) {
+    return (
+      <View style={styles.container}>
+        <Text>Verse not found</Text>
+      </View>
+    );
+  }
+
+  const handleWordInput = (phraseIndex: number, wordIndex: number, value: string) => {
+    const key = phraseIndex * 1000 + wordIndex;
+    setSelectedWords(prev => ({ ...prev, [key]: value }));
+
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.05,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handleCheck = () => {
+    setShowResult(true);
+    
+    let correctWordsCount = 0;
+    let totalWordsCount = 0;
+
+    gameData.scrambledPhrases.forEach((phrase, phraseIndex) => {
+      phrase.original.forEach((word, wordIndex) => {
+        totalWordsCount++;
+        const key = phraseIndex * 1000 + wordIndex;
+        const userWord = selectedWords[key] || '';
+        if (userWord.toLowerCase().trim() === word.toLowerCase().trim()) {
+          correctWordsCount++;
+        }
+      });
+    });
+
+    const accuracy = totalWordsCount > 0 ? Math.round((correctWordsCount / totalWordsCount) * 100) : 0;
+    const timeSpent = Math.round((Date.now() - startTime) / 1000);
+    const isCorrect = accuracy === 100;
+
+    if (isCorrect) {
+      completeGameSession(id || '', {
+        gameType: 'word-scramble',
+        completedAt: new Date().toISOString(),
+        accuracy,
+        timeSpent,
+        mistakeCount: totalWordsCount - correctWordsCount,
+        correctWords: correctWordsCount,
+        totalWords: totalWordsCount,
+        difficultyLevel,
+      });
+    }
+  };
+
+  const handleContinue = () => {
+    const allCorrect = gameData.scrambledPhrases.every((phrase, phraseIndex) =>
+      phrase.original.every((word, wordIndex) => {
+        const key = phraseIndex * 1000 + wordIndex;
+        const userWord = selectedWords[key] || '';
+        return userWord.toLowerCase().trim() === word.toLowerCase().trim();
+      })
+    );
+
+    if (allCorrect) {
+      router.push(`/verse/${id}`);
+    } else {
+      router.replace(`/game/word-scramble/${id}`);
+    }
+  };
+
+  const totalWords = gameData.scrambledPhrases.reduce((sum, p) => sum + p.original.length, 0);
+  const filledWords = Object.keys(selectedWords).filter(k => selectedWords[parseInt(k)]?.trim()).length;
+  const isComplete = filledWords === totalWords;
+
+  const allCorrect = showResult && gameData.scrambledPhrases.every((phrase, phraseIndex) =>
+    phrase.original.every((word, wordIndex) => {
+      const key = phraseIndex * 1000 + wordIndex;
+      const userWord = selectedWords[key] || '';
+      return userWord.toLowerCase().trim() === word.toLowerCase().trim();
+    })
+  );
+
+  return (
+    <View style={styles.container}>
+      <Stack.Screen
+        options={{
+          title: 'Word Scramble',
+          headerStyle: {
+            backgroundColor: category?.color || '#667eea',
+          },
+          headerTintColor: '#fff',
+          headerTitleStyle: {
+            fontWeight: '700' as const,
+          },
+        }}
+      />
+      <LinearGradient
+        colors={category?.gradient || ['#667eea', '#764ba2']}
+        style={styles.gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.instructionCard}>
+            <Text style={styles.instructionText}>
+              Unscramble the words in each phrase
+            </Text>
+          </View>
+
+          <View style={styles.verseCard}>
+            <Text style={styles.verseReference}>{verse.reference}</Text>
+            <View style={styles.phrasesContainer}>
+              {gameData.scrambledPhrases.map((phrase, phraseIndex) => (
+                <View key={phraseIndex} style={styles.phraseContainer}>
+                  {phrase.scrambled.map((scrambledWord, wordIndex) => {
+                    const key = phraseIndex * 1000 + wordIndex;
+                    const userWord = selectedWords[key] || '';
+                    const correctWord = phrase.original[wordIndex];
+                    const isWrong = showResult && userWord.toLowerCase().trim() !== correctWord.toLowerCase().trim();
+                    const isCorrect = showResult && userWord.toLowerCase().trim() === correctWord.toLowerCase().trim();
+
+                    return (
+                      <View key={wordIndex} style={styles.wordPairContainer}>
+                        <View style={styles.scrambledWordCard}>
+                          <Text style={styles.scrambledWord}>{scrambledWord}</Text>
+                        </View>
+                        <Text style={styles.arrowText}>↓</Text>
+                        <TouchableOpacity
+                          style={[
+                            styles.inputBox,
+                            userWord && styles.inputBoxFilled,
+                            isWrong && styles.inputBoxWrong,
+                            isCorrect && styles.inputBoxCorrect,
+                          ]}
+                          onPress={() => {
+                            if (!showResult) {
+                              const newWord = prompt('Enter word:', userWord);
+                              if (newWord !== null) {
+                                handleWordInput(phraseIndex, wordIndex, newWord);
+                              }
+                            }
+                          }}
+                          disabled={showResult}
+                        >
+                          <Text style={[styles.inputText, userWord && styles.inputTextFilled]}>
+                            {userWord || 'Tap to type'}
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  })}
+                  {gameData.punctuationMap[phraseIndex] && (
+                    <Text style={styles.punctuation}>{gameData.punctuationMap[phraseIndex]}</Text>
+                  )}
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {showResult && (
+            <View
+              style={[
+                styles.resultCard,
+                allCorrect ? styles.resultCardSuccess : styles.resultCardError,
+              ]}
+            >
+              <View style={styles.resultHeader}>
+                {allCorrect ? (
+                  <CheckCircle2 color="#4ade80" size={32} />
+                ) : (
+                  <XCircle color="#f87171" size={32} />
+                )}
+                <Text style={styles.resultTitle}>
+                  {allCorrect ? 'Perfect!' : 'Not quite right'}
+                </Text>
+              </View>
+              <Text style={styles.resultText}>
+                {allCorrect
+                  ? 'You unscrambled all the words!'
+                  : 'Try again to master this verse'}
+              </Text>
+            </View>
+          )}
+
+          {!showResult && isComplete && (
+            <TouchableOpacity
+              style={styles.checkButton}
+              onPress={handleCheck}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.checkButtonText}>Check Answer</Text>
+              <ArrowRight color="#fff" size={20} />
+            </TouchableOpacity>
+          )}
+
+          {showResult && (
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleContinue}
+              activeOpacity={0.9}
+            >
+              <Text style={styles.continueButtonText}>
+                {allCorrect ? 'Continue' : 'Try Again'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </ScrollView>
+      </LinearGradient>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  gradient: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 24,
+    paddingBottom: 40,
+  },
+  instructionCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  instructionText: {
+    fontSize: 15,
+    color: '#6b7280',
+    textAlign: 'center',
+    fontWeight: '500' as const,
+  },
+  verseCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  verseReference: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+    marginBottom: 16,
+  },
+  phrasesContainer: {
+    gap: 20,
+  },
+  phraseContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  wordPairContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  scrambledWordCard: {
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: '#fbbf24',
+  },
+  scrambledWord: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#92400e',
+  },
+  arrowText: {
+    fontSize: 18,
+    color: '#6b7280',
+    marginVertical: 4,
+  },
+  inputBox: {
+    backgroundColor: '#f3f4f6',
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    borderStyle: 'dashed' as const,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    minWidth: 80,
+    alignItems: 'center',
+  },
+  inputBoxFilled: {
+    backgroundColor: '#e0e7ff',
+    borderColor: '#818cf8',
+    borderStyle: 'solid' as const,
+  },
+  inputBoxCorrect: {
+    backgroundColor: '#d1fae5',
+    borderColor: '#4ade80',
+  },
+  inputBoxWrong: {
+    backgroundColor: '#fee2e2',
+    borderColor: '#f87171',
+  },
+  inputText: {
+    fontSize: 15,
+    color: '#9ca3af',
+    fontWeight: '500' as const,
+  },
+  inputTextFilled: {
+    color: '#374151',
+    fontWeight: '600' as const,
+  },
+  punctuation: {
+    fontSize: 18,
+    color: '#374151',
+    fontWeight: '600' as const,
+    marginLeft: -8,
+  },
+  resultCard: {
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  resultCardSuccess: {
+    backgroundColor: '#d1fae5',
+  },
+  resultCardError: {
+    backgroundColor: '#fee2e2',
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  resultTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  resultText: {
+    fontSize: 16,
+    color: '#374151',
+    lineHeight: 24,
+  },
+  checkButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  checkButtonText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  continueButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingVertical: 16,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  continueButtonText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+});

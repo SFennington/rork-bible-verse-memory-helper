@@ -32,6 +32,14 @@ const GAME_INFO: Record<GameType, { title: string; description: string }> = {
     title: 'Full Verse',
     description: 'Type the entire verse from memory',
   },
+  'word-scramble': {
+    title: 'Word Scramble',
+    description: 'Unscramble the words in each phrase',
+  },
+  'missing-vowels': {
+    title: 'Missing Vowels',
+    description: 'Fill in the missing vowels to complete words',
+  },
 };
 
 const DIFFICULTY_LABELS = [
