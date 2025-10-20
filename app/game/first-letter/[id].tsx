@@ -123,7 +123,7 @@ export default function FirstLetterGameScreen() {
       const nextGame = games.find(g => !completedGames.includes(g));
       
       if (nextGame) {
-        router.push(`/game/${nextGame}/${id}`);
+        router.replace(`/game/${nextGame}/${id}`);
       } else {
         router.push(`/verse/${id}`);
       }
