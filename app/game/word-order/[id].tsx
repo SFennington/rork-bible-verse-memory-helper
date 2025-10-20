@@ -11,6 +11,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Home, ArrowLeft } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 
 function isToday(dateString: string): boolean {
@@ -51,6 +52,7 @@ export default function WordOrderGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { verses, completeGameSession, getVerseProgress } = useVerses();
+  const { theme } = useTheme();
   const [orderedWords, setOrderedWords] = useState<string[]>([]);
   const [showResult, setShowResult] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
@@ -210,27 +212,27 @@ export default function WordOrderGameScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.instructionCard}>
-            <Text style={styles.instructionText}>
+          <View style={[styles.instructionCard, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
               Tap the words in the correct order to complete the verse
             </Text>
           </View>
 
-          <View style={styles.verseCard}>
+          <View style={[styles.verseCard, { backgroundColor: theme.cardBackground }]}>
             <View style={styles.verseHeader}>
-              <Text style={styles.verseReference}>{verse.reference}</Text>
+              <Text style={[styles.verseReference, { color: theme.text }]}>{verse.reference}</Text>
               <TouchableOpacity
-                style={styles.resetButton}
+                style={[styles.resetButton, { backgroundColor: theme.border }]}
                 onPress={handleReset}
                 activeOpacity={0.7}
               >
-                <RotateCcw color="#6b7280" size={20} />
+                <RotateCcw color={theme.textSecondary} size={20} />
               </TouchableOpacity>
             </View>
 
             <View style={styles.orderedWordsContainer}>
               {orderedWords.length === 0 ? (
-                <Text style={styles.placeholderText}>
+                <Text style={[styles.placeholderText, { color: theme.textTertiary }]}>
                   Tap words below to build the verse...
                 </Text>
               ) : (
@@ -243,6 +245,7 @@ export default function WordOrderGameScreen() {
                       <TouchableOpacity
                         style={[
                           styles.orderedWord,
+                          { backgroundColor: theme.cardBackground, borderColor: theme.border },
                           showResult && word !== correctWords[index] && styles.orderedWordWrong,
                           showResult && word === correctWords[index] && styles.orderedWordCorrect,
                         ]}
@@ -250,7 +253,7 @@ export default function WordOrderGameScreen() {
                         disabled={showResult}
                         activeOpacity={0.8}
                       >
-                        <Text style={styles.orderedWordText}>{word}</Text>
+                        <Text style={[styles.orderedWordText, { color: theme.text }]}>{word}</Text>
                       </TouchableOpacity>
                     </Animated.View>
                   ))}
@@ -265,12 +268,12 @@ export default function WordOrderGameScreen() {
               {availableWords.map((word, index) => (
                 <TouchableOpacity
                   key={`${word}-${index}`}
-                  style={styles.availableWord}
+                  style={[styles.availableWord, { backgroundColor: theme.cardBackground }]}
                   onPress={() => handleWordSelect(word, true, index)}
                   disabled={showResult}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.availableWordText}>{word}</Text>
+                  <Text style={[styles.availableWordText, { color: theme.text }]}>{word}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -303,11 +306,11 @@ export default function WordOrderGameScreen() {
 
           {!showResult && isComplete && (
             <TouchableOpacity
-              style={styles.checkButton}
+              style={[styles.checkButton, { backgroundColor: theme.cardBackground }]}
               onPress={handleCheck}
               activeOpacity={0.9}
             >
-              <Text style={styles.checkButtonText}>Check Answer</Text>
+              <Text style={[styles.checkButtonText, { color: theme.text }]}>Check Answer</Text>
               <ArrowRight color="#fff" size={20} />
             </TouchableOpacity>
           )}
@@ -316,23 +319,23 @@ export default function WordOrderGameScreen() {
             <View style={styles.buttonGroup}>
               {isCorrect && (
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.exitButton]}
+                  style={[styles.actionButton, styles.exitButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
                   onPress={handleExit}
                   activeOpacity={0.9}
                 >
-                  <Home color="#6b7280" size={20} />
-                  <Text style={styles.exitButtonText}>Exit</Text>
+                  <Home color={theme.textSecondary} size={20} />
+                  <Text style={[styles.exitButtonText, { color: theme.textSecondary }]}>Exit</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
-                style={[styles.actionButton, styles.continueButton, !isCorrect && styles.fullWidthButton]}
+                style={[styles.actionButton, styles.continueButton, { backgroundColor: theme.cardBackground }, !isCorrect && styles.fullWidthButton]}
                 onPress={handleContinue}
                 activeOpacity={0.9}
               >
-                <Text style={styles.continueButtonText}>
+                <Text style={[styles.continueButtonText, { color: theme.text }]}>
                   {isCorrect ? 'Continue' : 'Try Again'}
                 </Text>
-                <ArrowRight color="#1f2937" size={20} />
+                <ArrowRight color={theme.text} size={20} />
               </TouchableOpacity>
             </View>
           )}
@@ -357,19 +360,16 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   instructionCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
   },
   instructionText: {
     fontSize: 15,
-    color: '#6b7280',
     textAlign: 'center',
     fontWeight: '500' as const,
   },
   verseCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 24,
     marginBottom: 24,
@@ -389,19 +389,16 @@ const styles = StyleSheet.create({
   verseReference: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#1f2937',
   },
   resetButton: {
     padding: 8,
     borderRadius: 8,
-    backgroundColor: '#f3f4f6',
   },
   orderedWordsContainer: {
     minHeight: 120,
   },
   placeholderText: {
     fontSize: 15,
-    color: '#9ca3af',
     textAlign: 'center',
     marginTop: 40,
     fontStyle: 'italic' as const,
@@ -412,12 +409,10 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   orderedWord: {
-    backgroundColor: '#e0e7ff',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#818cf8',
   },
   orderedWordCorrect: {
     backgroundColor: '#d1fae5',
@@ -430,7 +425,6 @@ const styles = StyleSheet.create({
   orderedWordText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#374151',
   },
   availableSection: {
     marginBottom: 24,
@@ -447,7 +441,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   availableWord: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -460,7 +453,6 @@ const styles = StyleSheet.create({
   availableWordText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1f2937',
   },
   resultCard: {
     borderRadius: 16,
@@ -495,7 +487,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   checkButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -511,7 +502,6 @@ const styles = StyleSheet.create({
   checkButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1f2937',
   },
   buttonGroup: {
     flexDirection: 'row',
@@ -532,12 +522,9 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   continueButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   exitButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
   },
   fullWidthButton: {
     flex: 1,
@@ -545,11 +532,9 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1f2937',
   },
   exitButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#6b7280',
   },
 });

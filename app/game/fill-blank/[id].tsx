@@ -11,6 +11,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, XCircle, ArrowRight, Home, ArrowLeft } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 
 function isToday(dateString: string): boolean {
@@ -23,6 +24,7 @@ export default function FillBlankGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { verses, completeGameSession, getVerseProgress } = useVerses();
+  const { theme } = useTheme();
   const [selectedWords, setSelectedWords] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
@@ -192,14 +194,14 @@ export default function FillBlankGameScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.instructionCard}>
-            <Text style={styles.instructionText}>
+          <View style={[styles.instructionCard, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
               Tap the words below to fill in the blanks
             </Text>
           </View>
 
-          <View style={styles.verseCard}>
-            <Text style={styles.verseReference}>{verse.reference}</Text>
+          <View style={[styles.verseCard, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.verseReference, { color: theme.text }]}>{verse.reference}</Text>
             <View style={styles.verseTextContainer}>
               {gameData.words.map((word, index) => {
                 const blankPosition = gameData.blanks.indexOf(index);
@@ -221,7 +223,9 @@ export default function FillBlankGameScreen() {
                       <View
                         style={[
                           styles.blank,
+                          { backgroundColor: theme.border, borderColor: theme.border },
                           selectedWord && styles.blankFilled,
+                          selectedWord && { backgroundColor: '#e0e7ff', borderColor: '#818cf8' },
                           isWrong && styles.blankWrong,
                           showResult && selectedWord === correctWord && styles.blankCorrect,
                         ]}
@@ -229,7 +233,9 @@ export default function FillBlankGameScreen() {
                         <Text
                           style={[
                             styles.blankText,
+                            { color: theme.textTertiary },
                             selectedWord && styles.blankTextFilled,
+                            selectedWord && { color: theme.text },
                           ]}
                         >
                           {selectedWord || '____'}
@@ -240,7 +246,7 @@ export default function FillBlankGameScreen() {
                 }
 
                 return (
-                  <Text key={index} style={styles.wordText}>
+                  <Text key={index} style={[styles.wordText, { color: theme.text }]}>
                     {word}{' '}
                   </Text>
                 );
@@ -261,6 +267,7 @@ export default function FillBlankGameScreen() {
                     key={index}
                     style={[
                       styles.optionButton,
+                      { backgroundColor: theme.cardBackground },
                       isUsed && styles.optionButtonUsed,
                     ]}
                     onPress={() => {
@@ -279,6 +286,7 @@ export default function FillBlankGameScreen() {
                     <Text
                       style={[
                         styles.optionText,
+                        { color: theme.text },
                         isUsed && styles.optionTextUsed,
                       ]}
                     >
@@ -317,11 +325,11 @@ export default function FillBlankGameScreen() {
 
           {!showResult && isComplete && (
             <TouchableOpacity
-              style={styles.checkButton}
+              style={[styles.checkButton, { backgroundColor: theme.cardBackground }]}
               onPress={handleCheck}
               activeOpacity={0.9}
             >
-              <Text style={styles.checkButtonText}>Check Answer</Text>
+              <Text style={[styles.checkButtonText, { color: theme.text }]}>Check Answer</Text>
               <ArrowRight color="#fff" size={20} />
             </TouchableOpacity>
           )}
@@ -330,23 +338,23 @@ export default function FillBlankGameScreen() {
             <View style={styles.buttonGroup}>
               {isCorrect && (
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.exitButton]}
+                  style={[styles.actionButton, styles.exitButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
                   onPress={handleExit}
                   activeOpacity={0.9}
                 >
-                  <Home color="#6b7280" size={20} />
-                  <Text style={styles.exitButtonText}>Exit</Text>
+                  <Home color={theme.textSecondary} size={20} />
+                  <Text style={[styles.exitButtonText, { color: theme.textSecondary }]}>Exit</Text>
                 </TouchableOpacity>
               )}
               <TouchableOpacity
-                style={[styles.actionButton, styles.continueButton, !isCorrect && styles.fullWidthButton]}
+                style={[styles.actionButton, styles.continueButton, { backgroundColor: theme.cardBackground }, !isCorrect && styles.fullWidthButton]}
                 onPress={handleContinue}
                 activeOpacity={0.9}
               >
-                <Text style={styles.continueButtonText}>
+                <Text style={[styles.continueButtonText, { color: theme.text }]}>
                   {isCorrect ? 'Continue' : 'Try Again'}
                 </Text>
-                <ArrowRight color="#1f2937" size={20} />
+                <ArrowRight color={theme.text} size={20} />
               </TouchableOpacity>
             </View>
           )}
@@ -371,19 +379,16 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   instructionCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
   },
   instructionText: {
     fontSize: 15,
-    color: '#6b7280',
     textAlign: 'center',
     fontWeight: '500' as const,
   },
   verseCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 20,
     padding: 24,
     marginBottom: 24,
@@ -396,7 +401,6 @@ const styles = StyleSheet.create({
   verseReference: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#1f2937',
     marginBottom: 16,
   },
   verseTextContainer: {
@@ -407,16 +411,13 @@ const styles = StyleSheet.create({
   wordText: {
     fontSize: 17,
     lineHeight: 32,
-    color: '#374151',
   },
   blankContainer: {
     marginRight: 4,
     marginBottom: 4,
   },
   blank: {
-    backgroundColor: '#f3f4f6',
     borderWidth: 2,
-    borderColor: '#d1d5db',
     borderStyle: 'dashed' as const,
     borderRadius: 8,
     paddingHorizontal: 12,
@@ -425,8 +426,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   blankFilled: {
-    backgroundColor: '#e0e7ff',
-    borderColor: '#818cf8',
     borderStyle: 'solid' as const,
   },
   blankCorrect: {
@@ -439,11 +438,9 @@ const styles = StyleSheet.create({
   },
   blankText: {
     fontSize: 16,
-    color: '#9ca3af',
     fontWeight: '500' as const,
   },
   blankTextFilled: {
-    color: '#374151',
     fontWeight: '600' as const,
   },
   optionsSection: {
@@ -461,7 +458,6 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 12,
@@ -472,16 +468,14 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   optionButtonUsed: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     opacity: 0.5,
   },
   optionText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1f2937',
   },
   optionTextUsed: {
-    color: '#9ca3af',
+    opacity: 0.6,
   },
   resultCard: {
     borderRadius: 16,
@@ -516,7 +510,6 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   checkButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -532,7 +525,6 @@ const styles = StyleSheet.create({
   checkButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1f2937',
   },
   buttonGroup: {
     flexDirection: 'row',
@@ -553,12 +545,9 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   continueButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
   },
   exitButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.9)',
   },
   fullWidthButton: {
     flex: 1,
@@ -566,11 +555,9 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#1f2937',
   },
   exitButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#6b7280',
   },
 });
