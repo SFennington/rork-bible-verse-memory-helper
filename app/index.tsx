@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   categoryTextActive: {
-    color: '#667eea',
+    color: '#fff',
   },
   scrollView: {
     flex: 1,
