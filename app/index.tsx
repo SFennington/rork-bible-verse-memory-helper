@@ -126,8 +126,8 @@ export default function HomeScreen() {
               ]}>
                 My Progress
               </Text>
-              {dueVersesCount > 0 && (
-                <View style={styles.dueBadge}>
+              {(versesInProgress.length > 0 || archivedVerses.length > 0) && (
+                <View style={[styles.dueBadge, dueVersesCount === 0 && styles.dueBadgeComplete]}>
                   <Text style={styles.dueBadgeText}>{dueVersesCount}</Text>
                 </View>
               )}
@@ -461,6 +461,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     minWidth: 20,
     alignItems: 'center',
+  },
+  dueBadgeComplete: {
+    backgroundColor: '#10b981',
   },
   dueBadgeText: {
     fontSize: 11,
