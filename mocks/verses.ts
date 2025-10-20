@@ -91,6 +91,96 @@ export const BIBLE_VERSES: BibleVerse[] = [
     text: 'Be still and know that I am God',
     category: 'Peace',
   },
+  {
+    id: '16',
+    reference: 'Romans 8:38-39',
+    text: 'For I am convinced that neither death nor life neither angels nor demons neither the present nor the future nor any powers neither height nor depth nor anything else in all creation will be able to separate us from the love of God that is in Christ Jesus our Lord',
+    category: 'Promises',
+  },
+  {
+    id: '17',
+    reference: 'Deuteronomy 31:6',
+    text: 'Be strong and courageous do not be afraid or terrified because of them for the Lord your God goes with you he will never leave you nor forsake you',
+    category: 'Promises',
+  },
+  {
+    id: '18',
+    reference: 'Joshua 1:9',
+    text: 'Have I not commanded you be strong and courageous do not be afraid do not be discouraged for the Lord your God will be with you wherever you go',
+    category: 'Promises',
+  },
+  {
+    id: '19',
+    reference: 'Isaiah 43:2',
+    text: 'When you pass through the waters I will be with you and when you pass through the rivers they will not sweep over you when you walk through the fire you will not be burned the flames will not set you ablaze',
+    category: 'Promises',
+  },
+  {
+    id: '20',
+    reference: 'Matthew 28:20',
+    text: 'And surely I am with you always to the very end of the age',
+    category: 'Promises',
+  },
+  {
+    id: '21',
+    reference: 'John 14:27',
+    text: 'Peace I leave with you my peace I give you I do not give to you as the world gives do not let your hearts be troubled and do not be afraid',
+    category: 'Promises',
+  },
+  {
+    id: '22',
+    reference: '1 Corinthians 10:13',
+    text: 'No temptation has overtaken you except what is common to mankind and God is faithful he will not let you be tempted beyond what you can bear but when you are tempted he will also provide a way out so that you can endure it',
+    category: 'Promises',
+  },
+  {
+    id: '23',
+    reference: '2 Corinthians 12:9',
+    text: 'But he said to me my grace is sufficient for you for my power is made perfect in weakness therefore I will boast all the more gladly about my weaknesses so that Christ power may rest on me',
+    category: 'Promises',
+  },
+  {
+    id: '24',
+    reference: 'Philippians 4:19',
+    text: 'And my God will meet all your needs according to the riches of his glory in Christ Jesus',
+    category: 'Promises',
+  },
+  {
+    id: '25',
+    reference: 'Hebrews 13:5',
+    text: 'Keep your lives free from the love of money and be content with what you have because God has said never will I leave you never will I forsake you',
+    category: 'Promises',
+  },
+  {
+    id: '26',
+    reference: 'James 1:12',
+    text: 'Blessed is the one who perseveres under trial because having stood the test that person will receive the crown of life that the Lord has promised to those who love him',
+    category: 'Promises',
+  },
+  {
+    id: '27',
+    reference: '1 Peter 5:7',
+    text: 'Cast all your anxiety on him because he cares for you',
+    category: 'Promises',
+  },
+  {
+    id: '28',
+    reference: '1 John 1:9',
+    text: 'If we confess our sins he is faithful and just and will forgive us our sins and purify us from all unrighteousness',
+    category: 'Promises',
+  },
+  {
+    id: '29',
+    reference: 'Revelation 21:4',
+    text: 'He will wipe every tear from their eyes there will be no more death or mourning or crying or pain for the old order of things has passed away',
+    category: 'Promises',
+  },
+  {
+    id: '30',
+    reference: 'Psalm 34:18',
+    text: 'The Lord is close to the brokenhearted and saves those who are crushed in spirit',
+    category: 'Promises',
+  },
 ];
 
 export const CATEGORIES: { name: string; color: string; gradient: [string, string] }[] = [
@@ -100,4 +190,5 @@ export const CATEGORIES: { name: string; color: string; gradient: [string, strin
   { name: 'Love', color: '#E85D75', gradient: ['#E85D75', '#F27D93'] },
   { name: 'Faith', color: '#6BBF73', gradient: ['#6BBF73', '#88D18F'] },
   { name: 'Hope', color: '#F4A261', gradient: ['#F4A261', '#F7B77F'] },
+  { name: 'Promises', color: '#9333EA', gradient: ['#9333EA', '#A855F7'] },
 ];

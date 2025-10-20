@@ -96,7 +96,8 @@ export default function VerseDetailScreen() {
   const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
   const isDue = verseProgress ? verseProgress.completedGamesToday < requiredGames : false;
   const isDayComplete = verseProgress ? areAllGamesCompleted() : false;
-  const isMastered = verseProgress ? verseProgress.difficultyLevel === 5 && isDayComplete : false;
+  const isMastered = verseProgress ? verseProgress.difficultyLevel === 5 && verseProgress.overallProgress === 100 : false;
+  const canAdvanceToNextLevel = verseProgress ? isDayComplete && verseProgress.completedGamesToday >= requiredGames : false;
 
   const handleAdvanceLevel = () => {
     if (id) {
@@ -205,7 +206,7 @@ export default function VerseDetailScreen() {
                       <Text style={styles.dayCompleteText}>
                         Great job! You&apos;ve completed all games for today.
                       </Text>
-                      {verseProgress.difficultyLevel < 5 && (
+                      {canAdvanceToNextLevel && verseProgress.difficultyLevel < 5 && (
                         <TouchableOpacity
                           style={styles.advanceButton}
                           onPress={() => setShowDayCompleteModal(true)}
