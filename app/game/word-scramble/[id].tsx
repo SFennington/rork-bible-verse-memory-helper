@@ -74,8 +74,7 @@ export default function WordScrambleGameScreen() {
       } else if (difficultyLevel === 2 || difficultyLevel === 3) {
         scrambledWords = words.map(w => scrambleWord(w));
       } else {
-        const shuffled = [...words].sort(() => Math.random() - 0.5);
-        scrambledWords = shuffled.map(w => scrambleWord(w));
+        scrambledWords = words.map(w => scrambleWord(w));
       }
 
       return { original: words, scrambled: scrambledWords };
