@@ -287,10 +287,10 @@ export default function VerseDetailScreen() {
                   </View>
                 ) : isDayComplete ? (
                   <View style={styles.dayCompleteSection}>
-                    <View style={styles.dayCompleteCard}>
+                    <View style={[styles.dayCompleteCard, { backgroundColor: theme.cardBackground }]}>
                       <Trophy color="#f59e0b" size={48} />
-                      <Text style={styles.dayCompleteTitle}>Level {verseProgress.difficultyLevel} Complete!</Text>
-                      <Text style={styles.dayCompleteText}>
+                      <Text style={[styles.dayCompleteTitle, { color: theme.text }]}>Level {verseProgress.difficultyLevel} Complete!</Text>
+                      <Text style={[styles.dayCompleteText, { color: theme.textSecondary }]}>
                         Great job! You&apos;ve completed all games for today.
                       </Text>
                       {canAdvanceToNextLevel && verseProgress.difficultyLevel < 5 && (
@@ -304,7 +304,7 @@ export default function VerseDetailScreen() {
                         </TouchableOpacity>
                       )}
                       {isMastered && (
-                        <Text style={styles.masteredText}>You&apos;ve mastered this verse! 🎉</Text>
+                        <Text style={[styles.masteredText, { color: '#10b981' }]}>You&apos;ve mastered this verse! 🎉</Text>
                       )}
                     </View>
                   </View>
