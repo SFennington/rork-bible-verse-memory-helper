@@ -12,6 +12,7 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { CheckCircle2, XCircle, ArrowRight, Home, ArrowLeft } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 
 function isToday(dateString: string): boolean {
@@ -24,6 +25,7 @@ export default function WordScrambleGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { verses, completeGameSession, getVerseProgress } = useVerses();
+  const { theme } = useTheme();
   const [selectedWords, setSelectedWords] = useState<Record<number, string>>({});
   const [showResult, setShowResult] = useState(false);
   const [scaleAnim] = useState(new Animated.Value(1));
@@ -303,7 +305,7 @@ export default function WordScrambleGameScreen() {
             <View
               style={[
                 styles.resultCard,
-                allCorrect ? styles.resultCardSuccess : styles.resultCardError,
+                { backgroundColor: allCorrect ? theme.resultSuccess : theme.resultError },
               ]}
             >
               <View style={styles.resultHeader}>
@@ -312,11 +314,11 @@ export default function WordScrambleGameScreen() {
                 ) : (
                   <XCircle color="#f87171" size={32} />
                 )}
-                <Text style={styles.resultTitle}>
+                <Text style={[styles.resultTitle, { color: allCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
                   {allCorrect ? 'Perfect!' : 'Not quite right'}
                 </Text>
               </View>
-              <Text style={styles.resultText}>
+              <Text style={[styles.resultText, { color: allCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
                 {allCorrect
                   ? 'You unscrambled all the words!'
                   : 'Try again to master this verse'}
@@ -495,12 +497,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  resultCardSuccess: {
-    backgroundColor: '#d1fae5',
-  },
-  resultCardError: {
-    backgroundColor: '#fee2e2',
-  },
   resultHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -510,11 +506,9 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: '#1f2937',
   },
   resultText: {
     fontSize: 16,
-    color: '#374151',
     lineHeight: 24,
   },
   checkButton: {

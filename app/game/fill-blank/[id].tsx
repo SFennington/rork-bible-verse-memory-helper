@@ -302,7 +302,7 @@ export default function FillBlankGameScreen() {
             <View
               style={[
                 styles.resultCard,
-                isCorrect ? styles.resultCardSuccess : styles.resultCardError,
+                { backgroundColor: isCorrect ? theme.resultSuccess : theme.resultError },
               ]}
             >
               <View style={styles.resultHeader}>
@@ -311,11 +311,11 @@ export default function FillBlankGameScreen() {
                 ) : (
                   <XCircle color="#f87171" size={32} />
                 )}
-                <Text style={styles.resultTitle}>
+                <Text style={[styles.resultTitle, { color: isCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
                   {isCorrect ? 'Perfect!' : 'Not quite right'}
                 </Text>
               </View>
-              <Text style={styles.resultText}>
+              <Text style={[styles.resultText, { color: isCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
                 {isCorrect
                   ? 'You completed this memory game!'
                   : 'Try again to master this verse'}
@@ -487,12 +487,6 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  resultCardSuccess: {
-    backgroundColor: '#d1fae5',
-  },
-  resultCardError: {
-    backgroundColor: '#fee2e2',
-  },
   resultHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -502,11 +496,9 @@ const styles = StyleSheet.create({
   resultTitle: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: '#1f2937',
   },
   resultText: {
     fontSize: 16,
-    color: '#374151',
     lineHeight: 24,
   },
   checkButton: {
