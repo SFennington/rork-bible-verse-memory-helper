@@ -123,14 +123,6 @@ export default function VerseDetailScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.verseCard, { backgroundColor: theme.cardBackground }]}>
-            <Text style={[styles.verseReference, { color: theme.text }]}>{verse.reference}</Text>
-            <Text style={[styles.verseText, { color: theme.textSecondary }]}>{verse.text}</Text>
-            <View style={[styles.categoryBadge, { backgroundColor: theme.border }]}>
-              <Text style={[styles.categoryBadgeText, { color: theme.textSecondary }]}>{verse.category}</Text>
-            </View>
-          </View>
-
           {!verseProgress ? (
             <View style={styles.addToProgressSection}>
               <View style={styles.addToProgressCard}>
