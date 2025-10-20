@@ -9,7 +9,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Book, Target, Settings, Plus, Play, PlusCircle, Crown } from 'lucide-react-native';
+import { Book, Target, Settings, Plus, Play, PlusCircle, Crown, Archive } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -21,10 +21,11 @@ type TabType = 'browse' | 'progress';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { verses, progress, versesInProgress, dueVersesCount, addToProgress } = useVerses();
+  const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses } = useVerses();
   const { theme } = useTheme();
   const [selectedTab, setSelectedTab] = useState<TabType>('progress');
   const [selectedCategory, setSelectedCategory] = useState<VerseCategory | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const insets = useSafeAreaInsets();
 
   const filteredVerses = selectedCategory
@@ -160,7 +161,7 @@ export default function HomeScreen() {
         >
           {selectedTab === 'progress' && (
             <>
-              {versesInProgress.length === 0 ? (
+              {versesInProgress.length === 0 && archivedVerses.length === 0 && !showArchived ? (
                 <View style={styles.emptyState}>
                   <Target color="rgba(255, 255, 255, 0.5)" size={64} />
                   <Text style={styles.emptyTitle}>Start Your Journey</Text>
@@ -176,7 +177,8 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                 </View>
               ) : (
-                versesInProgress.map(({ verse, progress: verseProgress }) => {
+                <>
+                  {versesInProgress.length > 0 && versesInProgress.map(({ verse, progress: verseProgress }) => {
                   const category = CATEGORIES.find(c => c.name === verse.category);
                   const requiredGames = verseProgress.difficultyLevel === 5 ? 1 : 3;
                   const isDue = verseProgress.completedGamesToday < requiredGames;
@@ -221,7 +223,65 @@ export default function HomeScreen() {
                       </LinearGradient>
                     </TouchableOpacity>
                   );
-                })
+                })}
+
+                  {archivedVerses.length > 0 && (
+                    <TouchableOpacity
+                      style={styles.archivedToggle}
+                      onPress={() => setShowArchived(!showArchived)}
+                      activeOpacity={0.7}
+                    >
+                      <Archive color="#fff" size={20} />
+                      <Text style={styles.archivedToggleText}>
+                        {showArchived ? 'Hide' : 'Show'} Archived ({archivedVerses.length})
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {showArchived && archivedVerses.map(({ verse, progress: verseProgress }) => {
+                    const category = CATEGORIES.find(c => c.name === verse.category);
+
+                    return (
+                      <TouchableOpacity
+                        key={verse.id}
+                        style={[styles.verseCard, styles.archivedCard]}
+                        onPress={() => router.push(`/verse/${verse.id}`)}
+                        activeOpacity={0.9}
+                      >
+                        <LinearGradient
+                          colors={category?.gradient || ['#667eea', '#764ba2']}
+                          style={[styles.verseGradient, styles.archivedGradient]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <View style={styles.archivedBadge}>
+                            <Archive color="#fff" size={14} />
+                            <Text style={styles.archivedBadgeText}>Archived</Text>
+                          </View>
+                          <View style={styles.verseHeader}>
+                            <Text style={styles.verseReference}>{verse.reference}</Text>
+                          </View>
+                          <Text style={styles.verseText} numberOfLines={3}>
+                            {verse.text}
+                          </Text>
+                          {verseProgress.overallProgress === 100 ? (
+                            <View style={styles.masteredContainer}>
+                              <Crown color="#10b981" size={24} fill="#10b981" />
+                              <Text style={styles.masteredText}>Mastered</Text>
+                            </View>
+                          ) : (
+                            <View style={styles.verseFooter}>
+                              <View style={styles.progressBarContainer}>
+                                <View style={[styles.progressBar, { width: `${verseProgress.overallProgress}%` }]} />
+                              </View>
+                              <Text style={styles.progressText}>{verseProgress.overallProgress}%</Text>
+                            </View>
+                          )}
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </>
               )}
             </>
           )}
@@ -561,5 +621,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#10b981',
+  },
+  archivedToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginTop: 12,
+  },
+  archivedToggleText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  archivedCard: {
+    opacity: 0.8,
+  },
+  archivedGradient: {
+    position: 'relative',
+  },
+  archivedBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  archivedBadgeText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#fff',
   },
 });
