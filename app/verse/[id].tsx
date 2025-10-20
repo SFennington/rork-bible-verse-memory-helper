@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive } from 'lucide-react-native';
+import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive, Crown } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -199,19 +199,28 @@ export default function VerseDetailScreen() {
                 <View style={styles.progressHeader}>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.progressTitle, { color: theme.text }]}>Your Progress</Text>
-                    <Text style={[styles.masteryLabel, { color: theme.textSecondary }]}>
-                      {DIFFICULTY_LABELS[verseProgress.difficultyLevel]}
-                    </Text>
-                    <View style={styles.progressBarSection}>
-                      <View style={styles.progressBarBg}>
-                        <View style={[styles.progressBarFill, { width: `${verseProgress.overallProgress}%` }]} />
+                    {verseProgress.overallProgress === 100 ? (
+                      <View style={styles.masteredSection}>
+                        <Crown color="#10b981" size={48} fill="#10b981" />
+                        <Text style={styles.masteredMainText}>Mastered</Text>
                       </View>
-                      <Text style={[styles.progressPercentText, { color: theme.text }]}>
-                        {verseProgress.overallProgress}% Memorized
-                      </Text>
-                    </View>
+                    ) : (
+                      <>
+                        <Text style={[styles.masteryLabel, { color: theme.textSecondary }]}>
+                          {DIFFICULTY_LABELS[verseProgress.difficultyLevel]}
+                        </Text>
+                        <View style={styles.progressBarSection}>
+                          <View style={styles.progressBarBg}>
+                            <View style={[styles.progressBarFill, { width: `${verseProgress.overallProgress}%` }]} />
+                          </View>
+                          <Text style={[styles.progressPercentText, { color: theme.text }]}>
+                            {verseProgress.overallProgress}% Memorized
+                          </Text>
+                        </View>
+                      </>
+                    )}
                   </View>
-                  {isDue && (
+                  {isDue && verseProgress.overallProgress < 100 && (
                     <View style={styles.dueIndicator}>
                       <Play color="#fff" size={16} fill="#fff" />
                     </View>
@@ -804,6 +813,17 @@ const styles = StyleSheet.create({
     color: '#10b981',
     textAlign: 'center',
     marginTop: 8,
+  },
+  masteredSection: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 12,
+  },
+  masteredMainText: {
+    fontSize: 28,
+    fontWeight: '700' as const,
+    color: '#10b981',
   },
   warningCard: {
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
