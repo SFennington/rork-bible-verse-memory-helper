@@ -86,10 +86,17 @@ export default function VerseDetailScreen() {
     return todaysSessions.some(s => s.gameType === gameType);
   };
 
+  const areAllGamesCompleted = () => {
+    if (!verseProgress) return false;
+    const currentGames = verseProgress.currentDayGames;
+    return currentGames.every(gameType => isGameCompleted(gameType));
+  };
+
   const currentPathGames = verseProgress?.currentDayGames || [];
   const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
   const isDue = verseProgress ? verseProgress.completedGamesToday < requiredGames : false;
-  const isDayComplete = verseProgress ? verseProgress.completedGamesToday >= requiredGames : false;
+  const isDayComplete = verseProgress ? areAllGamesCompleted() : false;
+  const isMastered = verseProgress ? verseProgress.difficultyLevel === 5 && isDayComplete : false;
 
   const handleAdvanceLevel = () => {
     if (id) {
@@ -208,14 +215,14 @@ export default function VerseDetailScreen() {
                           <ArrowRight color="#fff" size={20} />
                         </TouchableOpacity>
                       )}
-                      {verseProgress.difficultyLevel === 5 && (
+                      {isMastered && (
                         <Text style={styles.masteredText}>You&apos;ve mastered this verse! 🎉</Text>
                       )}
                     </View>
                   </View>
                 ) : (
                   <Text style={styles.gamesSubtitle}>
-                    Complete {requiredGames - verseProgress.completedGamesToday} more {requiredGames - verseProgress.completedGamesToday === 1 ? 'game' : 'games'} to finish Level {verseProgress.difficultyLevel}
+                    Complete all {requiredGames} {requiredGames === 1 ? 'game' : 'games'} to finish Level {verseProgress.difficultyLevel}
                   </Text>
                 )}
 

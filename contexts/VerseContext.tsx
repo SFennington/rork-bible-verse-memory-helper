@@ -117,6 +117,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     const now = new Date();
     const updatedSessions = [...verseProgress.gameSessions, session];
     
+    const sessionsForCurrentLevel = updatedSessions.filter(s => s.difficultyLevel === verseProgress.difficultyLevel);
     const todaysSessions = updatedSessions.filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress.difficultyLevel);
     const completedGamesToday = todaysSessions.length;
     
@@ -129,17 +130,22 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       1,
     ];
     
-    const totalRequiredGames = requiredGamesPerLevel.reduce((sum, count) => sum + count, 0);
     const verse = [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
     const totalWordsInVerse = verse ? verse.text.split(' ').length : 0;
     
-    const totalCorrectWordsAccumulated = updatedSessions.reduce((sum, s) => {
-      return sum + (s.correctWords || 0);
-    }, 0);
+    const totalCompletedLevels = Math.max(0, verseProgress.difficultyLevel - 1);
+    const currentLevelSessions = sessionsForCurrentLevel.length;
+    const currentLevelRequired = requiredGamesPerLevel[verseProgress.difficultyLevel];
     
+    const completedLevelsWords = totalCompletedLevels * 3 * totalWordsInVerse;
+    const currentLevelCorrectWords = sessionsForCurrentLevel.reduce((sum, s) => sum + (s.correctWords || 0), 0);
+    
+    const totalCorrectWords = completedLevelsWords + currentLevelCorrectWords;
+    const totalRequiredGames = requiredGamesPerLevel.reduce((sum, count) => sum + count, 0);
     const totalPossibleWords = totalRequiredGames * totalWordsInVerse;
+    
     const overallProgress = totalPossibleWords > 0 
-      ? Math.min(100, Math.round((totalCorrectWordsAccumulated / totalPossibleWords) * 100))
+      ? Math.min(100, Math.round((totalCorrectWords / totalPossibleWords) * 100))
       : 0;
 
     const requiredGames = requiredGamesPerLevel[verseProgress.difficultyLevel];
@@ -154,10 +160,6 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     if (allGamesCompletedToday && !wasCompletedBefore) {
       newStreakDays = verseProgress.streakDays + 1;
       newReviewCount = verseProgress.reviewCount + 1;
-      
-      if (avgAccuracyToday >= 85 && verseProgress.difficultyLevel < 5) {
-        newDifficultyLevel = (verseProgress.difficultyLevel + 1) as DifficultyLevel;
-      }
     }
 
     const lastReviewedAt = now.toISOString();
@@ -174,13 +176,13 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         completedGamesToday,
         streakDays: newStreakDays,
         overallProgress,
-        totalCorrectWords: totalCorrectWordsAccumulated,
+        totalCorrectWords,
         totalWords: totalPossibleWords,
       },
     };
 
     saveProgress(updatedProgress);
-  }, [progress]);
+  }, [progress, customVerses, chapters]);
 
   const advanceToNextLevel = useCallback((verseId: string) => {
     const verseProgress = progress[verseId];
