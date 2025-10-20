@@ -117,7 +117,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     const now = new Date();
     const updatedSessions = [...verseProgress.gameSessions, session];
     
-    const todaysSessions = updatedSessions.filter(s => isToday(s.completedAt));
+    const todaysSessions = updatedSessions.filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress.difficultyLevel);
     const completedGamesToday = todaysSessions.length;
     
     const requiredGamesPerLevel = [

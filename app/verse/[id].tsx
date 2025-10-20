@@ -81,7 +81,7 @@ export default function VerseDetailScreen() {
     const todaysSessions = verseProgress.gameSessions.filter(s => {
       const sessionDate = new Date(s.completedAt);
       const today = new Date();
-      return sessionDate.toDateString() === today.toDateString();
+      return sessionDate.toDateString() === today.toDateString() && s.difficultyLevel === verseProgress.difficultyLevel;
     });
     return todaysSessions.some(s => s.gameType === gameType);
   };

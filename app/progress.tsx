@@ -104,7 +104,7 @@ export default function ProgressScreen() {
                 .filter(s => {
                   const sessionDate = new Date(s.completedAt);
                   const today = new Date();
-                  return sessionDate.toDateString() === today.toDateString();
+                  return sessionDate.toDateString() === today.toDateString() && s.difficultyLevel === progress.difficultyLevel;
                 })
                 .map(s => s.gameType);
               
