@@ -10,7 +10,7 @@ import {
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Book, Target, Settings, Plus, Play, PlusCircle } from 'lucide-react-native';
+import { Book, Target, Settings, Plus, Play, PlusCircle, Crown } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -207,12 +207,19 @@ export default function HomeScreen() {
                         <Text style={styles.verseText} numberOfLines={3}>
                           {verse.text}
                         </Text>
-                        <View style={styles.verseFooter}>
-                          <View style={styles.progressBarContainer}>
-                            <View style={[styles.progressBar, { width: `${verseProgress.overallProgress}%` }]} />
+                        {verseProgress.overallProgress === 100 ? (
+                          <View style={styles.masteredContainer}>
+                            <Crown color="#10b981" size={24} fill="#10b981" />
+                            <Text style={styles.masteredText}>Mastered</Text>
                           </View>
-                          <Text style={styles.progressText}>{verseProgress.overallProgress}%</Text>
-                        </View>
+                        ) : (
+                          <View style={styles.verseFooter}>
+                            <View style={styles.progressBarContainer}>
+                              <View style={[styles.progressBar, { width: `${verseProgress.overallProgress}%` }]} />
+                            </View>
+                            <Text style={styles.progressText}>{verseProgress.overallProgress}%</Text>
+                          </View>
+                        )}
                       </LinearGradient>
                     </TouchableOpacity>
                   );
@@ -540,5 +547,19 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
     lineHeight: 20,
+  },
+  masteredContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    borderRadius: 12,
+  },
+  masteredText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#10b981',
   },
 });
