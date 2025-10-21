@@ -1,5 +1,5 @@
 import { Tabs } from 'expo-router';
-import { BookOpen, HandHeart, Settings } from 'lucide-react-native';
+import { BookOpen, Heart, Settings } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export default function TabLayout() {
@@ -29,7 +29,7 @@ export default function TabLayout() {
         name="prayers"
         options={{
           title: 'Prayers',
-          tabBarIcon: ({ color, size }) => <HandHeart color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Heart color={color} size={size} fill={color} />,
         }}
       />
       <Tabs.Screen

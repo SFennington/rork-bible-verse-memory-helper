@@ -12,7 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  HandHeart,
+  Heart,
   Target,
   Plus,
   CheckCircle2,
@@ -93,7 +93,7 @@ export default function PrayersScreen() {
         <View style={[styles.header, { paddingTop: 20 + insets.top }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerContent}>
-              <HandHeart color="#fff" size={28} strokeWidth={2.5} />
+              <Heart color="#fff" size={28} strokeWidth={2.5} fill="#fff" />
               <Text style={styles.title}>Prayer Journey</Text>
             </View>
           </View>
@@ -166,7 +166,7 @@ export default function PrayersScreen() {
               onPress={() => setSelectedTab('browse')}
               activeOpacity={0.7}
             >
-              <HandHeart color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} />
+              <Heart color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} fill={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} />
               <Text style={[
                 styles.tabText,
                 selectedTab === 'browse' && styles.tabTextActive,

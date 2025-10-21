@@ -10,7 +10,7 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  HandHeart,
+  Heart,
   CheckCircle2,
   Trash2,
   Clock,
@@ -155,7 +155,7 @@ export default function PrayerDetailScreen() {
                 style={[styles.historyItem, { borderBottomColor: theme.border }]}
               >
                 <View style={styles.historyIcon}>
-                  <HandHeart color={category?.color || '#667eea'} size={16} />
+                  <Heart color={category?.color || '#667eea'} size={16} fill={category?.color || '#667eea'} />
                 </View>
                 <View style={styles.historyContent}>
                   <Text style={[styles.historyDate, { color: theme.text }]}>
@@ -188,7 +188,7 @@ export default function PrayerDetailScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <HandHeart color="#fff" size={20} />
+                <Heart color="#fff" size={20} fill="#fff" />
                 <Text style={styles.buttonText}>Pray Now</Text>
               </LinearGradient>
             </TouchableOpacity>
