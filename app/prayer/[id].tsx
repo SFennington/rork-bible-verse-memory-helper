@@ -10,7 +10,6 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Heart,
   CheckCircle2,
   Trash2,
   Clock,
@@ -21,6 +20,7 @@ import {
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PRAYER_CATEGORIES } from '@/types/prayer';
+import { PrayingHandsIcon } from '@/components/PrayingHandsIcon';
 
 export default function PrayerDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -165,7 +165,7 @@ export default function PrayerDetailScreen() {
                 style={[styles.historyItem, { borderBottomColor: theme.border }]}
               >
                   <View style={styles.historyIcon}>
-                    <Text style={styles.historyIconEmoji}>🙏</Text>
+                    <PrayingHandsIcon size={16} color={category?.color || '#667eea'} />
                   </View>
                 <View style={styles.historyContent}>
                   <Text style={[styles.historyDate, { color: theme.text }]}>
@@ -198,7 +198,7 @@ export default function PrayerDetailScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Text style={styles.prayIcon}>🙏</Text>
+                <PrayingHandsIcon size={20} color="#fff" />
                 <Text style={styles.buttonText}>Pray Now</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -331,9 +331,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  historyIconEmoji: {
-    fontSize: 16,
-  },
   historyContent: {
     flex: 1,
   },
@@ -381,9 +378,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
-  },
-  prayIcon: {
-    fontSize: 20,
   },
   buttonText: {
     fontSize: 18,

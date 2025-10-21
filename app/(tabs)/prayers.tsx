@@ -12,7 +12,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Heart,
   Target,
   Plus,
   CheckCircle2,
@@ -24,6 +23,7 @@ import {
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PRAYER_CATEGORIES, PrayerCategory } from '@/types/prayer';
+import { PrayingHandsIcon } from '@/components/PrayingHandsIcon';
 
 type TabType = 'browse' | 'progress';
 
@@ -93,7 +93,7 @@ export default function PrayersScreen() {
         <View style={[styles.header, { paddingTop: 20 + insets.top }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerContent}>
-              <Text style={styles.headerIcon}>🙏</Text>
+              <PrayingHandsIcon size={28} color="#fff" strokeWidth={2.5} />
               <Text style={styles.title}>Prayer Journey</Text>
             </View>
           </View>
@@ -166,7 +166,10 @@ export default function PrayersScreen() {
               onPress={() => setSelectedTab('browse')}
               activeOpacity={0.7}
             >
-              <Text style={styles.browseIcon}>🙏</Text>
+              <PrayingHandsIcon 
+                size={20} 
+                color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} 
+              />
               <Text style={[
                 styles.tabText,
                 selectedTab === 'browse' && styles.tabTextActive,
@@ -468,9 +471,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  headerIcon: {
-    fontSize: 28,
-  },
   title: {
     fontSize: 24,
     fontWeight: '700' as const,
@@ -481,9 +481,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     marginLeft: 44,
     marginBottom: 12,
-  },
-  browseIcon: {
-    fontSize: 20,
   },
   statsContainer: {
     marginTop: 16,

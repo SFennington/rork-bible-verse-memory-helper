@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
-import { Text } from 'react-native';
 import { BookOpen, Settings } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
+import { PrayingHandsIcon } from '@/components/PrayingHandsIcon';
 
 export default function TabLayout() {
   const { theme, themeMode } = useTheme();
@@ -37,7 +37,7 @@ export default function TabLayout() {
         name="prayers"
         options={{
           title: 'Prayers',
-          tabBarIcon: ({ color, size }) => <Text style={{ fontSize: size, color }}>🙏</Text>,
+          tabBarIcon: ({ color, size }) => <PrayingHandsIcon size={size} color={color} />,
         }}
       />
       <Tabs.Screen
