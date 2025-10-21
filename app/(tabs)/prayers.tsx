@@ -76,6 +76,9 @@ export default function PrayersScreen() {
     return prayedTodayIds.has(prayerId);
   };
 
+  // Check if all visible progress prayers have been prayed today
+  const allProgressPrayersCompleted = displayedProgressPrayers.every(prayer => prayedToday(prayer.id));
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -149,7 +152,10 @@ export default function PrayersScreen() {
                 My Progress
               </Text>
               {progressPrayers.length > 0 && (
-                <View style={styles.countBadge}>
+                <View style={[
+                  styles.countBadge,
+                  allProgressPrayersCompleted && progressPrayers.length > 0 && styles.countBadgeComplete
+                ]}>
                   <Text style={styles.countBadgeText}>{progressPrayers.length}</Text>
                 </View>
               )}
@@ -271,12 +277,13 @@ export default function PrayersScreen() {
                                   For: {prayer.prayingFor}
                                 </Text>
                               )}
+                              {isPrayedToday && (
+                                <View style={styles.prayedBadge}>
+                                  <CheckCircle2 color="#10b981" size={14} fill="#10b981" />
+                                  <Text style={styles.prayedBadgeText}>Prayed Today</Text>
+                                </View>
+                              )}
                             </View>
-                            {isPrayedToday && (
-                              <View style={styles.prayedIndicator}>
-                                <CheckCircle2 color="#fff" size={16} fill="#fff" />
-                              </View>
-                            )}
                           </View>
                           {prayer.description && (
                             <Text style={styles.prayerDescription} numberOfLines={2}>
@@ -555,6 +562,9 @@ const styles = StyleSheet.create({
     minWidth: 20,
     alignItems: 'center',
   },
+  countBadgeComplete: {
+    backgroundColor: '#10b981',
+  },
   countBadgeText: {
     fontSize: 11,
     fontWeight: '700' as const,
@@ -659,13 +669,20 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.8)',
     fontStyle: 'italic',
   },
-  prayedIndicator: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  prayedBadge: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(16, 185, 129, 0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+  },
+  prayedBadgeText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#10b981',
   },
   addButton: {
     width: 32,

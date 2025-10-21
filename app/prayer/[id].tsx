@@ -87,7 +87,7 @@ export default function PrayerDetailScreen() {
 
   const handlePray = async () => {
     await logPrayer(prayer.id);
-    Alert.alert('Prayer Logged', 'Prayer has been added to your history!');
+    // Prayer logged silently - no popup needed
   };
 
   return (
@@ -140,7 +140,7 @@ export default function PrayerDetailScreen() {
             <View style={styles.statItem}>
               <Calendar color={theme.textSecondary} size={24} />
               <Text style={[styles.statLabelSmall, { color: theme.textSecondary }]}>Last Prayed</Text>
-              <Text style={[styles.statNumber, { color: theme.text }]}>{lastPrayed}</Text>
+              <Text style={[styles.statDate, { color: theme.text }]} numberOfLines={1} adjustsFontSizeToFit>{lastPrayed}</Text>
             </View>
             
             <View style={styles.statItem}>
@@ -312,6 +312,11 @@ const styles = StyleSheet.create({
   },
   statLabelSmall: {
     fontSize: 11,
+    textAlign: 'center',
+  },
+  statDate: {
+    fontSize: 13,
+    fontWeight: '600' as const,
     textAlign: 'center',
   },
   historyCard: {
