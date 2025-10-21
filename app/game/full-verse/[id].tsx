@@ -143,7 +143,7 @@ export default function FullVerseGameScreen() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push(`/verse/${id}` as any)}
+              onPress={() => router.push('/(tabs)/verses' as any)}
               style={{ marginLeft: 8 }}
             >
               <ArrowLeft color="#fff" size={24} />

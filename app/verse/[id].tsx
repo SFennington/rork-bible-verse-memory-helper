@@ -230,7 +230,15 @@ export default function VerseDetailScreen() {
           headerTitleStyle: {
             fontWeight: '700' as const,
           },
-          headerBackVisible: true,
+          headerBackVisible: false,
+          headerLeft: () => (
+            <TouchableOpacity
+              style={styles.optionsButton}
+              onPress={() => router.push('/(tabs)/verses' as any)}
+            >
+              <ArrowRight color="#fff" size={24} style={{ transform: [{ rotate: '180deg' }] }} />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity
               style={styles.optionsButton}
