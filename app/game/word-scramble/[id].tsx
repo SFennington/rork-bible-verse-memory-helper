@@ -26,15 +26,15 @@ export default function WordScrambleGameScreen() {
   const router = useRouter();
   const { verses, completeGameSession, getVerseProgress } = useVerses();
   const { theme } = useTheme();
-  const [selectedWords, setSelectedWords] = useState<Record<number, string>>({});
-  const [showResult, setShowResult] = useState(false);
-  const [scaleAnim] = useState(new Animated.Value(1));
-  const [startTime] = useState(Date.now());
-
   const verse = verses.find(v => v.id === id);
   const category = CATEGORIES.find(c => c.name === verse?.category);
   const verseProgress = getVerseProgress(id || '');
   const difficultyLevel = verseProgress?.difficultyLevel || 1;
+  
+  const [selectedWords, setSelectedWords] = useState<Record<number, string>>({});
+  const [showResult, setShowResult] = useState(false);
+  const [scaleAnim] = useState(new Animated.Value(1));
+  const [startTime] = useState(Date.now());
 
   const gameData = useMemo(() => {
     if (!verse) return null;
@@ -61,19 +61,20 @@ export default function WordScrambleGameScreen() {
       
       let scrambledWords: string[];
       let scramblePercentage = 1.0;
-      let scrambleIntensity = 1.0; // How much each word is scrambled
+      let scrambleIntensity = 1.0;
+      let prefilledWords: Record<number, string> = {};
       
       switch (difficultyLevel) {
         case 1:
-          scramblePercentage = 0.30;  // Only scramble 30% of words
-          scrambleIntensity = 0.5;    // Light scrambling (keep some letters in place)
+          scramblePercentage = 0.50;  // Scramble at least half the words
+          scrambleIntensity = 0.5;    // Light scrambling
           break;
         case 2:
-          scramblePercentage = 0.50;  // Scramble half the words
+          scramblePercentage = 0.65;  // Scramble 65% of words
           scrambleIntensity = 0.7;    // Moderate scrambling
           break;
         case 3:
-          scramblePercentage = 0.75;  // Scramble most words
+          scramblePercentage = 0.80;  // Scramble most words
           scrambleIntensity = 0.9;    // Heavy scrambling
           break;
         case 4:
@@ -94,15 +95,46 @@ export default function WordScrambleGameScreen() {
       const indices = Array.from({ length: words.length }, (_, i) => i);
       const scrambleIndices = indices.sort(() => Math.random() - 0.5).slice(0, toScrambleCount);
       
+      // Pre-fill words that won't be scrambled
+      indices.forEach(idx => {
+        if (!scrambleIndices.includes(idx)) {
+          prefilledWords[idx] = words[idx];
+        }
+      });
+      
       scrambleIndices.forEach(idx => {
         scrambledWords[idx] = scrambleWord(words[idx], scrambleIntensity);
       });
 
-      return { original: words, scrambled: scrambledWords };
+      return { original: words, scrambled: scrambledWords, scrambleIndices, prefilledWords };
     });
 
-    return { phrases: phrasesWithoutPunctuation, scrambledPhrases, punctuationMap };
+    // Initialize pre-filled words
+    const initialPrefilledWords: Record<number, string> = {};
+    scrambledPhrases.forEach((phrase, phraseIndex) => {
+      Object.entries(phrase.prefilledWords).forEach(([wordIdx, word]) => {
+        const key = phraseIndex * 1000 + parseInt(wordIdx);
+        initialPrefilledWords[key] = word;
+      });
+    });
+
+    return { phrases: phrasesWithoutPunctuation, scrambledPhrases, punctuationMap, initialPrefilledWords };
   }, [verse, difficultyLevel]);
+
+  // Initialize selectedWords with pre-filled words
+  React.useEffect(() => {
+    if (gameData?.initialPrefilledWords) {
+      setSelectedWords(prev => {
+        const hasPrefilledAlready = Object.keys(prev).some(key => 
+          gameData.initialPrefilledWords[parseInt(key)] !== undefined
+        );
+        if (!hasPrefilledAlready) {
+          return { ...gameData.initialPrefilledWords };
+        }
+        return prev;
+      });
+    }
+  }, [gameData]);
 
   function scrambleWord(word: string, intensity: number = 1.0): string {
     if (word.length <= 2) return word;
@@ -291,8 +323,19 @@ export default function WordScrambleGameScreen() {
                     const key = phraseIndex * 1000 + wordIndex;
                     const userWord = selectedWords[key] || '';
                     const correctWord = phrase.original[wordIndex];
+                    const isPrefilled = phrase.prefilledWords[wordIndex] !== undefined;
+                    const isScrambled = phrase.scrambleIndices.includes(wordIndex);
                     const isWrong = showResult && userWord.toLowerCase().trim() !== correctWord.toLowerCase().trim();
                     const isCorrect = showResult && userWord.toLowerCase().trim() === correctWord.toLowerCase().trim();
+
+                    // Only show scrambled words, skip pre-filled ones
+                    if (!isScrambled) {
+                      return (
+                        <View key={wordIndex} style={styles.prefilledWordContainer}>
+                          <Text style={styles.prefilledWord}>{correctWord}</Text>
+                        </View>
+                      );
+                    }
 
                     return (
                       <View key={wordIndex} style={styles.wordPairContainer}>
@@ -515,6 +558,15 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontWeight: '600' as const,
     marginLeft: -8,
+  },
+  prefilledWordContainer: {
+    marginBottom: 8,
+  },
+  prefilledWord: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#374151',
+    paddingHorizontal: 4,
   },
   resultCard: {
     borderRadius: 16,

@@ -351,6 +351,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   wordsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 16,
   },
   wordInputContainer: {
