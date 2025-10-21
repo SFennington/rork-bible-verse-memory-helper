@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Bible Verse Memory Helper",
-    "slug": "bible-verse-memory-helper",
+    "name": "PrayPal",
+    "slug": "praypal",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.bibleversememoryhelper",
+      "package": "app.rork.praypal",
       "versionCode": 1,
       "statusBarHidden": false,
       "statusBarTranslucent": false,

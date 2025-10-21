@@ -21,7 +21,7 @@ if ($LASTEXITCODE -eq 0) {
         
         if ($LASTEXITCODE -eq 0) {
             Write-Host "APK installed! Launching app..." -ForegroundColor Green
-            adb -s emulator-5554 shell am start -n app.rork.bibleversememoryhelper/.MainActivity
+            adb -s emulator-5554 shell am start -n app.rork.praypal/.MainActivity
             Write-Host "App launched on emulator!" -ForegroundColor Green
             
             Write-Host "Committing changes to GitHub..." -ForegroundColor Cyan

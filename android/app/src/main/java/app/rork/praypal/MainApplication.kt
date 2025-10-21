@@ -1,4 +1,4 @@
-package app.rork.bibleversememoryhelper
+package app.rork.praypal
 
 import android.app.Application
 import android.content.res.Configuration

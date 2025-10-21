@@ -1,4 +1,4 @@
-package app.rork.bibleversememoryhelper
+package app.rork.praypal
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
