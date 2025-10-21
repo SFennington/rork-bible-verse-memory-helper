@@ -33,6 +33,8 @@ export default function PrayersScreen() {
     activePrayers,
     answeredPrayers,
     archivedPrayers,
+    todaysPrayers,
+    prayedTodayIds,
     stats,
     logPrayer,
     markAsAnswered,
@@ -40,10 +42,14 @@ export default function PrayersScreen() {
   const { theme, themeMode } = useTheme();
   const [selectedTab, setSelectedTab] = useState<TabType>('active');
   const [selectedCategory, setSelectedCategory] = useState<PrayerCategory | null>(null);
+  const [showTodaysOnly, setShowTodaysOnly] = useState(true);
   const insets = useSafeAreaInsets();
 
   const displayedPrayers = useMemo(() => {
-    let prayers = selectedTab === 'active' ? activePrayers
+    // For active tab, show today's prayers if toggle is on
+    let prayers = selectedTab === 'active' && showTodaysOnly
+      ? todaysPrayers
+      : selectedTab === 'active' ? activePrayers
       : selectedTab === 'answered' ? answeredPrayers
       : archivedPrayers;
 
@@ -59,18 +65,14 @@ export default function PrayersScreen() {
       }
       return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
     });
-  }, [selectedTab, selectedCategory, activePrayers, answeredPrayers, archivedPrayers]);
+  }, [selectedTab, selectedCategory, showTodaysOnly, todaysPrayers, activePrayers, answeredPrayers, archivedPrayers]);
 
-  const handlePrayNow = (prayerId: string) => {
-    Alert.alert(
-      'Prayer Logged',
-      'Would you like to mark this prayer?',
-      [
-        { text: 'Just Log', onPress: () => logPrayer(prayerId) },
-        { text: 'Mark Answered', onPress: () => markAsAnswered(prayerId) },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+  const handlePrayNow = async (prayerId: string) => {
+    await logPrayer(prayerId);
+  };
+
+  const prayedToday = (prayerId: string) => {
+    return prayedTodayIds.has(prayerId);
   };
 
   return (
@@ -136,6 +138,18 @@ export default function PrayersScreen() {
             </View>
           )}
 
+          {selectedTab === 'active' && (
+            <TouchableOpacity
+              style={[styles.todayToggle, showTodaysOnly && styles.todayToggleActive]}
+              onPress={() => setShowTodaysOnly(!showTodaysOnly)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.todayToggleText, showTodaysOnly && styles.todayToggleTextActive]}>
+                {showTodaysOnly ? "Today's 5" : 'Show All'}
+              </Text>
+            </TouchableOpacity>
+          )}
+
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[styles.tab, selectedTab === 'active' && styles.tabActive]}
@@ -198,12 +212,16 @@ export default function PrayersScreen() {
 
           {displayedPrayers.map((prayer) => {
             const category = PRAYER_CATEGORIES.find(c => c.name === prayer.category);
-            const logs = stats.totalPrayers; // You can get specific logs later
+            const isPrayedToday = prayedToday(prayer.id);
             
             return (
               <TouchableOpacity
                 key={prayer.id}
-                style={[styles.prayerCard, { backgroundColor: theme.cardBackground }]}
+                style={[
+                  styles.prayerCard,
+                  { backgroundColor: theme.cardBackground },
+                  isPrayedToday && styles.prayerCardCompleted,
+                ]}
                 onPress={() => router.push(`/prayer/${prayer.id}` as any)}
                 activeOpacity={0.9}
               >
@@ -233,15 +251,31 @@ export default function PrayersScreen() {
                   </Text>
                   <View style={styles.prayerActions}>
                     <TouchableOpacity
-                      style={[styles.prayNowButton, { backgroundColor: category?.color || '#667eea' }]}
+                      style={[
+                        styles.prayNowButton,
+                        { backgroundColor: isPrayedToday ? '#10b981' : category?.color || '#667eea' },
+                        isPrayedToday && styles.prayNowButtonCompleted,
+                      ]}
                       onPress={(e) => {
                         e.stopPropagation();
-                        handlePrayNow(prayer.id);
+                        if (!isPrayedToday) {
+                          handlePrayNow(prayer.id);
+                        }
                       }}
                       activeOpacity={0.8}
+                      disabled={isPrayedToday}
                     >
-                      <Heart color="#fff" size={16} fill="#fff" />
-                      <Text style={styles.prayNowText}>Pray</Text>
+                      {isPrayedToday ? (
+                        <>
+                          <CheckCircle2 color="#fff" size={16} fill="#fff" />
+                          <Text style={styles.prayNowText}>Prayed</Text>
+                        </>
+                      ) : (
+                        <>
+                          <Heart color="#fff" size={16} />
+                          <Text style={styles.prayNowText}>Pray</Text>
+                        </>
+                      )}
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -328,10 +362,29 @@ const styles = StyleSheet.create({
   statLabelDark: {
     color: '#9ca3af',
   },
+  todayToggle: {
+    alignSelf: 'center',
+    marginTop: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  todayToggleActive: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  todayToggleText: {
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontSize: 14,
+    fontWeight: '600' as const,
+  },
+  todayToggleTextActive: {
+    color: '#fff',
+  },
   tabsContainer: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 20,
+    marginTop: 12,
   },
   tab: {
     flex: 1,
@@ -400,6 +453,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  prayerCardCompleted: {
+    borderWidth: 2,
+    borderColor: '#10b981',
+    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+  },
   prayerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -461,6 +519,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 12,
+  },
+  prayNowButtonCompleted: {
+    opacity: 0.8,
   },
   prayNowText: {
     color: '#fff',
