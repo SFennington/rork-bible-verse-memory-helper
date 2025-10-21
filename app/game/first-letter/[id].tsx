@@ -23,12 +23,12 @@ function isToday(dateString: string): boolean {
 
 const getPreFillPercentage = (level: number): number => {
   switch (level) {
-    case 1: return 0.65;
-    case 2: return 0.45;
-    case 3: return 0.25;
-    case 4: return 0.12;
-    case 5: return 0;
-    default: return 0.65;
+    case 1: return 0.70;  // 70% pre-filled - easiest (only type 30% of words)
+    case 2: return 0.50;  // 50% pre-filled - medium (type half)
+    case 3: return 0.25;  // 25% pre-filled - hard (type most words)
+    case 4: return 0.10;  // 10% pre-filled - expert (type almost everything)
+    case 5: return 0;     // 0% pre-filled - master (type every single word)
+    default: return 0.50;
   }
 };
 
@@ -369,6 +369,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1f2937',
     fontWeight: '500' as const,
+    alignSelf: 'flex-start',
+    minWidth: 80,
   },
   wordInputFilled: {
     backgroundColor: '#eff6ff',

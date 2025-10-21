@@ -47,23 +47,32 @@ export default function MissingVowelsGameScreen() {
       const vowelCount = vowels.length;
       
       let vowelsToRemove = vowelCount;
+      let showConsonantHints = false;
       
       switch (difficultyLevel) {
         case 1:
-          vowelsToRemove = Math.ceil(vowelCount * 0.4);
+          vowelsToRemove = Math.ceil(vowelCount * 0.30);  // Remove only 30% of vowels
+          showConsonantHints = true;   // Show all consonants
           break;
         case 2:
-          vowelsToRemove = Math.ceil(vowelCount * 0.6);
+          vowelsToRemove = Math.ceil(vowelCount * 0.50);  // Remove 50% of vowels
+          showConsonantHints = true;   // Show all consonants
           break;
         case 3:
-          vowelsToRemove = Math.ceil(vowelCount * 0.8);
+          vowelsToRemove = Math.ceil(vowelCount * 0.75);  // Remove 75% of vowels
+          showConsonantHints = true;   // Show all consonants
           break;
         case 4:
+          vowelsToRemove = vowelCount;                    // Remove ALL vowels
+          showConsonantHints = true;   // Still show consonants
+          break;
         case 5:
-          vowelsToRemove = vowelCount;
+          vowelsToRemove = vowelCount;                    // Remove ALL vowels
+          showConsonantHints = false;  // Hide consonants too (extremely hard)
           break;
         default:
           vowelsToRemove = Math.ceil(vowelCount * 0.5);
+          showConsonantHints = true;
       }
 
       const vowelIndices = [];
@@ -79,7 +88,11 @@ export default function MissingVowelsGameScreen() {
 
       const displayWord = word
         .split('')
-        .map((char, i) => (indicesToRemove.includes(i) ? '_' : char))
+        .map((char, i) => {
+          if (indicesToRemove.includes(i)) return '_';
+          if (!showConsonantHints && !vowelPattern.test(char)) return '_';
+          return char;
+        })
         .join('');
 
       return {

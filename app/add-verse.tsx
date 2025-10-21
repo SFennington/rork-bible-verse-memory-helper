@@ -9,14 +9,18 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BookOpen, FileText } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useBibleVersion } from '@/contexts/BibleVersionContext';
 import { VerseCategory } from '@/types/verse';
 import { CATEGORIES } from '@/mocks/verses';
+import { fetchBibleVerse, fetchBibleChapter } from '@/services/bibleApi';
+import BibleVersePicker from '@/components/BibleVersePicker';
 
 type InputMode = 'single' | 'chapter';
 
@@ -24,11 +28,44 @@ export default function AddVerseScreen() {
   const router = useRouter();
   const { addCustomVerse, addChapter, addToProgress } = useVerses();
   const { theme } = useTheme();
+  const { selectedVersion } = useBibleVersion();
   const [mode, setMode] = useState<InputMode>('single');
   const [reference, setReference] = useState('');
   const [text, setText] = useState('');
   const [chapterText, setChapterText] = useState('');
   const [category, setCategory] = useState<VerseCategory>('Faith');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleVerseSelect = async (book: string, chapter: number, verse?: number, endVerse?: number) => {
+    setIsLoading(true);
+    
+    try {
+      if (mode === 'single') {
+        // Fetch single verse or verse range
+        const ref = endVerse && endVerse > verse! 
+          ? `${book} ${chapter}:${verse}-${endVerse}`
+          : `${book} ${chapter}:${verse}`;
+        
+        setReference(ref);
+        const result = await fetchBibleVerse(ref, selectedVersion.id);
+        setText(result.text);
+      } else {
+        // Fetch entire chapter
+        const ref = `${book} ${chapter}`;
+        setReference(ref);
+        const result = await fetchBibleChapter(book, chapter, selectedVersion.id);
+        const formattedText = result.verses.map(v => v.text).join('\n');
+        setChapterText(formattedText);
+      }
+    } catch (error) {
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to fetch verse'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddSingleVerse = async () => {
     if (!reference.trim() || !text.trim()) {
@@ -162,21 +199,27 @@ export default function AddVerseScreen() {
           </View>
 
           <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
-            <Text style={[styles.label, { color: theme.text }]}>Reference</Text>
-            <TextInput
-              style={[
-                styles.input,
-                {
-                  backgroundColor: theme.background,
-                  color: theme.text,
-                  borderColor: theme.border,
-                },
-              ]}
-              placeholder={mode === 'single' ? 'e.g., John 3:16' : 'e.g., Psalm 23'}
-              placeholderTextColor={theme.textTertiary}
-              value={reference}
-              onChangeText={setReference}
-            />
+            <View style={styles.versionBadge}>
+              <Text style={[styles.versionText, { color: theme.textSecondary }]}>
+                Using: {selectedVersion.abbreviation}
+              </Text>
+            </View>
+
+            <Text style={[styles.label, { color: theme.text }]}>Select {mode === 'single' ? 'Verse' : 'Chapter'}</Text>
+            
+            {isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color="#667eea" size="large" />
+                <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
+                  Fetching verse...
+                </Text>
+              </View>
+            ) : (
+              <BibleVersePicker
+                mode={mode === 'single' ? 'verse' : 'chapter'}
+                onSelect={handleVerseSelect}
+              />
+            )}
 
             <Text style={[styles.label, { color: theme.text }]}>Category</Text>
             <ScrollView
@@ -330,11 +373,32 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  versionBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  versionText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+  },
   label: {
     fontSize: 16,
     fontWeight: '600' as const,
     marginBottom: 8,
     marginTop: 16,
+  },
+  loadingContainer: {
+    paddingVertical: 40,
+    alignItems: 'center',
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    fontStyle: 'italic' as const,
   },
   hint: {
     fontSize: 13,

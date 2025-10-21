@@ -3,11 +3,11 @@ export type VerseCategory = 'Comfort' | 'Strength' | 'Peace' | 'Love' | 'Faith' 
 export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse' | 'word-scramble' | 'missing-vowels';
 
 export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
-  1: ['fill-blank', 'word-order', 'first-letter'],
-  2: ['word-scramble', 'missing-vowels', 'fill-blank'],
-  3: ['word-order', 'first-letter', 'missing-vowels'],
-  4: ['first-letter', 'word-scramble', 'fill-blank'],
-  5: ['full-verse'],
+  1: ['fill-blank', 'word-order', 'first-letter'],      // Easy: Basic games with more hints
+  2: ['fill-blank', 'first-letter', 'word-scramble'],   // Medium: Introduce scrambling
+  3: ['word-order', 'missing-vowels', 'word-scramble'], // Hard: More challenging combinations
+  4: ['fill-blank', 'first-letter', 'missing-vowels'],  // Expert: Hardest versions of pattern games
+  5: ['full-verse'],                                     // Master: Full recall
 };
 
 export type DifficultyLevel = 1 | 2 | 3 | 4 | 5;

@@ -41,25 +41,32 @@ export default function FillBlankGameScreen() {
 
     const words = verse.text.split(' ');
     let blankPercentage = 0.3;
+    let extraOptionsCount = 0;
     
     switch (difficultyLevel) {
       case 1:
-        blankPercentage = 0.25;
+        blankPercentage = 0.20;  // 20% blanks - easiest
+        extraOptionsCount = 8;    // Many extra words to choose from
         break;
       case 2:
-        blankPercentage = 0.35;
+        blankPercentage = 0.35;  // 35% blanks
+        extraOptionsCount = 5;    // Some extra words
         break;
       case 3:
-        blankPercentage = 0.5;
+        blankPercentage = 0.50;  // 50% blanks
+        extraOptionsCount = 3;    // Few extra words
         break;
       case 4:
-        blankPercentage = 0.65;
+        blankPercentage = 0.70;  // 70% blanks - very challenging
+        extraOptionsCount = 2;    // Very few extra words
         break;
       case 5:
-        blankPercentage = 0.8;
+        blankPercentage = 0.85;  // 85% blanks - extremely hard
+        extraOptionsCount = 0;    // No extra words - exact match needed
         break;
       default:
         blankPercentage = 0.3;
+        extraOptionsCount = 4;
     }
 
     const blanksCount = Math.max(2, Math.floor(words.length * blankPercentage));
@@ -71,7 +78,20 @@ export default function FillBlankGameScreen() {
     }
 
     const blanks = Array.from(blankIndices).sort((a, b) => a - b);
-    const options = blanks.map(i => words[i]).sort(() => Math.random() - 0.5);
+    const correctWords = blanks.map(i => words[i]);
+    
+    // Add extra distractor words for lower difficulty levels
+    const allWordsInVerse = words.filter(w => w.length > 2); // Only words with 3+ letters
+    const distractorWords: string[] = [];
+    
+    for (let i = 0; i < extraOptionsCount && distractorWords.length < extraOptionsCount; i++) {
+      const randomWord = allWordsInVerse[Math.floor(Math.random() * allWordsInVerse.length)];
+      if (!correctWords.includes(randomWord)) {
+        distractorWords.push(randomWord);
+      }
+    }
+    
+    const options = [...correctWords, ...distractorWords].sort(() => Math.random() - 0.5);
 
     return { words, blanks, options };
   }, [verse, difficultyLevel]);

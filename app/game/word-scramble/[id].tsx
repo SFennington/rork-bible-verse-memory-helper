@@ -61,23 +61,32 @@ export default function WordScrambleGameScreen() {
       
       let scrambledWords: string[];
       let scramblePercentage = 1.0;
+      let scrambleIntensity = 1.0; // How much each word is scrambled
       
       switch (difficultyLevel) {
         case 1:
-          scramblePercentage = 0.4;
+          scramblePercentage = 0.30;  // Only scramble 30% of words
+          scrambleIntensity = 0.5;    // Light scrambling (keep some letters in place)
           break;
         case 2:
-          scramblePercentage = 0.6;
+          scramblePercentage = 0.50;  // Scramble half the words
+          scrambleIntensity = 0.7;    // Moderate scrambling
           break;
         case 3:
-          scramblePercentage = 0.8;
+          scramblePercentage = 0.75;  // Scramble most words
+          scrambleIntensity = 0.9;    // Heavy scrambling
           break;
         case 4:
+          scramblePercentage = 0.90;  // Scramble almost all words
+          scrambleIntensity = 1.0;    // Full scrambling
+          break;
         case 5:
-          scramblePercentage = 1.0;
+          scramblePercentage = 1.0;   // Scramble every single word
+          scrambleIntensity = 1.0;    // Complete scrambling
           break;
         default:
           scramblePercentage = 0.5;
+          scrambleIntensity = 0.7;
       }
       
       scrambledWords = [...words];
@@ -86,7 +95,7 @@ export default function WordScrambleGameScreen() {
       const scrambleIndices = indices.sort(() => Math.random() - 0.5).slice(0, toScrambleCount);
       
       scrambleIndices.forEach(idx => {
-        scrambledWords[idx] = scrambleWord(words[idx]);
+        scrambledWords[idx] = scrambleWord(words[idx], scrambleIntensity);
       });
 
       return { original: words, scrambled: scrambledWords };
@@ -95,17 +104,24 @@ export default function WordScrambleGameScreen() {
     return { phrases: phrasesWithoutPunctuation, scrambledPhrases, punctuationMap };
   }, [verse, difficultyLevel]);
 
-  function scrambleWord(word: string): string {
+  function scrambleWord(word: string, intensity: number = 1.0): string {
     if (word.length <= 2) return word;
     
     const arr = word.split('');
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+    const lettersToScramble = Math.max(2, Math.floor(arr.length * intensity));
+    
+    // For lower intensity, keep first and last letter in place
+    const startIdx = intensity < 0.8 ? 1 : 0;
+    const endIdx = intensity < 0.8 ? arr.length - 1 : arr.length;
+    
+    // Only scramble the specified portion
+    for (let i = endIdx - 1; i > startIdx; i--) {
+      const j = startIdx + Math.floor(Math.random() * (i - startIdx + 1));
       [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     
     const scrambled = arr.join('');
-    return scrambled === word ? scrambleWord(word) : scrambled;
+    return scrambled === word && intensity >= 0.9 ? scrambleWord(word, intensity) : scrambled;
   }
 
   if (!verse || !gameData) {
@@ -194,7 +210,20 @@ export default function WordScrambleGameScreen() {
         router.push(`/verse/${id}`);
       }
     } else {
-      router.replace(`/game/word-scramble/${id}`);
+      // Only clear incorrect answers, keep correct ones
+      const newSelectedWords = { ...selectedWords };
+      gameData.scrambledPhrases.forEach((phrase, phraseIndex) => {
+        phrase.original.forEach((word, wordIndex) => {
+          const key = phraseIndex * 1000 + wordIndex;
+          const userWord = selectedWords[key] || '';
+          const isIncorrect = userWord.toLowerCase().trim() !== word.toLowerCase().trim();
+          if (isIncorrect) {
+            delete newSelectedWords[key];
+          }
+        });
+      });
+      setSelectedWords(newSelectedWords);
+      setShowResult(false);
     }
   };
 
@@ -270,7 +299,7 @@ export default function WordScrambleGameScreen() {
                         <View style={styles.scrambledWordCard}>
                           <Text style={styles.scrambledWord}>{scrambledWord}</Text>
                         </View>
-                        <Text style={styles.arrowText}>↓</Text>
+                        <Text style={styles.arrowText}>→</Text>
                         <View
                           style={[
                             styles.inputBox,
@@ -285,7 +314,7 @@ export default function WordScrambleGameScreen() {
                             onChangeText={(text) => handleWordInput(phraseIndex, wordIndex, text)}
                             placeholder="Tap to type"
                             placeholderTextColor="#9ca3af"
-                            editable={!showResult}
+                            editable={!showResult || isWrong}
                             autoCapitalize="none"
                             autoCorrect={false}
                           />

@@ -1,43 +1,40 @@
-name: Build and Submit to Google Play Store
+name: EAS Build and Submit
 
 on:
-  workflow_dispatch: # run manually to avoid accidental builds
+  workflow_dispatch:
 
 jobs:
-  build-and-submit:
+  build:
+    name: Build and Submit to Google Play
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          node-version: '22.20.0'
+          node-version: 18.x
+          cache: npm
 
-      - name: Setup EAS
+      - name: Setup Expo
         uses: expo/expo-github-action@v8
         with:
+          expo-version: latest
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
 
       - name: Create Google Service Account file
         run: |
           echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > google-play-service-account.json
-          test -s google-play-service-account.json
 
-      - name: Build Android app
-        run: eas build --platform android --profile production --non-interactive
-
-      - name: Submit to Google Play Store (alpha)
-        run: eas submit --platform android --profile production --non-interactive
-        env:
-          GOOGLE_SERVICE_ACCOUNT_KEY: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}
+      - name: Build and Submit AAB
+        run: |
+          eas build --platform android --profile production --non-interactive --auto-submit
 
       - name: Cleanup
+        if: always()
         run: rm -f google-play-service-account.json
-
-

@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -22,7 +22,11 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.bible-verse-memory-helper"
+      "package": "app.rork.bibleversememoryhelper",
+      "versionCode": 1,
+      "statusBarHidden": false,
+      "statusBarTranslucent": false,
+      "navigationBarVisibility": "visible"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -33,10 +37,25 @@
         {
           "origin": "https://rork.com/"
         }
+      ],
+      [
+        "expo-system-ui",
+        {
+          "userInterfaceStyle": "automatic"
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {
+        "origin": "https://rork.com/"
+      },
+      "eas": {
+        "projectId": "d7d80ddd-c2ad-4208-bd4c-962d48be0ad9"
+      }
+    },
+    "owner": "sfennington"
   }
 }

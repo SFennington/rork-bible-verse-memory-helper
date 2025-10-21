@@ -69,9 +69,51 @@ export default function WordOrderGameScreen() {
     const words = verse.text.split(' ');
     let scrambledArray = [...words];
     
-    const scrambleIterations = difficultyLevel;
+    // More scramble iterations = harder to recognize original order
+    let scrambleIterations = 1;
+    let extraDistractorCount = 0;
+    
+    switch (difficultyLevel) {
+      case 1:
+        scrambleIterations = 2;   // Lightly scrambled
+        extraDistractorCount = 6; // Many extra words to make it easier to spot patterns
+        break;
+      case 2:
+        scrambleIterations = 3;   // Moderately scrambled
+        extraDistractorCount = 4; // Some extra words
+        break;
+      case 3:
+        scrambleIterations = 5;   // Well scrambled
+        extraDistractorCount = 2; // Few extra words
+        break;
+      case 4:
+        scrambleIterations = 7;   // Heavily scrambled
+        extraDistractorCount = 1; // Very few extra words
+        break;
+      case 5:
+        scrambleIterations = 10;  // Completely randomized
+        extraDistractorCount = 0; // No extra words
+        break;
+      default:
+        scrambleIterations = 3;
+        extraDistractorCount = 3;
+    }
+    
     for (let i = 0; i < scrambleIterations; i++) {
       scrambledArray = scrambledArray.sort(() => Math.random() - 0.5);
+    }
+    
+    // Add distractor words for easier levels
+    if (extraDistractorCount > 0) {
+      const distractors: string[] = [];
+      const allWordsInVerse = words.filter(w => w.length > 2);
+      
+      for (let i = 0; i < extraDistractorCount; i++) {
+        const randomWord = allWordsInVerse[Math.floor(Math.random() * allWordsInVerse.length)];
+        distractors.push(randomWord);
+      }
+      
+      scrambledArray = [...scrambledArray, ...distractors].sort(() => Math.random() - 0.5);
     }
     
     return scrambledArray;

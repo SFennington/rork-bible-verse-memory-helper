@@ -26,7 +26,12 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   useEffect(() => {
-    SplashScreen.hideAsync();
+    // Delay hiding splash screen to ensure app is ready
+    const timer = setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   return (
@@ -34,7 +39,7 @@ export default function RootLayout() {
       <ThemeProvider>
         <BibleVersionProvider>
           <VerseProvider>
-            <GestureHandlerRootView>
+            <GestureHandlerRootView style={{ flex: 1 }}>
               <RootLayoutNav />
             </GestureHandlerRootView>
           </VerseProvider>
