@@ -19,6 +19,15 @@ if ($gitStatus) {
     }
     git commit -m $commitMessage
     Write-Host "✅ Changes committed" -ForegroundColor Green
+    
+    # Push to remote
+    Write-Host "📤 Pushing to remote repository..." -ForegroundColor Yellow
+    git push
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "✅ Pushed to remote" -ForegroundColor Green
+    } else {
+        Write-Host "⚠️  Failed to push (check your connection or credentials)" -ForegroundColor Yellow
+    }
 } else {
     Write-Host "ℹ️  No changes to commit" -ForegroundColor Cyan
 }
