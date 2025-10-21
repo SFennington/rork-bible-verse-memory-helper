@@ -74,12 +74,21 @@ export default function AddVerseScreen() {
     }
 
     try {
-      const verseId = await addCustomVerse({
+      const verseData = {
         reference: reference.trim(),
         text: text.trim(),
         category,
+      };
+      
+      const verseId = await addCustomVerse(verseData);
+      
+      // Pass the full verse object to addToProgress to avoid race condition
+      addToProgress(verseId, {
+        ...verseData,
+        id: verseId,
+        isCustom: true,
       });
-      addToProgress(verseId);
+      
       Alert.alert('Success', 'Verse added to your progress!', [
         { text: 'OK', onPress: () => router.back() },
       ]);
@@ -102,19 +111,27 @@ export default function AddVerseScreen() {
     }
 
     try {
-      const chapterId = await addChapter({
+      const timestamp = Date.now();
+      const chapterId = `chapter-${timestamp}`;
+      
+      const versesData = lines.map((line, index) => ({
+        id: `${chapterId}-verse-${index}`,
+        reference: `${reference.trim()} ${index + 1}`,
+        text: line.trim(),
+        category,
+        isCustom: true as const,
+        chapterId,
+      }));
+
+      await addChapter({
         reference: reference.trim(),
-        verses: lines.map((line, index) => ({
-          id: '',
-          reference: `${reference.trim()} ${index + 1}`,
-          text: line.trim(),
-          category,
-        })),
+        verses: versesData,
         category,
       });
 
-      lines.forEach((_, index) => {
-        addToProgress(`${chapterId}-verse-${index}`);
+      // Add each verse to progress with the verse data to avoid race condition
+      versesData.forEach((verse) => {
+        addToProgress(verse.id, verse);
       });
 
       Alert.alert(

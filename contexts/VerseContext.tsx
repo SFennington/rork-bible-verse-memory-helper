@@ -101,13 +101,14 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     }
   };
 
-  const addToProgress = useCallback((verseId: string) => {
+  const addToProgress = useCallback((verseId: string, verseOverride?: BibleVerse) => {
     if (progress[verseId]) {
       console.log('Verse already in progress');
       return;
     }
 
-    const verse = [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
+    // Use provided verse or find it in the existing verses
+    const verse = verseOverride || [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
     if (!verse) {
       console.error('Verse not found');
       return;
