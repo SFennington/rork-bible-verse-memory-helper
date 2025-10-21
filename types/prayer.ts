@@ -12,6 +12,7 @@ export type PrayerCategory =
   | 'Church'
   | 'World'
   | 'Prayer Requests'
+  | 'Verses'
   | 'Other';
 
 export type PrayerStatus = 'active' | 'answered' | 'archived';
@@ -69,6 +70,7 @@ export const PRAYER_CATEGORIES: Array<{
   { name: 'Church', color: '#06b6d4', gradient: ['#06b6d4', '#0891b2'], icon: 'home' },
   { name: 'World', color: '#3b82f6', gradient: ['#3b82f6', '#2563eb'], icon: 'globe' },
   { name: 'Prayer Requests', color: '#ec4899', gradient: ['#ec4899', '#db2777'], icon: 'mail' },
+  { name: 'Verses', color: '#8b5cf6', gradient: ['#8b5cf6', '#7c3aed'], icon: 'book-open' },
   { name: 'Other', color: '#6b7280', gradient: ['#6b7280', '#4b5563'], icon: 'more-horizontal' },
 ];
 

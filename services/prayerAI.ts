@@ -41,7 +41,7 @@ export async function generatePrayerFromVerse(verse: VerseData): Promise<Generat
     'Promises': 'Thanksgiving',
   };
 
-  const prayerCategory = categoryMap[verse.category] || 'Personal';
+  const prayerCategory = 'Verses' as PrayerCategory;
 
   // Generate prayer title based on verse
   const title = `Prayer from ${verse.reference}`;

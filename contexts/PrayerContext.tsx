@@ -126,7 +126,7 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       id: `prayer-${Date.now()}`,
       createdAt: now,
       updatedAt: now,
-      isInProgress: false, // Default to not in progress
+      isInProgress: request.isInProgress ?? false, // Use provided value or default to false
     };
     const updated = [...prayerRequests, newRequest];
     await savePrayerRequests(updated);

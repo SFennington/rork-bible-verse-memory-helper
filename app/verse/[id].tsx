@@ -179,17 +179,21 @@ export default function VerseDetailScreen() {
         reminderEnabled: false,
         verseId: verse.id,
         verseReference: verse.reference,
+        isInProgress: true, // Add directly to progress
+      });
+
+      console.log('Prayer created with ID:', prayerId);
+      console.log('Prayer data:', {
+        ...generatedPrayer,
+        status: 'active',
+        reminderEnabled: false,
+        verseId: verse.id,
+        verseReference: verse.reference,
+        isInProgress: true,
       });
 
       // Wait for storage to complete
       await new Promise(resolve => setTimeout(resolve, 300));
-
-      // Automatically add to progress
-      if (prayerId) {
-        await addToProgress(prayerId);
-        // Wait again after adding to progress
-        await new Promise(resolve => setTimeout(resolve, 200));
-      }
 
       setIsGeneratingPrayer(false);
 
