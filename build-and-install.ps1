@@ -8,6 +8,22 @@ Write-Host ""
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
 $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk"
 
+# Stage and commit changes
+Write-Host "📝 Committing changes..." -ForegroundColor Yellow
+git add .
+$gitStatus = git status --short
+if ($gitStatus) {
+    $commitMessage = Read-Host "Enter commit message (or press Enter for default)"
+    if ([string]::IsNullOrWhiteSpace($commitMessage)) {
+        $commitMessage = "Update: $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
+    }
+    git commit -m $commitMessage
+    Write-Host "✅ Changes committed" -ForegroundColor Green
+} else {
+    Write-Host "ℹ️  No changes to commit" -ForegroundColor Cyan
+}
+Write-Host ""
+
 # Navigate to android directory and build
 Write-Host "📦 Building APK with latest changes..." -ForegroundColor Yellow
 Set-Location android

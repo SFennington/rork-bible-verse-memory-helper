@@ -103,7 +103,6 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
   const addToProgress = useCallback((verseId: string, verseOverride?: BibleVerse) => {
     if (progress[verseId]) {
-      console.log('Verse already in progress');
       return;
     }
 

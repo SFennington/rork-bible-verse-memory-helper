@@ -59,7 +59,7 @@ export default function VerseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { verses, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse } = useVerses();
-  const { addPrayerRequest, addToProgress: addPrayerToProgress } = usePrayer();
+  const { addPrayerRequest, reloadPrayers } = usePrayer();
   const { theme } = useTheme();
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
   const [showIncompleteWarning, setShowIncompleteWarning] = useState(false);
@@ -161,7 +161,10 @@ export default function VerseDetailScreen() {
   };
 
   const handleConvertToPrayer = async () => {
-    if (!verse) return;
+    if (!verse) {
+      Alert.alert('Error', 'Verse not found. Please try again.');
+      return;
+    }
 
     setShowOptionsModal(false);
     setIsGeneratingPrayer(true);
@@ -173,26 +176,24 @@ export default function VerseDetailScreen() {
         category: verse.category,
       });
 
-      const prayerId = await addPrayerRequest({
+      const prayerData = {
         ...generatedPrayer,
-        status: 'active',
+        status: 'active' as const,
         reminderEnabled: false,
         verseId: verse.id,
         verseReference: verse.reference,
         isInProgress: true, // Add directly to progress
-      });
+      };
 
-      console.log('Prayer created with ID:', prayerId);
-      console.log('Prayer data:', {
-        ...generatedPrayer,
-        status: 'active',
-        reminderEnabled: false,
-        verseId: verse.id,
-        verseReference: verse.reference,
-        isInProgress: true,
-      });
+      const prayerId = await addPrayerRequest(prayerData);
 
-      // Wait for storage to complete
+      // Wait for AsyncStorage to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Reload prayers from AsyncStorage to ensure sync
+      await reloadPrayers();
+      
+      // Wait a bit more to ensure React has updated
       await new Promise(resolve => setTimeout(resolve, 300));
 
       setIsGeneratingPrayer(false);
@@ -204,7 +205,6 @@ export default function VerseDetailScreen() {
           { 
             text: 'View in Prayers', 
             onPress: () => {
-              // Navigate to prayers tab instead of specific prayer
               router.push('/(tabs)/prayers' as any);
             }
           },

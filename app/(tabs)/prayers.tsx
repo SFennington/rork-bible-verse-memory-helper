@@ -8,6 +8,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -37,6 +38,8 @@ export default function PrayersScreen() {
     prayedTodayIds,
     stats,
     addToProgress,
+    prayerRequests,
+    reloadPrayers,
   } = usePrayer();
   const { theme, themeMode } = useTheme();
   const [selectedTab, setSelectedTab] = useState<TabType>('progress');
@@ -44,6 +47,13 @@ export default function PrayersScreen() {
   const [showAllProgress, setShowAllProgress] = useState(false);
   const [showArchived, setShowArchived] = useState(false);
   const insets = useSafeAreaInsets();
+
+  // Reload prayers when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      reloadPrayers();
+    }, [reloadPrayers])
+  );
 
   const filteredBrowsePrayers = selectedCategory
     ? browsePrayers.filter(p => p.category === selectedCategory)

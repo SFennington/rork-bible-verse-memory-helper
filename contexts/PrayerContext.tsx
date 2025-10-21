@@ -101,15 +101,6 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
     }
   }, [prayerRequests]);
 
-  const savePrayerRequests = async (requests: PrayerRequest[]) => {
-    try {
-      await AsyncStorage.setItem(PRAYER_REQUESTS_KEY, JSON.stringify(requests));
-      setPrayerRequests(requests);
-    } catch (error) {
-      console.error('Failed to save prayer requests:', error);
-    }
-  };
-
   const savePrayerLogs = async (logs: PrayerLog[]) => {
     try {
       await AsyncStorage.setItem(PRAYER_LOGS_KEY, JSON.stringify(logs));
@@ -126,28 +117,84 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       id: `prayer-${Date.now()}`,
       createdAt: now,
       updatedAt: now,
-      isInProgress: request.isInProgress ?? false, // Use provided value or default to false
+      isInProgress: request.isInProgress === true, // Explicitly convert to boolean
     };
-    const updated = [...prayerRequests, newRequest];
-    await savePrayerRequests(updated);
+    
+    // Read current data from AsyncStorage first
+    let currentRequests: PrayerRequest[] = [];
+    try {
+      const stored = await AsyncStorage.getItem(PRAYER_REQUESTS_KEY);
+      if (stored) {
+        currentRequests = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to read current prayers:', error);
+    }
+    
+    // Add new prayer
+    const updated = [...currentRequests, newRequest];
+    
+    // Save to AsyncStorage FIRST
+    try {
+      await AsyncStorage.setItem(PRAYER_REQUESTS_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to save to AsyncStorage:', error);
+      throw error;
+    }
+    
+    // Then update React state
+    setPrayerRequests(updated);
+    
     return newRequest.id;
-  }, [prayerRequests]);
+  }, []);
 
   const updatePrayerRequest = useCallback(async (id: string, updates: Partial<PrayerRequest>) => {
-    const updated = prayerRequests.map(req =>
-      req.id === id
-        ? { ...req, ...updates, updatedAt: new Date().toISOString() }
-        : req
-    );
-    await savePrayerRequests(updated);
-  }, [prayerRequests]);
+    const updated = await new Promise<PrayerRequest[]>((resolve) => {
+      setPrayerRequests((prevRequests) => {
+        const newList = prevRequests.map(req =>
+          req.id === id
+            ? { ...req, ...updates, updatedAt: new Date().toISOString() }
+            : req
+        );
+        resolve(newList);
+        return newList;
+      });
+    });
+    
+    try {
+      await AsyncStorage.setItem(PRAYER_REQUESTS_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to save prayer requests:', error);
+    }
+  }, []);
 
   const deletePrayerRequest = useCallback(async (id: string) => {
-    const updated = prayerRequests.filter(req => req.id !== id);
-    const updatedLogs = prayerLogs.filter(log => log.prayerRequestId !== id);
-    await savePrayerRequests(updated);
-    await savePrayerLogs(updatedLogs);
-  }, [prayerRequests, prayerLogs]);
+    const [updatedRequests, updatedLogs] = await Promise.all([
+      new Promise<PrayerRequest[]>((resolve) => {
+        setPrayerRequests((prev) => {
+          const filtered = prev.filter(req => req.id !== id);
+          resolve(filtered);
+          return filtered;
+        });
+      }),
+      new Promise<PrayerLog[]>((resolve) => {
+        setPrayerLogs((prev) => {
+          const filtered = prev.filter(log => log.prayerRequestId !== id);
+          resolve(filtered);
+          return filtered;
+        });
+      })
+    ]);
+    
+    try {
+      await Promise.all([
+        AsyncStorage.setItem(PRAYER_REQUESTS_KEY, JSON.stringify(updatedRequests)),
+        AsyncStorage.setItem(PRAYER_LOGS_KEY, JSON.stringify(updatedLogs))
+      ]);
+    } catch (error) {
+      console.error('Failed to save after deletion:', error);
+    }
+  }, []);
 
   const markAsAnswered = useCallback(async (id: string) => {
     await updatePrayerRequest(id, {
@@ -194,10 +241,9 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
     [prayerRequests]
   );
 
-  const progressPrayers = useMemo(
-    () => prayerRequests.filter(req => req.status === 'active' && req.isInProgress),
-    [prayerRequests]
-  );
+  const progressPrayers = useMemo(() => {
+    return prayerRequests.filter(req => req.status === 'active' && req.isInProgress === true);
+  }, [prayerRequests]);
 
   const browsePrayers = useMemo(
     () => prayerRequests.filter(req => req.status === 'active' && !req.isInProgress),
@@ -280,6 +326,18 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
     };
   }, [prayerLogs, answeredPrayers]);
 
+  const reloadPrayers = useCallback(async () => {
+    try {
+      const stored = await AsyncStorage.getItem(PRAYER_REQUESTS_KEY);
+      if (stored) {
+        const loaded = JSON.parse(stored);
+        setPrayerRequests(loaded);
+      }
+    } catch (error) {
+      console.error('Failed to reload prayers:', error);
+    }
+  }, []);
+
   return useMemo(
     () => ({
       prayerRequests,
@@ -303,6 +361,7 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       getPrayersByCategory,
       getPrayerLogs,
       rotateDailyPrayers,
+      reloadPrayers,
     }),
     [
       prayerRequests,
@@ -326,6 +385,7 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       getPrayersByCategory,
       getPrayerLogs,
       rotateDailyPrayers,
+      reloadPrayers,
     ]
   );
 });
