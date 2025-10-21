@@ -130,7 +130,19 @@ export default function FirstLetterGameScreen() {
         router.push(`/verse/${id}`);
       }
     } else {
-      router.replace(`/game/first-letter/${id}`);
+      // Only clear incorrect answers, keep correct ones
+      const newInputs: Record<number, string> = {};
+      words.forEach((word, index) => {
+        if (!preFilledIndices.has(index)) {
+          const input = inputs[index]?.trim() || '';
+          if (input.toLowerCase() === word.toLowerCase()) {
+            // Keep correct answer
+            newInputs[index] = inputs[index];
+          }
+        }
+      });
+      setInputs(newInputs);
+      setShowResult(false);
     }
   };
 
@@ -260,7 +272,7 @@ export default function FirstLetterGameScreen() {
               onPress={handleCheck}
               activeOpacity={0.9}
             >
-              <Text style={styles.checkButtonText}>Check Answer</Text>
+              <Text style={styles.checkButtonText}>Check Answers</Text>
               <ArrowRight color="#fff" size={20} />
             </TouchableOpacity>
           )}

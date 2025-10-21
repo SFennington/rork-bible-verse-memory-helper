@@ -184,7 +184,17 @@ export default function MissingVowelsGameScreen() {
         router.push(`/verse/${id}`);
       }
     } else {
-      router.replace(`/game/missing-vowels/${id}`);
+      // Only clear incorrect answers, keep correct ones
+      const newInputs: Record<number, string> = {};
+      gameData.wordsData.forEach((wordData) => {
+        const userWord = userInputs[wordData.wordIndex] || '';
+        if (userWord.toLowerCase().trim() === wordData.original.toLowerCase().trim()) {
+          // Keep correct answer
+          newInputs[wordData.wordIndex] = userInputs[wordData.wordIndex];
+        }
+      });
+      setUserInputs(newInputs);
+      setShowResult(false);
     }
   };
 
@@ -300,13 +310,13 @@ export default function MissingVowelsGameScreen() {
             </View>
           )}
 
-          {!showResult && isComplete && (
+          {!showResult && (
             <TouchableOpacity
               style={styles.checkButton}
               onPress={handleCheck}
               activeOpacity={0.9}
             >
-              <Text style={styles.checkButtonText}>Check Answer</Text>
+              <Text style={styles.checkButtonText}>Check Answers</Text>
               <ArrowRight color="#fff" size={20} />
             </TouchableOpacity>
           )}

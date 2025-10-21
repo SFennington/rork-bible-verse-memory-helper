@@ -210,7 +210,19 @@ export default function WordOrderGameScreen() {
         router.push(`/verse/${id}`);
       }
     } else {
-      router.replace(`/game/word-order/${id}`);
+      // Only clear incorrect words, keep correct ones
+      const correctWordsArray = correctWords;
+      const newOrderedWords: string[] = [];
+      
+      orderedWords.forEach((word, index) => {
+        if (word === correctWordsArray[index]) {
+          // Keep correct word in correct position
+          newOrderedWords.push(word);
+        }
+      });
+      
+      setOrderedWords(newOrderedWords);
+      setShowResult(false);
     }
   };
 
@@ -346,13 +358,13 @@ export default function WordOrderGameScreen() {
             </View>
           )}
 
-          {!showResult && isComplete && (
+          {!showResult && (
             <TouchableOpacity
               style={[styles.checkButton, { backgroundColor: theme.cardBackground }]}
               onPress={handleCheck}
               activeOpacity={0.9}
             >
-              <Text style={[styles.checkButtonText, { color: theme.text }]}>Check Answer</Text>
+              <Text style={[styles.checkButtonText, { color: theme.text }]}>Check Answers</Text>
               <ArrowRight color="#fff" size={20} />
             </TouchableOpacity>
           )}
