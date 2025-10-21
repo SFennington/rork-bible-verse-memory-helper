@@ -295,17 +295,16 @@ export default function VerseDetailScreen() {
                       </>
                     )}
                   </View>
+                  {isDue && verseProgress.overallProgress < 100 && (
+                    <TouchableOpacity 
+                      style={styles.dueIndicator}
+                      onPress={handlePlayNextIncomplete}
+                      activeOpacity={0.8}
+                    >
+                      <Play color="#fff" size={16} fill="#fff" />
+                    </TouchableOpacity>
+                  )}
                 </View>
-                {isDue && verseProgress.overallProgress < 100 && (
-                  <TouchableOpacity 
-                    style={styles.dueButton}
-                    onPress={handlePlayNextIncomplete}
-                    activeOpacity={0.8}
-                  >
-                    <Play color="#fff" size={14} fill="#fff" />
-                    <Text style={styles.dueButtonText}>Play Next</Text>
-                  </TouchableOpacity>
-                )}
                 <View style={styles.statsRow}>
                   <View style={styles.statItem}>
                     <Flame color="#f59e0b" size={20} />
@@ -753,20 +752,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600' as const,
   },
-  dueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  dueIndicator: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#ef4444',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginTop: 8,
-  },
-  dueButtonText: {
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   statsRow: {
     flexDirection: 'row',

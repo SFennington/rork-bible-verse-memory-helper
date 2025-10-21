@@ -10,9 +10,8 @@ import {
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Heart,
+  HandHeart,
   CheckCircle2,
-  Archive,
   Trash2,
   Clock,
   Calendar,
@@ -30,7 +29,6 @@ export default function PrayerDetailScreen() {
     getPrayerLogs,
     logPrayer,
     markAsAnswered,
-    markAsArchived,
     deletePrayerRequest,
   } = usePrayer();
   const { theme } = useTheme();
@@ -77,11 +75,6 @@ export default function PrayerDetailScreen() {
 
   const handleMarkAnswered = async () => {
     await markAsAnswered(prayer.id);
-    Alert.alert('Success', 'Prayer marked as answered!');
-  };
-
-  const handleArchive = async () => {
-    await markAsArchived(prayer.id);
     router.back();
   };
 
@@ -162,7 +155,7 @@ export default function PrayerDetailScreen() {
                 style={[styles.historyItem, { borderBottomColor: theme.border }]}
               >
                 <View style={styles.historyIcon}>
-                  <Heart color={category?.color || '#667eea'} size={16} fill={category?.color || '#667eea'} />
+                  <HandHeart color={category?.color || '#667eea'} size={16} />
                 </View>
                 <View style={styles.historyContent}>
                   <Text style={[styles.historyDate, { color: theme.text }]}>
@@ -195,7 +188,7 @@ export default function PrayerDetailScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Heart color="#fff" size={20} />
+                <HandHeart color="#fff" size={20} />
                 <Text style={styles.buttonText}>Pray Now</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -212,17 +205,6 @@ export default function PrayerDetailScreen() {
         )}
 
         <View style={styles.dangerZone}>
-          {prayer.status === 'active' && (
-            <TouchableOpacity
-              style={[styles.dangerButton, { borderColor: theme.border }]}
-              onPress={handleArchive}
-              activeOpacity={0.7}
-            >
-              <Archive color={theme.textSecondary} size={18} />
-              <Text style={[styles.dangerButtonText, { color: theme.textSecondary }]}>Archive</Text>
-            </TouchableOpacity>
-          )}
-          
           <TouchableOpacity
             style={[styles.dangerButton, { borderColor: '#ef4444' }]}
             onPress={handleDelete}

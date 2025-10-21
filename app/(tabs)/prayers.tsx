@@ -12,14 +12,13 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
-  Heart,
+  HandHeart,
   Target,
   Plus,
   CheckCircle2,
   Flame,
   TrendingUp,
   PlusCircle,
-  Archive,
   Clock,
 } from 'lucide-react-native';
 import { usePrayer } from '@/contexts/PrayerContext';
@@ -34,7 +33,6 @@ export default function PrayersScreen() {
     progressPrayers,
     browsePrayers,
     answeredPrayers,
-    archivedPrayers,
     prayedTodayIds,
     stats,
     addToProgress,
@@ -95,7 +93,7 @@ export default function PrayersScreen() {
         <View style={[styles.header, { paddingTop: 20 + insets.top }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerContent}>
-              <Heart color="#fff" size={28} strokeWidth={2.5} />
+              <HandHeart color="#fff" size={28} strokeWidth={2.5} />
               <Text style={styles.title}>Prayer Journey</Text>
             </View>
           </View>
@@ -168,7 +166,7 @@ export default function PrayersScreen() {
               onPress={() => setSelectedTab('browse')}
               activeOpacity={0.7}
             >
-              <Heart color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} />
+              <HandHeart color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} />
               <Text style={[
                 styles.tabText,
                 selectedTab === 'browse' && styles.tabTextActive,
@@ -277,13 +275,12 @@ export default function PrayersScreen() {
                                   For: {prayer.prayingFor}
                                 </Text>
                               )}
-                              {isPrayedToday && (
-                                <View style={styles.prayedBadge}>
-                                  <CheckCircle2 color="#10b981" size={14} fill="#10b981" />
-                                  <Text style={styles.prayedBadgeText}>Prayed Today</Text>
-                                </View>
-                              )}
                             </View>
+                            {isPrayedToday && (
+                              <View style={styles.prayedBadge}>
+                                <CheckCircle2 color="#fff" size={16} fill="#fff" />
+                              </View>
+                            )}
                           </View>
                           {prayer.description && (
                             <Text style={styles.prayerDescription} numberOfLines={2}>
@@ -317,20 +314,20 @@ export default function PrayersScreen() {
                     </TouchableOpacity>
                   )}
 
-                  {(answeredPrayers.length > 0 || archivedPrayers.length > 0) && (
+                  {answeredPrayers.length > 0 && (
                     <TouchableOpacity
                       style={styles.archivedToggle}
                       onPress={() => setShowArchived(!showArchived)}
                       activeOpacity={0.7}
                     >
-                      <Archive color="#fff" size={20} />
+                      <CheckCircle2 color="#fff" size={20} />
                       <Text style={styles.archivedToggleText}>
-                        {showArchived ? 'Hide' : 'Show'} Answered & Archived ({answeredPrayers.length + archivedPrayers.length})
+                        {showArchived ? 'Hide' : 'Show'} Answered ({answeredPrayers.length})
                       </Text>
                     </TouchableOpacity>
                   )}
 
-                  {showArchived && [...answeredPrayers, ...archivedPrayers].map((prayer) => {
+                  {showArchived && answeredPrayers.map((prayer) => {
                     const category = PRAYER_CATEGORIES.find(c => c.name === prayer.category);
 
                     return (
@@ -347,14 +344,8 @@ export default function PrayersScreen() {
                           end={{ x: 1, y: 1 }}
                         >
                           <View style={styles.archivedBadge}>
-                            {prayer.status === 'answered' ? (
-                              <CheckCircle2 color="#fff" size={14} />
-                            ) : (
-                              <Archive color="#fff" size={14} />
-                            )}
-                            <Text style={styles.archivedBadgeText}>
-                              {prayer.status === 'answered' ? 'Answered' : 'Archived'}
-                            </Text>
+                            <CheckCircle2 color="#fff" size={14} />
+                            <Text style={styles.archivedBadgeText}>Answered</Text>
                           </View>
                           <View style={styles.prayerHeader}>
                             <View style={styles.prayerTitleSection}>
@@ -670,19 +661,12 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   prayedBadge: {
-    flexDirection: 'row',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginTop: 4,
-  },
-  prayedBadgeText: {
-    fontSize: 11,
-    fontWeight: '600' as const,
-    color: '#10b981',
+    justifyContent: 'center',
   },
   addButton: {
     width: 32,
