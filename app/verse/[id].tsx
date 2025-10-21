@@ -231,14 +231,6 @@ export default function VerseDetailScreen() {
             fontWeight: '700' as const,
           },
           headerBackVisible: true,
-          headerLeft: () => (
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.push('/(tabs)/verses' as any)}
-            >
-              <ArrowRight color="#fff" size={24} style={{ transform: [{ rotate: '180deg' }] }} />
-            </TouchableOpacity>
-          ),
           headerRight: () => (
             <TouchableOpacity
               style={styles.optionsButton}
@@ -1030,9 +1022,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#fff',
-  },
-  backButton: {
-    paddingLeft: 16,
   },
   optionsButton: {
     padding: 8,
