@@ -1,4 +1,4 @@
-package app.rork.praypal
+package app.rork.heartscript
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

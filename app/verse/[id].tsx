@@ -6,14 +6,18 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive, Crown } from 'lucide-react-native';
+import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive, Crown, Heart } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
+import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 import { GameType } from '@/types/verse';
+import { generatePrayerFromVerse } from '@/services/prayerAI';
 
 const GAME_INFO: Record<GameType, { title: string; description: string }> = {
   'fill-blank': {
@@ -55,12 +59,14 @@ export default function VerseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { verses, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse } = useVerses();
+  const { addPrayerRequest, addToProgress: addPrayerToProgress } = usePrayer();
   const { theme } = useTheme();
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
   const [showIncompleteWarning, setShowIncompleteWarning] = useState(false);
   const [showOptionsModal, setShowOptionsModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [isGeneratingPrayer, setIsGeneratingPrayer] = useState(false);
 
   const verse = verses.find(v => v.id === id);
   const verseProgress = getVerseProgress(id || '');
@@ -154,6 +160,60 @@ export default function VerseDetailScreen() {
     }
   };
 
+  const handleConvertToPrayer = async () => {
+    if (!verse) return;
+
+    setShowOptionsModal(false);
+    setIsGeneratingPrayer(true);
+    
+    try {
+      const generatedPrayer = await generatePrayerFromVerse({
+        reference: verse.reference,
+        text: verse.text,
+        category: verse.category,
+      });
+
+      const prayerId = await addPrayerRequest({
+        ...generatedPrayer,
+        status: 'active',
+        reminderEnabled: false,
+        verseId: verse.id,
+        verseReference: verse.reference,
+      });
+
+      // Wait for storage to complete
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Automatically add to progress
+      if (prayerId) {
+        await addToProgress(prayerId);
+        // Wait again after adding to progress
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      setIsGeneratingPrayer(false);
+
+      Alert.alert(
+        'Prayer Created!',
+        'A prayer has been generated from this verse and added to your Prayers list.',
+        [
+          { 
+            text: 'View in Prayers', 
+            onPress: () => {
+              // Navigate to prayers tab instead of specific prayer
+              router.push('/(tabs)/prayers' as any);
+            }
+          },
+          { text: 'OK', style: 'cancel' },
+        ]
+      );
+    } catch (error) {
+      console.error('Failed to generate prayer:', error);
+      setIsGeneratingPrayer(false);
+      Alert.alert('Error', 'Failed to generate prayer. Please try again.');
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Stack.Screen
@@ -166,14 +226,14 @@ export default function VerseDetailScreen() {
           headerTitleStyle: {
             fontWeight: '700' as const,
           },
-          headerRight: verseProgress ? () => (
+          headerRight: () => (
             <TouchableOpacity
               style={styles.optionsButton}
               onPress={() => setShowOptionsModal(true)}
             >
               <MoreVertical color="#fff" size={24} />
             </TouchableOpacity>
-          ) : undefined,
+          ),
         }}
       />
       <LinearGradient
@@ -442,27 +502,47 @@ export default function VerseDetailScreen() {
           <View style={[styles.optionsContent, { backgroundColor: theme.cardBackground }]}>
             <TouchableOpacity
               style={styles.optionItem}
-              onPress={() => {
-                setShowOptionsModal(false);
-                setShowArchiveConfirm(true);
-              }}
+              onPress={handleConvertToPrayer}
               activeOpacity={0.7}
+              disabled={isGeneratingPrayer}
             >
-              <Archive color="#3b82f6" size={22} />
-              <Text style={[styles.optionText, { color: theme.text }]}>Archive Verse</Text>
+              {isGeneratingPrayer ? (
+                <ActivityIndicator size="small" color="#ec4899" />
+              ) : (
+                <Heart color="#ec4899" size={22} />
+              )}
+              <Text style={[styles.optionText, { color: theme.text }]}>
+                {isGeneratingPrayer ? 'Generating...' : 'Convert to Prayer'}
+              </Text>
             </TouchableOpacity>
-            <View style={[styles.optionDivider, { backgroundColor: theme.border }]} />
-            <TouchableOpacity
-              style={styles.optionItem}
-              onPress={() => {
-                setShowOptionsModal(false);
-                setShowDeleteConfirm(true);
-              }}
-              activeOpacity={0.7}
-            >
-              <Trash2 color="#ef4444" size={22} />
-              <Text style={[styles.optionText, { color: '#ef4444' }]}>Delete Verse</Text>
-            </TouchableOpacity>
+            {verseProgress && (
+              <>
+                <View style={[styles.optionDivider, { backgroundColor: theme.border }]} />
+                <TouchableOpacity
+                  style={styles.optionItem}
+                  onPress={() => {
+                    setShowOptionsModal(false);
+                    setShowArchiveConfirm(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Archive color="#3b82f6" size={22} />
+                  <Text style={[styles.optionText, { color: theme.text }]}>Archive Verse</Text>
+                </TouchableOpacity>
+                <View style={[styles.optionDivider, { backgroundColor: theme.border }]} />
+                <TouchableOpacity
+                  style={styles.optionItem}
+                  onPress={() => {
+                    setShowOptionsModal(false);
+                    setShowDeleteConfirm(true);
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <Trash2 color="#ef4444" size={22} />
+                  <Text style={[styles.optionText, { color: '#ef4444' }]}>Delete Verse</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </TouchableOpacity>
       </Modal>

@@ -166,7 +166,7 @@ export default function HomeScreen() {
                 <Text
                   style={[
                     styles.categoryText,
-                    !selectedCategory && styles.categoryTextActive,
+                    !selectedCategory && styles.categoryTextAllActive,
                   ]}
                 >
                   All
@@ -533,6 +533,9 @@ const styles = StyleSheet.create({
   },
   categoryTextActive: {
     color: '#fff',
+  },
+  categoryTextAllActive: {
+    color: '#667eea',
   },
   scrollView: {
     flex: 1,

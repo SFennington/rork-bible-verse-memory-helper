@@ -25,6 +25,7 @@ export default function AddPrayerScreen() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<PrayerCategory>('Personal');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [prayingFor, setPrayingFor] = useState('');
 
   const handleAdd = async () => {
     if (!title.trim()) {
@@ -40,6 +41,7 @@ export default function AddPrayerScreen() {
         status: 'active',
         priority,
         reminderEnabled: false,
+        prayingFor: prayingFor.trim() || undefined,
       });
 
       Alert.alert('Success', 'Prayer request added!', [
@@ -90,6 +92,26 @@ export default function AddPrayerScreen() {
               value={title}
               onChangeText={setTitle}
             />
+
+            {category === 'Prayer Requests' && (
+              <>
+                <Text style={[styles.label, { color: theme.text }]}>Praying For</Text>
+                <TextInput
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.background,
+                      color: theme.text,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                  placeholder="Who are you praying for? (e.g., John, Mom, etc.)"
+                  placeholderTextColor={theme.textTertiary}
+                  value={prayingFor}
+                  onChangeText={setPrayingFor}
+                />
+              </>
+            )}
 
             <Text style={[styles.label, { color: theme.text }]}>Description (Optional)</Text>
             <TextInput

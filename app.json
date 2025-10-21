@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "PrayPal",
-    "slug": "praypal",
+    "name": "HeartScript",
+    "slug": "heartscript",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -22,7 +22,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.praypal",
+      "package": "app.rork.heartscript",
       "versionCode": 1,
       "statusBarHidden": false,
       "statusBarTranslucent": false,

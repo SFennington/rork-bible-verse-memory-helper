@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'app.rork.praypal'
+    namespace 'app.rork.heartscript'
     defaultConfig {
-        applicationId 'app.rork.praypal'
+        applicationId 'app.rork.heartscript'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -53,6 +53,7 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
           id: `example-${index}`,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
+          isInProgress: false, // Start in Browse, not Progress
         }));
         await AsyncStorage.setItem(PRAYER_REQUESTS_KEY, JSON.stringify(requests));
       }
@@ -125,6 +126,7 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       id: `prayer-${Date.now()}`,
       createdAt: now,
       updatedAt: now,
+      isInProgress: false, // Default to not in progress
     };
     const updated = [...prayerRequests, newRequest];
     await savePrayerRequests(updated);
@@ -161,6 +163,10 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
     });
   }, [updatePrayerRequest]);
 
+  const addToProgress = useCallback(async (prayerId: string) => {
+    await updatePrayerRequest(prayerId, { isInProgress: true });
+  }, [updatePrayerRequest]);
+
   const logPrayer = useCallback(async (prayerRequestId: string, notes?: string, duration?: number) => {
     const newLog: PrayerLog = {
       id: `log-${Date.now()}`,
@@ -185,6 +191,16 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
 
   const archivedPrayers = useMemo(
     () => prayerRequests.filter(req => req.status === 'archived'),
+    [prayerRequests]
+  );
+
+  const progressPrayers = useMemo(
+    () => prayerRequests.filter(req => req.status === 'active' && req.isInProgress),
+    [prayerRequests]
+  );
+
+  const browsePrayers = useMemo(
+    () => prayerRequests.filter(req => req.status === 'active' && !req.isInProgress),
     [prayerRequests]
   );
 
@@ -271,11 +287,14 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       activePrayers,
       answeredPrayers,
       archivedPrayers,
+      progressPrayers,
+      browsePrayers,
       todaysPrayers,
       prayedTodayIds,
       stats,
       isLoading,
       addPrayerRequest,
+      addToProgress,
       updatePrayerRequest,
       deletePrayerRequest,
       markAsAnswered,
@@ -291,11 +310,14 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       activePrayers,
       answeredPrayers,
       archivedPrayers,
+      progressPrayers,
+      browsePrayers,
       todaysPrayers,
       prayedTodayIds,
       stats,
       isLoading,
       addPrayerRequest,
+      addToProgress,
       updatePrayerRequest,
       deletePrayerRequest,
       markAsAnswered,

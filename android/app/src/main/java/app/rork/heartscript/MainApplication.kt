@@ -1,4 +1,4 @@
-package app.rork.praypal
+package app.rork.heartscript
 
 import android.app.Application
 import android.content.res.Configuration

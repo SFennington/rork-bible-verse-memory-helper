@@ -6,69 +6,60 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Heart,
+  Target,
   Plus,
   CheckCircle2,
-  Clock,
   Flame,
   TrendingUp,
+  PlusCircle,
   Archive,
-  Circle,
+  Clock,
 } from 'lucide-react-native';
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PRAYER_CATEGORIES, PrayerCategory } from '@/types/prayer';
 
-type TabType = 'active' | 'answered' | 'archived';
+type TabType = 'browse' | 'progress';
 
 export default function PrayersScreen() {
   const router = useRouter();
   const {
-    activePrayers,
+    progressPrayers,
+    browsePrayers,
     answeredPrayers,
     archivedPrayers,
-    todaysPrayers,
     prayedTodayIds,
     stats,
-    logPrayer,
-    markAsAnswered,
+    addToProgress,
   } = usePrayer();
   const { theme, themeMode } = useTheme();
-  const [selectedTab, setSelectedTab] = useState<TabType>('active');
+  const [selectedTab, setSelectedTab] = useState<TabType>('progress');
   const [selectedCategory, setSelectedCategory] = useState<PrayerCategory | null>(null);
-  const [showTodaysOnly, setShowTodaysOnly] = useState(true);
+  const [showAllProgress, setShowAllProgress] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
   const insets = useSafeAreaInsets();
 
-  const displayedPrayers = useMemo(() => {
-    // For active tab, show today's prayers if toggle is on
-    let prayers = selectedTab === 'active' && showTodaysOnly
-      ? todaysPrayers
-      : selectedTab === 'active' ? activePrayers
-      : selectedTab === 'answered' ? answeredPrayers
-      : archivedPrayers;
+  const filteredBrowsePrayers = selectedCategory
+    ? browsePrayers.filter(p => p.category === selectedCategory)
+    : browsePrayers;
 
-    if (selectedCategory) {
-      prayers = prayers.filter(p => p.category === selectedCategory);
-    }
+  const displayedProgressPrayers = showAllProgress 
+    ? progressPrayers 
+    : progressPrayers.slice(0, 5);
 
-    return prayers.sort((a, b) => {
-      // Sort by priority first, then by date
-      const priorityOrder = { high: 0, medium: 1, low: 2 };
-      if (a.priority !== b.priority) {
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      }
-      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-    });
-  }, [selectedTab, selectedCategory, showTodaysOnly, todaysPrayers, activePrayers, answeredPrayers, archivedPrayers]);
+  const isInProgress = (prayerId: string) => {
+    return progressPrayers.some(p => p.id === prayerId);
+  };
 
-  const handlePrayNow = async (prayerId: string) => {
-    await logPrayer(prayerId);
+  const handleAddToProgress = (prayerId: string) => {
+    addToProgress(prayerId);
+    setSelectedTab('progress');
   };
 
   const prayedToday = (prayerId: string) => {
@@ -92,19 +83,12 @@ export default function PrayersScreen() {
           <View style={styles.headerRow}>
             <View style={styles.headerContent}>
               <Heart color="#fff" size={28} strokeWidth={2.5} />
-              <Text style={styles.title}>PrayPal</Text>
+              <Text style={styles.title}>Prayer Journey</Text>
             </View>
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => router.push('/add-prayer' as any)}
-              activeOpacity={0.7}
-            >
-              <Plus color="#fff" size={24} />
-            </TouchableOpacity>
           </View>
-          <Text style={styles.subtitle}>Your Prayer Journey</Text>
+          <Text style={styles.subtitle}>Keep your prayers in focus</Text>
 
-          {stats.totalPrayers > 0 && (
+          {selectedTab === 'progress' && progressPrayers.length > 0 && (
             <View style={styles.statsContainer}>
               <View style={styles.statRow}>
                 <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
@@ -138,150 +122,316 @@ export default function PrayersScreen() {
             </View>
           )}
 
-          {selectedTab === 'active' && (
-            <TouchableOpacity
-              style={[styles.todayToggle, showTodaysOnly && styles.todayToggleActive]}
-              onPress={() => setShowTodaysOnly(!showTodaysOnly)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.todayToggleText, showTodaysOnly && styles.todayToggleTextActive]}>
-                {showTodaysOnly ? "Today's 5" : 'Show All'}
-              </Text>
-            </TouchableOpacity>
-          )}
-
           <View style={styles.tabsContainer}>
             <TouchableOpacity
-              style={[styles.tab, selectedTab === 'active' && styles.tabActive]}
-              onPress={() => setSelectedTab('active')}
+              style={[
+                styles.tab,
+                selectedTab === 'progress' && styles.tabActive,
+              ]}
+              onPress={() => setSelectedTab('progress')}
               activeOpacity={0.7}
             >
-              <Circle color={selectedTab === 'active' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} />
-              <Text style={[styles.tabText, selectedTab === 'active' && styles.tabTextActive]}>
-                Active
+              <Target color={selectedTab === 'progress' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} />
+              <Text style={[
+                styles.tabText,
+                selectedTab === 'progress' && styles.tabTextActive,
+              ]}>
+                My Progress
               </Text>
-              {activePrayers.length > 0 && (
+              {progressPrayers.length > 0 && (
                 <View style={styles.countBadge}>
-                  <Text style={styles.countBadgeText}>{activePrayers.length}</Text>
+                  <Text style={styles.countBadgeText}>{progressPrayers.length}</Text>
                 </View>
               )}
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tab, selectedTab === 'answered' && styles.tabActive]}
-              onPress={() => setSelectedTab('answered')}
+              style={[
+                styles.tab,
+                selectedTab === 'browse' && styles.tabActive,
+              ]}
+              onPress={() => setSelectedTab('browse')}
               activeOpacity={0.7}
             >
-              <CheckCircle2
-                color={selectedTab === 'answered' ? '#fff' : 'rgba(255, 255, 255, 0.7)'}
-                size={20}
-              />
-              <Text style={[styles.tabText, selectedTab === 'answered' && styles.tabTextActive]}>
-                Answered
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, selectedTab === 'archived' && styles.tabActive]}
-              onPress={() => setSelectedTab('archived')}
-              activeOpacity={0.7}
-            >
-              <Archive
-                color={selectedTab === 'archived' ? '#fff' : 'rgba(255, 255, 255, 0.7)'}
-                size={20}
-              />
-              <Text style={[styles.tabText, selectedTab === 'archived' && styles.tabTextActive]}>
-                Archived
+              <Heart color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} />
+              <Text style={[
+                styles.tabText,
+                selectedTab === 'browse' && styles.tabTextActive,
+              ]}>
+                Browse
               </Text>
             </TouchableOpacity>
           </View>
         </View>
 
+        {selectedTab === 'browse' && (
+          <View style={styles.categoriesContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoriesScroll}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.categoryChip,
+                  !selectedCategory && styles.categoryChipActive,
+                ]}
+                onPress={() => setSelectedCategory(null)}
+              >
+                <Text
+                  style={[
+                    styles.categoryText,
+                    !selectedCategory && styles.categoryTextAllActive,
+                  ]}
+                >
+                  All
+                </Text>
+              </TouchableOpacity>
+              {PRAYER_CATEGORIES.map(cat => (
+                <TouchableOpacity
+                  key={cat.name}
+                  style={[
+                    styles.categoryChip,
+                    selectedCategory === cat.name && styles.categoryChipActive,
+                    selectedCategory === cat.name && { backgroundColor: cat.color },
+                  ]}
+                  onPress={() => setSelectedCategory(cat.name as PrayerCategory)}
+                >
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      selectedCategory === cat.name && styles.categoryTextActive,
+                    ]}
+                  >
+                    {cat.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+
         <ScrollView
-          style={styles.content}
+          style={styles.scrollView}
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          {selectedTab === 'active' && activePrayers.length === 0 && (
-            <View style={[styles.emptyState, { backgroundColor: theme.cardBackground }]}>
-              <Heart color={theme.textSecondary} size={48} />
-              <Text style={[styles.emptyStateTitle, { color: theme.text }]}>No Active Prayers</Text>
-              <Text style={[styles.emptyStateText, { color: theme.textSecondary }]}>
-                Tap the + button to add your first prayer request
-              </Text>
-            </View>
+          {selectedTab === 'progress' && (
+            <>
+              {progressPrayers.length === 0 && !showArchived ? (
+                <View style={styles.emptyState}>
+                  <Target color="rgba(255, 255, 255, 0.5)" size={64} />
+                  <Text style={styles.emptyTitle}>Start Your Prayer Journey</Text>
+                  <Text style={styles.emptyText}>
+                    Add prayers from Browse to begin your focused prayer time
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.browseButton}
+                    onPress={() => setSelectedTab('browse')}
+                    activeOpacity={0.9}
+                  >
+                    <Text style={styles.browseButtonText}>Browse Prayers</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <>
+                  {displayedProgressPrayers.map((prayer) => {
+                    const category = PRAYER_CATEGORIES.find(c => c.name === prayer.category);
+                    const isPrayedToday = prayedToday(prayer.id);
+
+                    return (
+                      <TouchableOpacity
+                        key={prayer.id}
+                        style={styles.prayerCard}
+                        onPress={() => router.push(`/prayer/${prayer.id}` as any)}
+                        activeOpacity={0.9}
+                      >
+                        <LinearGradient
+                          colors={(category?.gradient || ['#667eea', '#764ba2']) as any}
+                          style={styles.prayerGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <View style={styles.prayerHeader}>
+                            <View style={styles.prayerTitleSection}>
+                              <Text style={styles.prayerTitle} numberOfLines={2}>
+                                {prayer.title}
+                              </Text>
+                              {prayer.prayingFor && (
+                                <Text style={styles.prayingForText}>
+                                  For: {prayer.prayingFor}
+                                </Text>
+                              )}
+                            </View>
+                            {isPrayedToday && (
+                              <View style={styles.prayedIndicator}>
+                                <CheckCircle2 color="#fff" size={16} fill="#fff" />
+                              </View>
+                            )}
+                          </View>
+                          {prayer.description && (
+                            <Text style={styles.prayerDescription} numberOfLines={2}>
+                              {prayer.description}
+                            </Text>
+                          )}
+                          <View style={styles.prayerFooter}>
+                            <View style={styles.categoryBadge}>
+                              <Text style={styles.categoryBadgeText}>{prayer.category}</Text>
+                            </View>
+                            {prayer.priority === 'high' && (
+                              <View style={styles.priorityBadge}>
+                                <Text style={styles.priorityText}>High Priority</Text>
+                              </View>
+                            )}
+                          </View>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    );
+                  })}
+
+                  {progressPrayers.length > 5 && (
+                    <TouchableOpacity
+                      style={styles.showAllToggle}
+                      onPress={() => setShowAllProgress(!showAllProgress)}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.showAllToggleText}>
+                        {showAllProgress ? 'Show Less' : `Show All (${progressPrayers.length})`}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {(answeredPrayers.length > 0 || archivedPrayers.length > 0) && (
+                    <TouchableOpacity
+                      style={styles.archivedToggle}
+                      onPress={() => setShowArchived(!showArchived)}
+                      activeOpacity={0.7}
+                    >
+                      <Archive color="#fff" size={20} />
+                      <Text style={styles.archivedToggleText}>
+                        {showArchived ? 'Hide' : 'Show'} Answered & Archived ({answeredPrayers.length + archivedPrayers.length})
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+
+                  {showArchived && [...answeredPrayers, ...archivedPrayers].map((prayer) => {
+                    const category = PRAYER_CATEGORIES.find(c => c.name === prayer.category);
+
+                    return (
+                      <TouchableOpacity
+                        key={prayer.id}
+                        style={[styles.prayerCard, styles.archivedCard]}
+                        onPress={() => router.push(`/prayer/${prayer.id}` as any)}
+                        activeOpacity={0.9}
+                      >
+                        <LinearGradient
+                          colors={(category?.gradient || ['#667eea', '#764ba2']) as any}
+                          style={[styles.prayerGradient, styles.archivedGradient]}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <View style={styles.archivedBadge}>
+                            {prayer.status === 'answered' ? (
+                              <CheckCircle2 color="#fff" size={14} />
+                            ) : (
+                              <Archive color="#fff" size={14} />
+                            )}
+                            <Text style={styles.archivedBadgeText}>
+                              {prayer.status === 'answered' ? 'Answered' : 'Archived'}
+                            </Text>
+                          </View>
+                          <View style={styles.prayerHeader}>
+                            <View style={styles.prayerTitleSection}>
+                              <Text style={styles.prayerTitle} numberOfLines={2}>
+                                {prayer.title}
+                              </Text>
+                              {prayer.prayingFor && (
+                                <Text style={styles.prayingForText}>
+                                  For: {prayer.prayingFor}
+                                </Text>
+                              )}
+                            </View>
+                          </View>
+                          {prayer.description && (
+                            <Text style={styles.prayerDescription} numberOfLines={2}>
+                              {prayer.description}
+                            </Text>
+                          )}
+                          <View style={styles.categoryBadge}>
+                            <Text style={styles.categoryBadgeText}>{prayer.category}</Text>
+                          </View>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </>
+              )}
+            </>
           )}
 
-          {displayedPrayers.map((prayer) => {
-            const category = PRAYER_CATEGORIES.find(c => c.name === prayer.category);
-            const isPrayedToday = prayedToday(prayer.id);
-            
-            return (
+          {selectedTab === 'browse' && (
+            <>
               <TouchableOpacity
-                key={prayer.id}
-                style={[
-                  styles.prayerCard,
-                  { backgroundColor: theme.cardBackground },
-                  isPrayedToday && styles.prayerCardCompleted,
-                ]}
-                onPress={() => router.push(`/prayer/${prayer.id}` as any)}
+                style={styles.addCustomCard}
+                onPress={() => router.push('/add-prayer' as any)}
                 activeOpacity={0.9}
               >
-                <View style={styles.prayerHeader}>
-                  <View style={styles.prayerTitleRow}>
-                    <View style={[styles.categoryDot, { backgroundColor: category?.color || '#667eea' }]} />
-                    <Text style={[styles.prayerTitle, { color: theme.text }]} numberOfLines={2}>
-                      {prayer.title}
-                    </Text>
-                  </View>
-                  {prayer.priority === 'high' && (
-                    <View style={styles.priorityBadge}>
-                      <Text style={styles.priorityText}>!</Text>
-                    </View>
-                  )}
-                </View>
-
-                {prayer.description && (
-                  <Text style={[styles.prayerDescription, { color: theme.textSecondary }]} numberOfLines={2}>
-                    {prayer.description}
+                <View style={styles.addCustomContent}>
+                  <PlusCircle color="#fff" size={32} />
+                  <Text style={styles.addCustomTitle}>Add Prayer Request</Text>
+                  <Text style={styles.addCustomText}>
+                    Create your own prayer requests to focus on
                   </Text>
-                )}
-
-                <View style={styles.prayerFooter}>
-                  <Text style={[styles.prayerCategory, { color: theme.textTertiary }]}>
-                    {prayer.category}
-                  </Text>
-                  <View style={styles.prayerActions}>
-                    <TouchableOpacity
-                      style={[
-                        styles.prayNowButton,
-                        { backgroundColor: isPrayedToday ? '#10b981' : category?.color || '#667eea' },
-                        isPrayedToday && styles.prayNowButtonCompleted,
-                      ]}
-                      onPress={(e) => {
-                        e.stopPropagation();
-                        if (!isPrayedToday) {
-                          handlePrayNow(prayer.id);
-                        }
-                      }}
-                      activeOpacity={0.8}
-                      disabled={isPrayedToday}
-                    >
-                      {isPrayedToday ? (
-                        <>
-                          <CheckCircle2 color="#fff" size={16} fill="#fff" />
-                          <Text style={styles.prayNowText}>Prayed</Text>
-                        </>
-                      ) : (
-                        <>
-                          <Heart color="#fff" size={16} />
-                          <Text style={styles.prayNowText}>Pray</Text>
-                        </>
-                      )}
-                    </TouchableOpacity>
-                  </View>
                 </View>
               </TouchableOpacity>
-            );
-          })}
+
+              {filteredBrowsePrayers.map(prayer => {
+                const inProgress = isInProgress(prayer.id);
+                const category = PRAYER_CATEGORIES.find(c => c.name === prayer.category);
+
+                return (
+                  <TouchableOpacity
+                    key={prayer.id}
+                    style={styles.prayerCard}
+                    onPress={() => inProgress ? router.push(`/prayer/${prayer.id}` as any) : handleAddToProgress(prayer.id)}
+                    activeOpacity={0.9}
+                  >
+                    <LinearGradient
+                      colors={(category?.gradient || ['#667eea', '#764ba2']) as any}
+                      style={styles.prayerGradient}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                    >
+                      <View style={styles.prayerHeader}>
+                        <View style={styles.prayerTitleSection}>
+                          <Text style={styles.prayerTitle} numberOfLines={2}>
+                            {prayer.title}
+                          </Text>
+                          {prayer.prayingFor && (
+                            <Text style={styles.prayingForText}>
+                              For: {prayer.prayingFor}
+                            </Text>
+                          )}
+                        </View>
+                        {!inProgress && (
+                          <View style={styles.addButton}>
+                            <Plus color="#fff" size={20} strokeWidth={3} />
+                          </View>
+                        )}
+                      </View>
+                      {prayer.description && (
+                        <Text style={styles.prayerDescription} numberOfLines={2}>
+                          {prayer.description}
+                        </Text>
+                      )}
+                      <View style={styles.categoryBadge}>
+                        <Text style={styles.categoryBadgeText}>{prayer.category}</Text>
+                      </View>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                );
+              })}
+            </>
+          )}
         </ScrollView>
       </LinearGradient>
     </View>
@@ -297,7 +447,7 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 16,
   },
   headerRow: {
     flexDirection: 'row',
@@ -311,89 +461,68 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '800' as const,
+    fontSize: 24,
+    fontWeight: '700' as const,
     color: '#fff',
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
-    fontWeight: '500' as const,
-  },
-  addButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    marginLeft: 44,
+    marginBottom: 12,
   },
   statsContainer: {
-    marginTop: 20,
+    marginTop: 16,
+    marginBottom: 8,
   },
   statRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: 8,
   },
   statCard: {
     flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 10,
+    padding: 8,
     alignItems: 'center',
-    gap: 4,
+    gap: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   statCardDark: {
-    backgroundColor: 'rgba(31, 41, 55, 0.95)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   statValue: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700' as const,
     color: '#1f2937',
   },
   statValueDark: {
-    color: '#f9fafb',
+    color: '#fff',
   },
   statLabel: {
-    fontSize: 11,
-    color: '#6b7280',
+    fontSize: 9,
     fontWeight: '600' as const,
+    color: '#6b7280',
+    textAlign: 'center',
   },
   statLabelDark: {
-    color: '#9ca3af',
-  },
-  todayToggle: {
-    alignSelf: 'center',
-    marginTop: 16,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-  },
-  todayToggleActive: {
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-  },
-  todayToggleText: {
-    color: 'rgba(255, 255, 255, 0.7)',
-    fontSize: 14,
-    fontWeight: '600' as const,
-  },
-  todayToggleTextActive: {
-    color: '#fff',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   tabsContainer: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 12,
   },
   tab: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     paddingVertical: 12,
-    paddingHorizontal: 16,
     borderRadius: 12,
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
@@ -401,7 +530,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   tabText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '600' as const,
     color: 'rgba(255, 255, 255, 0.7)',
   },
@@ -410,53 +539,94 @@ const styles = StyleSheet.create({
   },
   countBadge: {
     backgroundColor: '#ef4444',
-    borderRadius: 10,
-    paddingHorizontal: 6,
+    paddingHorizontal: 8,
     paddingVertical: 2,
+    borderRadius: 10,
     minWidth: 20,
     alignItems: 'center',
   },
   countBadgeText: {
-    color: '#fff',
     fontSize: 11,
     fontWeight: '700' as const,
+    color: '#fff',
   },
-  content: {
+  categoriesContainer: {
+    marginBottom: 16,
+  },
+  categoriesScroll: {
+    paddingHorizontal: 24,
+    gap: 8,
+  },
+  categoryChip: {
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    marginRight: 8,
+  },
+  categoryChipActive: {
+    backgroundColor: '#fff',
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  categoryTextActive: {
+    color: '#fff',
+  },
+  categoryTextAllActive: {
+    color: '#667eea',
+  },
+  scrollView: {
     flex: 1,
   },
   contentContainer: {
     padding: 24,
-    paddingTop: 16,
+    gap: 12,
+    paddingBottom: 40,
   },
   emptyState: {
-    borderRadius: 20,
-    padding: 48,
     alignItems: 'center',
-    gap: 12,
+    justifyContent: 'center',
+    paddingVertical: 80,
+    gap: 16,
   },
-  emptyStateTitle: {
-    fontSize: 20,
+  emptyTitle: {
+    fontSize: 24,
     fontWeight: '700' as const,
-    marginTop: 12,
+    color: '#fff',
   },
-  emptyStateText: {
-    fontSize: 15,
+  emptyText: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
+    lineHeight: 24,
+    paddingHorizontal: 32,
+  },
+  browseButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  browseButtonText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#667eea',
   },
   prayerCard: {
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+    borderRadius: 16,
+    overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
-  prayerCardCompleted: {
-    borderWidth: 2,
-    borderColor: '#10b981',
-    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+  prayerGradient: {
+    padding: 16,
   },
   prayerHeader: {
     flexDirection: 'row',
@@ -464,69 +634,151 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 8,
   },
-  prayerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
+  prayerTitleSection: {
     flex: 1,
-  },
-  categoryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginTop: 6,
+    gap: 4,
   },
   prayerTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    flex: 1,
-  },
-  priorityBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#ef4444',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  priorityText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '700' as const,
+    color: '#fff',
+  },
+  prayingForText: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontStyle: 'italic',
+  },
+  prayedIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   prayerDescription: {
     fontSize: 14,
-    marginBottom: 12,
     lineHeight: 20,
+    color: '#fff',
+    marginBottom: 8,
   },
   prayerFooter: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  prayerCategory: {
-    fontSize: 12,
-    fontWeight: '600' as const,
-  },
-  prayerActions: {
-    flexDirection: 'row',
     gap: 8,
   },
-  prayNowButton: {
+  categoryBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  categoryBadgeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  priorityBadge: {
+    backgroundColor: 'rgba(239, 68, 68, 0.9)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  priorityText: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  addCustomCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.4)',
+    borderStyle: 'dashed' as const,
+  },
+  addCustomContent: {
+    padding: 24,
+    alignItems: 'center',
+    gap: 10,
+    justifyContent: 'center',
+  },
+  addCustomTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#fff',
+  },
+  addCustomText: {
+    fontSize: 14,
+    color: 'rgba(255, 255, 255, 0.9)',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  showAllToggle: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  showAllToggleText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  archivedToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+    marginTop: 12,
+  },
+  archivedToggleText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  archivedCard: {
+    opacity: 0.8,
+  },
+  archivedGradient: {
+    position: 'relative',
+  },
+  archivedBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     borderRadius: 12,
+    zIndex: 1,
   },
-  prayNowButtonCompleted: {
-    opacity: 0.8,
-  },
-  prayNowText: {
-    color: '#fff',
-    fontSize: 14,
+  archivedBadgeText: {
+    fontSize: 11,
     fontWeight: '600' as const,
+    color: '#fff',
   },
 });
-
