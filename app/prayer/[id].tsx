@@ -16,11 +16,11 @@ import {
   Calendar,
   TrendingUp,
   ArrowLeft,
+  HandHeart,
 } from 'lucide-react-native';
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PRAYER_CATEGORIES } from '@/types/prayer';
-import { PrayingHandsIcon } from '@/components/PrayingHandsIcon';
 
 export default function PrayerDetailScreen() {
   const { id } = useLocalSearchParams();
@@ -165,7 +165,7 @@ export default function PrayerDetailScreen() {
                 style={[styles.historyItem, { borderBottomColor: theme.border }]}
               >
                   <View style={styles.historyIcon}>
-                    <PrayingHandsIcon size={16} color={category?.color || '#667eea'} />
+                    <HandHeart color={category?.color || '#667eea'} size={16} />
                   </View>
                 <View style={styles.historyContent}>
                   <Text style={[styles.historyDate, { color: theme.text }]}>
@@ -198,7 +198,7 @@ export default function PrayerDetailScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <PrayingHandsIcon size={20} color="#fff" />
+                <HandHeart color="#fff" size={20} />
                 <Text style={styles.buttonText}>Pray Now</Text>
               </LinearGradient>
             </TouchableOpacity>

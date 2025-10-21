@@ -19,11 +19,11 @@ import {
   TrendingUp,
   PlusCircle,
   Clock,
+  HandHeart,
 } from 'lucide-react-native';
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PRAYER_CATEGORIES, PrayerCategory } from '@/types/prayer';
-import { PrayingHandsIcon } from '@/components/PrayingHandsIcon';
 
 type TabType = 'browse' | 'progress';
 
@@ -93,7 +93,7 @@ export default function PrayersScreen() {
         <View style={[styles.header, { paddingTop: 20 + insets.top }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerContent}>
-              <PrayingHandsIcon size={28} color="#fff" strokeWidth={2.5} />
+              <HandHeart color="#fff" size={28} strokeWidth={2.5} />
               <Text style={styles.title}>Prayer Journey</Text>
             </View>
           </View>
@@ -166,9 +166,9 @@ export default function PrayersScreen() {
               onPress={() => setSelectedTab('browse')}
               activeOpacity={0.7}
             >
-              <PrayingHandsIcon 
-                size={20} 
+              <HandHeart 
                 color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} 
+                size={20}
               />
               <Text style={[
                 styles.tabText,
