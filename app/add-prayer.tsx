@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Platform,
   Alert,
 } from 'react-native';
-import { Stack, useRouter } from 'expo-router';
+import { Stack, useRouter, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -20,12 +20,19 @@ export default function AddPrayerScreen() {
   const router = useRouter();
   const { addPrayerRequest } = usePrayer();
   const { theme } = useTheme();
+  const params = useLocalSearchParams<{ category?: string }>();
   
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<PrayerCategory>('Personal');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
-  const [prayingFor, setPrayingFor] = useState('');
+
+  // Set category from URL parameter if provided
+  useEffect(() => {
+    if (params.category && PRAYER_CATEGORIES.some(c => c.name === params.category)) {
+      setCategory(params.category as PrayerCategory);
+    }
+  }, [params.category]);
 
   const handleAdd = async () => {
     if (!title.trim()) {
@@ -41,7 +48,6 @@ export default function AddPrayerScreen() {
         status: 'active',
         priority,
         reminderEnabled: false,
-        prayingFor: prayingFor.trim() || undefined,
       });
 
       Alert.alert('Success', 'Prayer request added!', [
@@ -92,26 +98,6 @@ export default function AddPrayerScreen() {
               value={title}
               onChangeText={setTitle}
             />
-
-            {category === 'Prayer Requests' && (
-              <>
-                <Text style={[styles.label, { color: theme.text }]}>Praying For</Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: theme.background,
-                      color: theme.text,
-                      borderColor: theme.border,
-                    },
-                  ]}
-                  placeholder="Who are you praying for? (e.g., John, Mom, etc.)"
-                  placeholderTextColor={theme.textTertiary}
-                  value={prayingFor}
-                  onChangeText={setPrayingFor}
-                />
-              </>
-            )}
 
             <Text style={[styles.label, { color: theme.text }]}>Description (Optional)</Text>
             <TextInput

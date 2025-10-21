@@ -273,15 +273,10 @@ export default function PrayersScreen() {
                               <Text style={styles.prayerTitle} numberOfLines={2}>
                                 {prayer.title}
                               </Text>
-                              {prayer.prayingFor && (
-                                <Text style={styles.prayingForText}>
-                                  For: {prayer.prayingFor}
-                                </Text>
-                              )}
                             </View>
                             {isPrayedToday && (
                               <View style={styles.prayedBadge}>
-                                <CheckCircle2 color="#fff" size={16} fill="#fff" />
+                                <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
                               </View>
                             )}
                           </View>
@@ -355,11 +350,6 @@ export default function PrayersScreen() {
                               <Text style={styles.prayerTitle} numberOfLines={2}>
                                 {prayer.title}
                               </Text>
-                              {prayer.prayingFor && (
-                                <Text style={styles.prayingForText}>
-                                  For: {prayer.prayingFor}
-                                </Text>
-                              )}
                             </View>
                           </View>
                           {prayer.description && (
@@ -383,15 +373,12 @@ export default function PrayersScreen() {
             <>
               <TouchableOpacity
                 style={styles.addCustomCard}
-                onPress={() => router.push('/add-prayer' as any)}
+                onPress={() => router.push(`/add-prayer${selectedCategory ? `?category=${selectedCategory}` : ''}` as any)}
                 activeOpacity={0.9}
               >
                 <View style={styles.addCustomContent}>
                   <PlusCircle color="#fff" size={32} />
-                  <Text style={styles.addCustomTitle}>Add Prayer Request</Text>
-                  <Text style={styles.addCustomText}>
-                    Create your own prayer requests to focus on
-                  </Text>
+                  <Text style={styles.addCustomTitle}>Add Prayer: Create your own prayers to focus on</Text>
                 </View>
               </TouchableOpacity>
 
@@ -417,11 +404,6 @@ export default function PrayersScreen() {
                           <Text style={styles.prayerTitle} numberOfLines={2}>
                             {prayer.title}
                           </Text>
-                          {prayer.prayingFor && (
-                            <Text style={styles.prayingForText}>
-                              For: {prayer.prayingFor}
-                            </Text>
-                          )}
                         </View>
                         {!inProgress && (
                           <View style={styles.addButton}>
@@ -657,17 +639,11 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#fff',
   },
-  prayingForText: {
-    fontSize: 12,
-    fontWeight: '500' as const,
-    color: 'rgba(255, 255, 255, 0.8)',
-    fontStyle: 'italic',
-  },
   prayedBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -728,15 +704,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   addCustomTitle: {
-    fontSize: 18,
-    fontWeight: '700' as const,
+    fontSize: 16,
+    fontWeight: '600' as const,
     color: '#fff',
-  },
-  addCustomText: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 22,
   },
   showAllToggle: {
     alignItems: 'center',

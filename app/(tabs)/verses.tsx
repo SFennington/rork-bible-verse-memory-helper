@@ -240,9 +240,13 @@ export default function HomeScreen() {
                       >
                         <View style={styles.verseHeader}>
                           <Text style={styles.verseReference}>{verse.reference}</Text>
-                          {isDue && (
+                          {isDue ? (
                             <View style={styles.dueIndicator}>
                               <Play color="#fff" size={14} fill="#fff" />
+                            </View>
+                          ) : (
+                            <View style={styles.completedIndicator}>
+                              <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
                             </View>
                           )}
                         </View>
@@ -573,6 +577,14 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  completedIndicator: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
     alignItems: 'center',
     justifyContent: 'center',
   },
