@@ -25,7 +25,8 @@
       "package": "app.rork.heartscript",
       "versionCode": 1,
       "statusBarHidden": false,
-      "statusBarTranslucent": false,
+      "statusBarTranslucent": true,
+      "statusBarStyle": "light",
       "navigationBarVisibility": "visible"
     },
     "web": {

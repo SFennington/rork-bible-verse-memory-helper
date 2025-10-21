@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, Flame, Calendar, TrendingUp, Play, Crown } from 'lucide-react-native';
+import { Target, Flame, Calendar, TrendingUp, Play, Crown, CheckCircle2 } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
@@ -125,15 +125,22 @@ export default function ProgressScreen() {
                   >
                     <View style={styles.verseHeader}>
                       <Text style={styles.verseReference}>{verse.reference}</Text>
-                      <TouchableOpacity 
-                        style={styles.playButton}
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          router.push(`/game/${nextGame}/${verse.id}`);
-                        }}
-                      >
-                        <Play color="#fff" size={16} fill="#fff" />
-                      </TouchableOpacity>
+                      <View style={styles.headerActions}>
+                        {progress.completedGamesToday >= requiredGames && (
+                          <View style={styles.completedBadge}>
+                            <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
+                          </View>
+                        )}
+                        <TouchableOpacity 
+                          style={styles.playButton}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            router.push(`/game/${nextGame}/${verse.id}`);
+                          }}
+                        >
+                          <Play color="#fff" size={16} fill="#fff" />
+                        </TouchableOpacity>
+                      </View>
                     </View>
                     <Text style={styles.verseText} numberOfLines={2}>
                       {verse.text}
@@ -187,7 +194,7 @@ export default function ProgressScreen() {
                   <View style={styles.upcomingContent}>
                     <View style={styles.upcomingHeader}>
                       <Text style={[styles.upcomingReference, { color: theme.text }]}>{verse.reference}</Text>
-                      <View style={[styles.categoryDot, { backgroundColor: category?.color || '#667eea' }]} />
+                      <CheckCircle2 color="#10b981" size={24} fill="#10b981" />
                     </View>
                     <Text style={[styles.upcomingText, { color: theme.textSecondary }]} numberOfLines={1}>
                       {verse.text}
@@ -316,6 +323,19 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#fff',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  completedBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   playButton: {
     width: 32,

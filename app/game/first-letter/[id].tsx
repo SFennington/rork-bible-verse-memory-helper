@@ -164,7 +164,7 @@ export default function FirstLetterGameScreen() {
           },
           headerLeft: () => (
             <TouchableOpacity
-              onPress={() => router.push('/')}
+              onPress={() => router.push(`/verse/${id}` as any)}
               style={{ marginLeft: 8 }}
             >
               <ArrowLeft color="#fff" size={24} />
