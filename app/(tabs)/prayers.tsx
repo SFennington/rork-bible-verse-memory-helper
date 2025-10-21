@@ -93,7 +93,7 @@ export default function PrayersScreen() {
         <View style={[styles.header, { paddingTop: 20 + insets.top }]}>
           <View style={styles.headerRow}>
             <View style={styles.headerContent}>
-              <Heart color="#fff" size={28} strokeWidth={2.5} fill="#fff" />
+              <Text style={styles.headerIcon}>🙏</Text>
               <Text style={styles.title}>Prayer Journey</Text>
             </View>
           </View>
@@ -166,7 +166,7 @@ export default function PrayersScreen() {
               onPress={() => setSelectedTab('browse')}
               activeOpacity={0.7}
             >
-              <Heart color={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} size={20} fill={selectedTab === 'browse' ? '#fff' : 'rgba(255, 255, 255, 0.7)'} />
+              <Text style={styles.browseIcon}>🙏</Text>
               <Text style={[
                 styles.tabText,
                 selectedTab === 'browse' && styles.tabTextActive,
@@ -468,6 +468,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  headerIcon: {
+    fontSize: 28,
+  },
   title: {
     fontSize: 24,
     fontWeight: '700' as const,
@@ -478,6 +481,9 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     marginLeft: 44,
     marginBottom: 12,
+  },
+  browseIcon: {
+    fontSize: 20,
   },
   statsContainer: {
     marginTop: 16,

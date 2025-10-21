@@ -16,6 +16,7 @@ import {
   Clock,
   Calendar,
   TrendingUp,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -95,6 +96,15 @@ export default function PrayerDetailScreen() {
           headerTitleStyle: {
             fontWeight: '700' as const,
           },
+          headerBackVisible: true,
+          headerLeft: () => (
+            <TouchableOpacity
+              style={{ paddingLeft: 16 }}
+              onPress={() => router.push('/(tabs)/prayers' as any)}
+            >
+              <ArrowLeft color="#fff" size={24} />
+            </TouchableOpacity>
+          ),
         }}
       />
 
@@ -154,9 +164,9 @@ export default function PrayerDetailScreen() {
                 key={log.id}
                 style={[styles.historyItem, { borderBottomColor: theme.border }]}
               >
-                <View style={styles.historyIcon}>
-                  <Heart color={category?.color || '#667eea'} size={16} fill={category?.color || '#667eea'} />
-                </View>
+                  <View style={styles.historyIcon}>
+                    <Text style={styles.historyIconEmoji}>🙏</Text>
+                  </View>
                 <View style={styles.historyContent}>
                   <Text style={[styles.historyDate, { color: theme.text }]}>
                     {new Date(log.prayedAt).toLocaleDateString()}
@@ -188,7 +198,7 @@ export default function PrayerDetailScreen() {
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 1 }}
               >
-                <Heart color="#fff" size={20} fill="#fff" />
+                <Text style={styles.prayIcon}>🙏</Text>
                 <Text style={styles.buttonText}>Pray Now</Text>
               </LinearGradient>
             </TouchableOpacity>
@@ -321,6 +331,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  historyIconEmoji: {
+    fontSize: 16,
+  },
   historyContent: {
     flex: 1,
   },
@@ -368,6 +381,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
+  },
+  prayIcon: {
+    fontSize: 20,
   },
   buttonText: {
     fontSize: 18,
