@@ -61,7 +61,13 @@ Write-Host ""
 Write-Host "🎉 Launching app..." -ForegroundColor Yellow
 & "$env:ANDROID_HOME\platform-tools\adb.exe" shell am start -n app.rork.heartscript/.MainActivity
 
-Write-Host ""
-Write-Host "✅ Done! Your emulator now has the latest version!" -ForegroundColor Green
-Write-Host ""
+if ($LASTEXITCODE -eq 0) {
+    Write-Host ""
+    Write-Host "✅ Done! Your emulator now has the latest version running!" -ForegroundColor Green
+    Write-Host ""
+} else {
+    Write-Host ""
+    Write-Host "⚠️  App installed but failed to launch automatically. Please launch manually." -ForegroundColor Yellow
+    Write-Host ""
+}
 
