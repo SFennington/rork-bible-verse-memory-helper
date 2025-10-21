@@ -246,7 +246,7 @@ export default function HomeScreen() {
                             </View>
                           ) : (
                             <View style={styles.completedIndicator}>
-                              <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
+                              <CheckCircle2 color="#10b981" size={20} />
                             </View>
                           )}
                         </View>

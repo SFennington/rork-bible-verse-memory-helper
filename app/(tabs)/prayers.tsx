@@ -276,7 +276,7 @@ export default function PrayersScreen() {
                             </View>
                             {isPrayedToday && (
                               <View style={styles.prayedBadge}>
-                                <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
+                                <CheckCircle2 color="#10b981" size={20} />
                               </View>
                             )}
                           </View>

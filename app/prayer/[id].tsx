@@ -15,7 +15,6 @@ import {
   Clock,
   Calendar,
   TrendingUp,
-  ArrowLeft,
   HandHeart,
 } from 'lucide-react-native';
 import { usePrayer } from '@/contexts/PrayerContext';
@@ -88,7 +87,7 @@ export default function PrayerDetailScreen() {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Stack.Screen
         options={{
-          title: prayer.category,
+          title: prayer.title,
           headerStyle: {
             backgroundColor: category?.color || '#667eea',
           },
@@ -97,14 +96,6 @@ export default function PrayerDetailScreen() {
             fontWeight: '700' as const,
           },
           headerBackVisible: true,
-          headerLeft: () => (
-            <TouchableOpacity
-              style={{ paddingLeft: 16 }}
-              onPress={() => router.push('/(tabs)/prayers' as any)}
-            >
-              <ArrowLeft color="#fff" size={24} />
-            </TouchableOpacity>
-          ),
         }}
       />
 
