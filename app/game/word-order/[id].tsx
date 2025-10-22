@@ -20,6 +20,11 @@ function isToday(dateString: string): boolean {
   return date.toDateString() === today.toDateString();
 }
 
+function stripPunctuation(word: string): string {
+  // Remove all punctuation except apostrophes (for contractions like "don't")
+  return word.replace(/[.,;:!?"()[\]{}\-—]/g, '').trim();
+}
+
 function levenshteinDistance(str1: string, str2: string): number {
   const matrix: number[][] = [];
 
@@ -66,7 +71,7 @@ export default function WordOrderGameScreen() {
 
   const scrambledWords = useMemo(() => {
     if (!verse) return [];
-    const words = verse.text.split(' ');
+    const words = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
     let scrambledArray = [...words];
     
     // More scramble iterations = harder to recognize original order
@@ -129,7 +134,7 @@ export default function WordOrderGameScreen() {
     );
   }
 
-  const correctWords = verse.text.split(' ');
+  const correctWords = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
 
   const handleWordSelect = (word: string, fromAvailable: boolean, index: number) => {
     Animated.sequence([
@@ -169,7 +174,7 @@ export default function WordOrderGameScreen() {
     setShowResult(true);
     const userText = orderedWords.join(' ');
     const correctText = verse.text;
-    const isCorrect = userText === correctText;
+    const isCorrect = userText.toLowerCase() === correctText.toLowerCase();
     
     const distance = levenshteinDistance(userText.toLowerCase(), correctText.toLowerCase());
     const maxLength = Math.max(userText.length, correctText.length);
@@ -178,7 +183,7 @@ export default function WordOrderGameScreen() {
     const totalWords = correctWords.length;
     const correctWordCount = isCorrect ? totalWords : Math.round((accuracy / 100) * totalWords);
 
-    if (accuracy >= 80) {
+    if (isCorrect) {
       const verseProgress = getVerseProgress(id || '');
       completeGameSession(id || '', {
         gameType: 'word-order',
@@ -210,18 +215,23 @@ export default function WordOrderGameScreen() {
         router.push(`/verse/${id}`);
       }
     } else {
-      // Only clear incorrect words, keep correct ones
+      // Return incorrect words to available pool, keep correct ones
       const correctWordsArray = correctWords;
       const newOrderedWords: string[] = [];
+      const wordsToReturn: string[] = [];
       
       orderedWords.forEach((word, index) => {
-        if (word === correctWordsArray[index]) {
+        if (word.toLowerCase() === correctWordsArray[index].toLowerCase()) {
           // Keep correct word in correct position
           newOrderedWords.push(word);
+        } else {
+          // Return incorrect word to available pool
+          wordsToReturn.push(word);
         }
       });
       
       setOrderedWords(newOrderedWords);
+      setAvailableWords([...availableWords, ...wordsToReturn]);
       setShowResult(false);
     }
   };
@@ -231,7 +241,7 @@ export default function WordOrderGameScreen() {
   };
 
   const isComplete = orderedWords.length === correctWords.length;
-  const isCorrect = showResult && orderedWords.join(' ') === verse.text;
+  const isCorrect = showResult && orderedWords.join(' ').toLowerCase() === verse.text.toLowerCase();
 
   return (
     <View style={styles.container}>
@@ -300,8 +310,8 @@ export default function WordOrderGameScreen() {
                         style={[
                           styles.orderedWord,
                           { backgroundColor: theme.cardBackground, borderColor: theme.border },
-                          showResult && word !== correctWords[index] && styles.orderedWordWrong,
-                          showResult && word === correctWords[index] && styles.orderedWordCorrect,
+                          showResult && word.toLowerCase() !== correctWords[index].toLowerCase() && styles.orderedWordWrong,
+                          showResult && word.toLowerCase() === correctWords[index].toLowerCase() && styles.orderedWordCorrect,
                         ]}
                         onPress={() => !showResult && handleWordSelect(word, false, index)}
                         disabled={showResult}

@@ -21,6 +21,11 @@ function isToday(dateString: string): boolean {
   return date.toDateString() === today.toDateString();
 }
 
+function stripPunctuation(word: string): string {
+  // Remove all punctuation except apostrophes (for contractions like "don't")
+  return word.replace(/[.,;:!?"()[\]{}\-—]/g, '').trim();
+}
+
 export default function WordScrambleGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -57,7 +62,7 @@ export default function WordScrambleGameScreen() {
     }
 
     const scrambledPhrases = phrasesWithoutPunctuation.map((phrase) => {
-      const words = phrase.split(' ');
+      const words = phrase.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
       
       let scrambledWords: string[];
       let scramblePercentage = 1.0;

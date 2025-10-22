@@ -20,6 +20,11 @@ function isToday(dateString: string): boolean {
   return date.toDateString() === today.toDateString();
 }
 
+function stripPunctuation(word: string): string {
+  // Remove all punctuation except apostrophes (for contractions like "don't")
+  return word.replace(/[.,;:!?"()[\]{}\-—]/g, '').trim();
+}
+
 export default function FillBlankGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -39,7 +44,7 @@ export default function FillBlankGameScreen() {
   const gameData = useMemo(() => {
     if (!verse) return null;
 
-    const words = verse.text.split(' ');
+    const words = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
     let blankPercentage = 0.3;
     let extraOptionsCount = 0;
     
@@ -124,11 +129,11 @@ export default function FillBlankGameScreen() {
   const handleCheck = () => {
     setShowResult(true);
     const isCorrect = gameData.blanks.every(
-      (blankIdx, i) => selectedWords[i] === gameData.words[blankIdx]
+      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()
     );
 
     const correctBlankCount = gameData.blanks.filter(
-      (blankIdx, i) => selectedWords[i] === gameData.words[blankIdx]
+      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()
     ).length;
     const accuracy = Math.round((correctBlankCount / gameData.blanks.length) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
@@ -171,7 +176,7 @@ export default function FillBlankGameScreen() {
       // Only clear incorrect answers, keep correct ones
       const newSelectedWords: Record<number, string> = {};
       gameData.blanks.forEach((blankIdx, i) => {
-        if (selectedWords[i] === gameData.words[blankIdx]) {
+        if ((selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()) {
           // Keep correct answer
           newSelectedWords[i] = selectedWords[i];
         }
@@ -187,7 +192,7 @@ export default function FillBlankGameScreen() {
 
   const isComplete = gameData.blanks.every((_, i) => selectedWords[i]);
   const isCorrect = showResult && gameData.blanks.every(
-    (blankIdx, i) => selectedWords[i] === gameData.words[blankIdx]
+    (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()
   );
 
   return (
@@ -239,7 +244,7 @@ export default function FillBlankGameScreen() {
                 if (isBlank) {
                   const selectedWord = selectedWords[blankPosition];
                   const correctWord = gameData.words[index];
-                  const isWrong = showResult && selectedWord !== correctWord;
+                  const isWrong = showResult && (selectedWord || '').toLowerCase() !== correctWord.toLowerCase();
 
                   return (
                     <Animated.View
@@ -256,7 +261,7 @@ export default function FillBlankGameScreen() {
                           selectedWord && styles.blankFilled,
                           selectedWord && { backgroundColor: '#e0e7ff', borderColor: '#818cf8' },
                           isWrong && styles.blankWrong,
-                          showResult && selectedWord === correctWord && styles.blankCorrect,
+                          showResult && (selectedWord || '').toLowerCase() === correctWord.toLowerCase() && styles.blankCorrect,
                         ]}
                       >
                         <Text

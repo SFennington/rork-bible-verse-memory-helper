@@ -22,6 +22,11 @@ function isToday(dateString: string): boolean {
   return date.toDateString() === today.toDateString();
 }
 
+function stripPunctuation(word: string): string {
+  // Remove all punctuation except apostrophes (for contractions like "don't")
+  return word.replace(/[.,;:!?"()[\]{}\-—]/g, '').trim();
+}
+
 export default function FullVerseGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -71,7 +76,7 @@ export default function FullVerseGameScreen() {
   const handleCheck = () => {
     const accuracy = calculateAccuracy();
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
-    const totalWords = verse.text.split(' ').length;
+    const totalWords = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0).length;
     const correctWords = Math.round((accuracy / 100) * totalWords);
     
     setShowResult(true);

@@ -21,6 +21,11 @@ function isToday(dateString: string): boolean {
   return date.toDateString() === today.toDateString();
 }
 
+function stripPunctuation(word: string): string {
+  // Remove all punctuation except apostrophes (for contractions like "don't")
+  return word.replace(/[.,;:!?"()[\]{}\-—]/g, '').trim();
+}
+
 const getPreFillPercentage = (level: number): number => {
   switch (level) {
     case 1: return 0.70;  // 70% pre-filled - easiest (only type 30% of words)
@@ -46,7 +51,10 @@ export default function FirstLetterGameScreen() {
   const verseProgress = getVerseProgress(id || '');
   const difficultyLevel = verseProgress?.difficultyLevel || 1;
 
-  const words = useMemo(() => verse?.text.split(' ') || [], [verse?.text]);
+  const words = useMemo(() => 
+    verse?.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0) || [], 
+    [verse?.text]
+  );
 
   const preFilledIndices = useMemo(() => {
     const percentage = getPreFillPercentage(difficultyLevel);

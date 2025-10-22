@@ -1,13 +1,13 @@
 export type VerseCategory = 'Comfort' | 'Strength' | 'Peace' | 'Love' | 'Faith' | 'Hope' | 'Promises';
 
-export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse' | 'word-scramble' | 'missing-vowels';
+export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse' | 'word-scramble' | 'missing-vowels' | 'flashcard' | 'speed-tap' | 'progressive-reveal';
 
 export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
-  1: ['fill-blank', 'word-order', 'first-letter'],      // Easy: Basic games with more hints
-  2: ['fill-blank', 'first-letter', 'word-scramble'],   // Medium: Introduce scrambling
-  3: ['word-order', 'missing-vowels', 'word-scramble'], // Hard: More challenging combinations
-  4: ['fill-blank', 'first-letter', 'missing-vowels'],  // Expert: Hardest versions of pattern games
-  5: ['full-verse'],                                     // Master: Full recall
+  1: ['flashcard', 'fill-blank', 'word-order'],          // Easy: Simple memorization and selection
+  2: ['progressive-reveal', 'fill-blank', 'speed-tap'],  // Medium: Test recall with hints
+  3: ['speed-tap', 'word-order', 'progressive-reveal'],  // Hard: Quick recognition and order
+  4: ['flashcard', 'progressive-reveal', 'fill-blank'],  // Expert: Minimal hints
+  5: ['full-verse'],                                     // Master: Full recall, type entire verse
 };
 
 export type DifficultyLevel = 1 | 2 | 3 | 4 | 5;

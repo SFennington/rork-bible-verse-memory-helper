@@ -21,6 +21,11 @@ function isToday(dateString: string): boolean {
   return date.toDateString() === today.toDateString();
 }
 
+function stripPunctuation(word: string): string {
+  // Remove all punctuation except apostrophes (for contractions like "don't")
+  return word.replace(/[.,;:!?"()[\]{}\-—]/g, '').trim();
+}
+
 export default function MissingVowelsGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -39,7 +44,7 @@ export default function MissingVowelsGameScreen() {
   const gameData = useMemo(() => {
     if (!verse) return null;
 
-    const words = verse.text.split(' ');
+    const words = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
     
     const wordsData = words.map((word, index) => {
       const vowelPattern = /[aeiouAEIOU]/g;
