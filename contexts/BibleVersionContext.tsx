@@ -11,18 +11,18 @@ export type BibleVersion = {
 };
 
 export const BIBLE_VERSIONS: BibleVersion[] = [
+  { id: 'nasb', name: 'New American Standard Bible', abbreviation: 'NASB' },
   { id: 'kjv', name: 'King James Version', abbreviation: 'KJV' },
   { id: 'niv', name: 'New International Version', abbreviation: 'NIV' },
   { id: 'esv', name: 'English Standard Version', abbreviation: 'ESV' },
   { id: 'nkjv', name: 'New King James Version', abbreviation: 'NKJV' },
   { id: 'nlt', name: 'New Living Translation', abbreviation: 'NLT' },
-  { id: 'nasb', name: 'New American Standard Bible', abbreviation: 'NASB' },
   { id: 'csb', name: 'Christian Standard Bible', abbreviation: 'CSB' },
   { id: 'msg', name: 'The Message', abbreviation: 'MSG' },
 ];
 
 export const [BibleVersionProvider, useBibleVersion] = createContextHook(() => {
-  const [selectedVersion, setSelectedVersion] = useState<BibleVersion>(BIBLE_VERSIONS[0]);
+  const [selectedVersion, setSelectedVersion] = useState<BibleVersion>(BIBLE_VERSIONS[0]); // Now defaults to NASB
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

@@ -35,8 +35,20 @@ export default function AddVerseScreen() {
   const [chapterText, setChapterText] = useState('');
   const [category, setCategory] = useState<VerseCategory>('Faith');
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Track selected verse details to preserve picker state
+  const [selectedBook, setSelectedBook] = useState<string>('');
+  const [selectedChapter, setSelectedChapter] = useState<number>(0);
+  const [selectedVerse, setSelectedVerse] = useState<number>(0);
+  const [selectedEndVerse, setSelectedEndVerse] = useState<number | undefined>(undefined);
 
   const handleVerseSelect = async (book: string, chapter: number, verse?: number, endVerse?: number) => {
+    // Store the selection
+    setSelectedBook(book);
+    setSelectedChapter(chapter);
+    setSelectedVerse(verse || 0);
+    setSelectedEndVerse(endVerse);
+    
     setIsLoading(true);
     
     try {
@@ -224,18 +236,22 @@ export default function AddVerseScreen() {
 
             <Text style={[styles.label, { color: theme.text }]}>Select {mode === 'single' ? 'Verse' : 'Chapter'}</Text>
             
-            {isLoading ? (
+            <BibleVersePicker
+              mode={mode === 'single' ? 'verse' : 'chapter'}
+              onSelect={handleVerseSelect}
+              initialBook={selectedBook || undefined}
+              initialChapter={selectedChapter || undefined}
+              initialVerse={selectedVerse || undefined}
+              initialEndVerse={selectedEndVerse}
+            />
+            
+            {isLoading && (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator color="#667eea" size="large" />
+                <ActivityIndicator color="#667eea" size="small" />
                 <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
                   Fetching verse...
                 </Text>
               </View>
-            ) : (
-              <BibleVersePicker
-                mode={mode === 'single' ? 'verse' : 'chapter'}
-                onSelect={handleVerseSelect}
-              />
             )}
 
             <Text style={[styles.label, { color: theme.text }]}>Category</Text>
@@ -409,9 +425,11 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   loadingContainer: {
-    paddingVertical: 40,
+    paddingVertical: 12,
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
+    flexDirection: 'row',
+    justifyContent: 'center',
   },
   loadingText: {
     fontSize: 14,

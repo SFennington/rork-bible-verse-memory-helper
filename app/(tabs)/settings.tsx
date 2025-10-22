@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Moon, Sun, ArrowLeft, Book, ChevronRight } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useBibleVersion } from '@/contexts/BibleVersionContext';
+import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -145,7 +146,7 @@ export default function SettingsScreen() {
                 Version
               </Text>
               <Text style={[styles.infoValue, { color: theme.text }]}>
-                1.0.0
+                {Constants.expoConfig?.version || '1.0.2'}
               </Text>
             </View>
             <View style={styles.infoRow}>
@@ -153,7 +154,7 @@ export default function SettingsScreen() {
                 App Name
               </Text>
               <Text style={[styles.infoValue, { color: theme.text }]}>
-                Scripture Memory
+                HeartScript
               </Text>
             </View>
           </View>
