@@ -12,6 +12,10 @@ export type Theme = {
   resultSuccessText: string;
   resultError: string;
   resultErrorText: string;
+  buttonSuccess: string;
+  buttonSuccessText: string;
+  buttonError: string;
+  buttonErrorText: string;
 };
 
 export const lightTheme: Theme = {
@@ -28,6 +32,10 @@ export const lightTheme: Theme = {
   resultSuccessText: '#1f2937',
   resultError: '#fee2e2',
   resultErrorText: '#1f2937',
+  buttonSuccess: '#10b981',
+  buttonSuccessText: '#ffffff',
+  buttonError: '#ef4444',
+  buttonErrorText: '#ffffff',
 };
 
 export const darkTheme: Theme = {
@@ -44,4 +52,8 @@ export const darkTheme: Theme = {
   resultSuccessText: '#4ade80',
   resultError: 'rgba(239, 68, 68, 0.2)',
   resultErrorText: '#f87171',
+  buttonSuccess: '#22c55e',
+  buttonSuccessText: '#ffffff',
+  buttonError: '#dc2626',
+  buttonErrorText: '#ffffff',
 };

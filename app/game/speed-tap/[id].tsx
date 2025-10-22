@@ -270,20 +270,20 @@ export default function SpeedTapGameScreen() {
 
               <View style={styles.answerButtons}>
                 <TouchableOpacity
-                  style={[styles.answerButton, styles.wrongButton, { backgroundColor: theme.resultError }]}
+                  style={[styles.answerButton, styles.wrongButton, { backgroundColor: theme.buttonError }]}
                   onPress={() => handleAnswer(false)}
                   activeOpacity={0.8}
                 >
-                  <XCircle color="#fff" size={48} />
-                  <Text style={styles.answerButtonText}>Wrong Position</Text>
+                  <XCircle color={theme.buttonErrorText} size={48} />
+                  <Text style={[styles.answerButtonText, { color: theme.buttonErrorText }]}>Wrong Position</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.answerButton, styles.correctButton, { backgroundColor: theme.resultSuccess }]}
+                  style={[styles.answerButton, styles.correctButton, { backgroundColor: theme.buttonSuccess }]}
                   onPress={() => handleAnswer(true)}
                   activeOpacity={0.8}
                 >
-                  <CheckCircle2 color="#fff" size={48} />
-                  <Text style={styles.answerButtonText}>Correct Position</Text>
+                  <CheckCircle2 color={theme.buttonSuccessText} size={48} />
+                  <Text style={[styles.answerButtonText, { color: theme.buttonSuccessText }]}>Correct Position</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -459,7 +459,6 @@ const styles = StyleSheet.create({
   answerButtonText: {
     fontSize: 16,
     fontWeight: '700' as const,
-    color: '#fff',
   },
   resultCard: {
     borderRadius: 16,

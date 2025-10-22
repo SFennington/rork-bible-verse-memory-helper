@@ -251,12 +251,12 @@ export default function ProgressiveRevealGameScreen() {
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.knowItButton, { backgroundColor: theme.resultSuccess }]}
+                  style={[styles.knowItButton, { backgroundColor: theme.buttonSuccess }]}
                   onPress={handleIKnowIt}
                   activeOpacity={0.8}
                 >
-                  <CheckCircle2 color="#fff" size={24} />
-                  <Text style={styles.knowItButtonText}>I Know the Rest!</Text>
+                  <CheckCircle2 color={theme.buttonSuccessText} size={24} />
+                  <Text style={[styles.knowItButtonText, { color: theme.buttonSuccessText }]}>I Know the Rest!</Text>
                 </TouchableOpacity>
               </View>
             </>
@@ -441,7 +441,6 @@ const styles = StyleSheet.create({
   knowItButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#fff',
   },
   resultCard: {
     borderRadius: 16,

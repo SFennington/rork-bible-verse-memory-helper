@@ -310,20 +310,20 @@ export default function FlashcardGameScreen() {
           {isFlipped && !showResult && currentCard === totalCards - 1 && (
             <View style={styles.answerButtons}>
               <TouchableOpacity
-                style={[styles.answerButton, styles.wrongButton, { backgroundColor: theme.resultError }]}
+                style={[styles.answerButton, styles.wrongButton, { backgroundColor: theme.buttonError }]}
                 onPress={() => handleAnswer(false)}
                 activeOpacity={0.8}
               >
-                <XCircle color="#fff" size={32} />
-                <Text style={styles.answerButtonText}>Need More Practice</Text>
+                <XCircle color={theme.buttonErrorText} size={32} />
+                <Text style={[styles.answerButtonText, { color: theme.buttonErrorText }]}>Need More Practice</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.answerButton, styles.correctButton, { backgroundColor: theme.resultSuccess }]}
+                style={[styles.answerButton, styles.correctButton, { backgroundColor: theme.buttonSuccess }]}
                 onPress={() => handleAnswer(true)}
                 activeOpacity={0.8}
               >
-                <CheckCircle2 color="#fff" size={32} />
-                <Text style={styles.answerButtonText}>I Got It!</Text>
+                <CheckCircle2 color={theme.buttonSuccessText} size={32} />
+                <Text style={[styles.answerButtonText, { color: theme.buttonSuccessText }]}>I Got It!</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -520,7 +520,6 @@ const styles = StyleSheet.create({
   answerButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#fff',
   },
   resultCard: {
     borderRadius: 16,
