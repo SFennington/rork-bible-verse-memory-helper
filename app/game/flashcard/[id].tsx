@@ -30,6 +30,7 @@ export default function FlashcardGameScreen() {
   const [showResult, setShowResult] = useState(false);
   const [userKnewIt, setUserKnewIt] = useState<boolean | null>(null);
   const [startTime] = useState(Date.now());
+  const [currentCard, setCurrentCard] = useState(0);
 
   const verse = verses.find(v => v.id === id);
   const category = CATEGORIES.find(c => c.name === verse?.category);
@@ -44,7 +45,36 @@ export default function FlashcardGameScreen() {
     );
   }
 
+  // Split long verses into chunks (approximately 100 characters per card)
+  const splitVerseIntoCards = (text: string): string[] => {
+    const words = text.split(' ');
+    const cards: string[] = [];
+    let currentCardText = '';
+    
+    for (const word of words) {
+      const testText = currentCardText ? `${currentCardText} ${word}` : word;
+      
+      if (testText.length > 100 && currentCardText.length > 0) {
+        cards.push(currentCardText);
+        currentCardText = word;
+      } else {
+        currentCardText = testText;
+      }
+    }
+    
+    if (currentCardText) {
+      cards.push(currentCardText);
+    }
+    
+    return cards.length > 0 ? cards : [text];
+  };
+
+  const verseCards = splitVerseIntoCards(verse.text);
+  const totalCards = verseCards.length;
+
   const handleFlip = () => {
+    if (showResult) return; // Don't flip when showing results
+    
     const toValue = isFlipped ? 0 : 1;
     Animated.spring(flipAnim, {
       toValue,
@@ -53,6 +83,22 @@ export default function FlashcardGameScreen() {
       useNativeDriver: true,
     }).start();
     setIsFlipped(!isFlipped);
+  };
+
+  const handleNextCard = () => {
+    if (currentCard < totalCards - 1) {
+      setCurrentCard(currentCard + 1);
+      setIsFlipped(false);
+      flipAnim.setValue(0);
+    }
+  };
+
+  const handlePrevCard = () => {
+    if (currentCard > 0) {
+      setCurrentCard(currentCard - 1);
+      setIsFlipped(false);
+      flipAnim.setValue(0);
+    }
   };
 
   const handleAnswer = (knewIt: boolean) => {
@@ -98,6 +144,7 @@ export default function FlashcardGameScreen() {
       setShowResult(false);
       setUserKnewIt(null);
       setIsFlipped(false);
+      setCurrentCard(0);
       flipAnim.setValue(0);
     }
   };
@@ -163,66 +210,104 @@ export default function FlashcardGameScreen() {
             <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
               {!isFlipped 
                 ? "Try to recall the verse, then tap the card to flip and check"
-                : "Did you remember the verse correctly?"}
+                : totalCards > 1 && currentCard < totalCards - 1
+                  ? "Swipe or tap arrows to see the next part"
+                  : "Did you remember the verse correctly?"}
             </Text>
+            {totalCards > 1 && (
+              <Text style={[styles.cardCounter, { color: theme.textTertiary }]}>
+                Card {currentCard + 1} of {totalCards}
+              </Text>
+            )}
           </View>
 
-          <View style={styles.cardContainer}>
-            <TouchableOpacity 
-              activeOpacity={0.9} 
-              onPress={handleFlip}
-              disabled={showResult}
+          <TouchableOpacity 
+            activeOpacity={1} 
+            onPress={handleFlip}
+            disabled={showResult}
+            style={styles.cardContainer}
+          >
+            {/* Front of card - Reference */}
+            <Animated.View
+              style={[
+                styles.card,
+                { backgroundColor: theme.cardBackground },
+                {
+                  transform: [{ rotateY: frontRotate }],
+                  opacity: frontOpacity,
+                },
+                isFlipped && styles.cardHidden,
+              ]}
+              pointerEvents={isFlipped ? 'none' : 'auto'}
             >
-              {/* Front of card - Reference */}
-              <Animated.View
-                style={[
-                  styles.card,
-                  { backgroundColor: theme.cardBackground },
-                  {
-                    transform: [{ rotateY: frontRotate }],
-                    opacity: frontOpacity,
-                  },
-                  isFlipped && styles.cardHidden,
-                ]}
-              >
-                <View style={styles.cardIcon}>
-                  <Eye color={category?.color || '#667eea'} size={48} />
-                </View>
-                <Text style={[styles.cardReference, { color: theme.text }]}>
-                  {verse.reference}
+              <View style={styles.cardIcon}>
+                <Eye color={category?.color || '#667eea'} size={48} />
+              </View>
+              <Text style={[styles.cardReference, { color: theme.text }]}>
+                {verse.reference}
+              </Text>
+              {totalCards > 1 && (
+                <Text style={[styles.cardPartLabel, { color: theme.textSecondary }]}>
+                  Part {currentCard + 1} of {totalCards}
                 </Text>
-                <Text style={[styles.cardHint, { color: theme.textTertiary }]}>
-                  Tap to reveal verse
-                </Text>
-              </Animated.View>
+              )}
+              <Text style={[styles.cardHint, { color: theme.textTertiary }]}>
+                Tap to reveal verse
+              </Text>
+            </Animated.View>
 
-              {/* Back of card - Verse text */}
-              <Animated.View
-                style={[
-                  styles.card,
-                  styles.cardBack,
-                  { backgroundColor: theme.cardBackground },
-                  {
-                    transform: [{ rotateY: backRotate }],
-                    opacity: backOpacity,
-                  },
-                  !isFlipped && styles.cardHidden,
-                ]}
+            {/* Back of card - Verse text */}
+            <Animated.View
+              style={[
+                styles.card,
+                styles.cardBack,
+                { backgroundColor: theme.cardBackground },
+                {
+                  transform: [{ rotateY: backRotate }],
+                  opacity: backOpacity,
+                },
+                !isFlipped && styles.cardHidden,
+              ]}
+              pointerEvents={!isFlipped ? 'none' : 'auto'}
+            >
+              <View style={styles.cardIcon}>
+                <EyeOff color={category?.color || '#667eea'} size={48} />
+              </View>
+              <ScrollView 
+                style={styles.verseScrollContainer}
+                contentContainerStyle={styles.verseScrollContent}
+                showsVerticalScrollIndicator={false}
               >
-                <View style={styles.cardIcon}>
-                  <EyeOff color={category?.color || '#667eea'} size={48} />
-                </View>
                 <Text style={[styles.verseText, { color: theme.text }]}>
-                  {verse.text}
+                  {verseCards[currentCard]}
                 </Text>
-                <Text style={[styles.verseReferenceSmall, { color: theme.textSecondary }]}>
-                  — {verse.reference}
-                </Text>
-              </Animated.View>
-            </TouchableOpacity>
-          </View>
+              </ScrollView>
+              <Text style={[styles.verseReferenceSmall, { color: theme.textSecondary }]}>
+                — {verse.reference}
+              </Text>
+            </Animated.View>
+          </TouchableOpacity>
 
-          {isFlipped && !showResult && (
+          {isFlipped && totalCards > 1 && !showResult && (
+            <View style={styles.cardNavigation}>
+              <TouchableOpacity
+                style={[styles.navButton, { backgroundColor: theme.cardBackground, opacity: currentCard === 0 ? 0.3 : 1 }]}
+                onPress={handlePrevCard}
+                disabled={currentCard === 0}
+              >
+                <ArrowLeft color={theme.text} size={24} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.navButton, { backgroundColor: theme.cardBackground, opacity: currentCard === totalCards - 1 ? 0.3 : 1 }]}
+                onPress={handleNextCard}
+                disabled={currentCard === totalCards - 1}
+              >
+                <ArrowRight color={theme.text} size={24} />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {isFlipped && !showResult && currentCard === totalCards - 1 && (
             <View style={styles.answerButtons}>
               <TouchableOpacity
                 style={[styles.answerButton, styles.wrongButton, { backgroundColor: theme.resultError }]}
@@ -325,10 +410,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
     textAlign: 'center',
     fontWeight: '500' as const,
+    marginBottom: 8,
+  },
+  cardCounter: {
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '600' as const,
   },
   cardContainer: {
     height: 400,
     marginBottom: 24,
+    position: 'relative',
   },
   card: {
     position: 'absolute',
@@ -358,18 +450,49 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '700' as const,
     textAlign: 'center',
+    marginBottom: 8,
+  },
+  cardPartLabel: {
+    fontSize: 14,
+    textAlign: 'center',
     marginBottom: 16,
+    fontWeight: '600' as const,
   },
   cardHint: {
     fontSize: 16,
     fontStyle: 'italic' as const,
+  },
+  verseScrollContainer: {
+    maxHeight: 250,
+    width: '100%',
+  },
+  verseScrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
   },
   verseText: {
     fontSize: 20,
     lineHeight: 32,
     textAlign: 'center',
     fontWeight: '500' as const,
+  },
+  cardNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 16,
+  },
+  navButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   verseReferenceSmall: {
     fontSize: 16,
