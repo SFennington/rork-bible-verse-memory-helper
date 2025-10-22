@@ -44,6 +44,18 @@ const GAME_INFO: Record<GameType, { title: string; description: string }> = {
     title: 'Missing Vowels',
     description: 'Fill in the missing vowels to complete words',
   },
+  'flashcard': {
+    title: 'Flashcard',
+    description: 'Review the verse with flashcard-style memorization',
+  },
+  'speed-tap': {
+    title: 'Speed Tap',
+    description: 'Tap words quickly in the correct order',
+  },
+  'progressive-reveal': {
+    title: 'Progressive Reveal',
+    description: 'Reveal words one at a time to build memory',
+  },
 };
 
 const DIFFICULTY_LABELS = [
