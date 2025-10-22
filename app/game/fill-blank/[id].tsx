@@ -44,7 +44,11 @@ export default function FillBlankGameScreen() {
   const gameData = useMemo(() => {
     if (!verse) return null;
 
-    const words = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
+    // Keep original words WITH punctuation for display
+    const displayWords = verse.text.split(' ').filter(word => word.length > 0);
+    // Strip punctuation for comparison
+    const cleanWords = displayWords.map(word => stripPunctuation(word));
+    
     let blankPercentage = 0.3;
     let extraOptionsCount = 0;
     
@@ -74,19 +78,19 @@ export default function FillBlankGameScreen() {
         extraOptionsCount = 4;
     }
 
-    const blanksCount = Math.max(2, Math.floor(words.length * blankPercentage));
+    const blanksCount = Math.max(2, Math.floor(cleanWords.length * blankPercentage));
     const blankIndices = new Set<number>();
 
     while (blankIndices.size < blanksCount) {
-      const randomIndex = Math.floor(Math.random() * words.length);
+      const randomIndex = Math.floor(Math.random() * cleanWords.length);
       blankIndices.add(randomIndex);
     }
 
     const blanks = Array.from(blankIndices).sort((a, b) => a - b);
-    const correctWords = blanks.map(i => words[i]);
+    const correctWords = blanks.map(i => cleanWords[i]);
     
     // Add extra distractor words for lower difficulty levels
-    const allWordsInVerse = words.filter(w => w.length > 2); // Only words with 3+ letters
+    const allWordsInVerse = cleanWords.filter(w => w.length > 2); // Only words with 3+ letters
     const distractorWords: string[] = [];
     
     for (let i = 0; i < extraOptionsCount && distractorWords.length < extraOptionsCount; i++) {
@@ -98,7 +102,7 @@ export default function FillBlankGameScreen() {
     
     const options = [...correctWords, ...distractorWords].sort(() => Math.random() - 0.5);
 
-    return { words, blanks, options };
+    return { displayWords, cleanWords, blanks, options };
   }, [verse, difficultyLevel]);
 
   if (!verse || !gameData) {
@@ -129,15 +133,15 @@ export default function FillBlankGameScreen() {
   const handleCheck = () => {
     setShowResult(true);
     const isCorrect = gameData.blanks.every(
-      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()
+      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()
     );
 
     const correctBlankCount = gameData.blanks.filter(
-      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()
+      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()
     ).length;
     const accuracy = Math.round((correctBlankCount / gameData.blanks.length) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
-    const totalWords = gameData.words.length;
+    const totalWords = gameData.cleanWords.length;
     
     const correctWords = isCorrect ? totalWords : Math.round((correctBlankCount / gameData.blanks.length) * totalWords);
 
@@ -176,7 +180,7 @@ export default function FillBlankGameScreen() {
       // Only clear incorrect answers, keep correct ones
       const newSelectedWords: Record<number, string> = {};
       gameData.blanks.forEach((blankIdx, i) => {
-        if ((selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()) {
+        if ((selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()) {
           // Keep correct answer
           newSelectedWords[i] = selectedWords[i];
         }
@@ -192,7 +196,7 @@ export default function FillBlankGameScreen() {
 
   const isComplete = gameData.blanks.every((_, i) => selectedWords[i]);
   const isCorrect = showResult && gameData.blanks.every(
-    (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.words[blankIdx].toLowerCase()
+    (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()
   );
 
   return (
@@ -237,13 +241,13 @@ export default function FillBlankGameScreen() {
           <View style={[styles.verseCard, { backgroundColor: theme.cardBackground }]}>
             <Text style={[styles.verseReference, { color: theme.text }]}>{verse.reference}</Text>
             <View style={styles.verseTextContainer}>
-              {gameData.words.map((word, index) => {
+              {gameData.displayWords.map((word, index) => {
                 const blankPosition = gameData.blanks.indexOf(index);
                 const isBlank = blankPosition !== -1;
 
                 if (isBlank) {
                   const selectedWord = selectedWords[blankPosition];
-                  const correctWord = gameData.words[index];
+                  const correctWord = gameData.cleanWords[index];
                   const isWrong = showResult && (selectedWord || '').toLowerCase() !== correctWord.toLowerCase();
 
                   return (

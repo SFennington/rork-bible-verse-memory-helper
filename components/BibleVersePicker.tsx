@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -34,6 +34,23 @@ export default function BibleVersePicker({
   const [selectedChapter, setSelectedChapter] = useState(initialChapter || 1);
   const [selectedVerse, setSelectedVerse] = useState(initialVerse || 1);
   const [selectedEndVerse, setSelectedEndVerse] = useState<number | undefined>(initialEndVerse);
+  
+  // Update internal state when initial values change
+  useEffect(() => {
+    if (initialBook) setSelectedBook(initialBook);
+  }, [initialBook]);
+  
+  useEffect(() => {
+    if (initialChapter) setSelectedChapter(initialChapter);
+  }, [initialChapter]);
+  
+  useEffect(() => {
+    if (initialVerse) setSelectedVerse(initialVerse);
+  }, [initialVerse]);
+  
+  useEffect(() => {
+    setSelectedEndVerse(initialEndVerse);
+  }, [initialEndVerse]);
   
   const [showBookPicker, setShowBookPicker] = useState(false);
   const [showChapterPicker, setShowChapterPicker] = useState(false);

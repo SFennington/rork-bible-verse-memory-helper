@@ -37,16 +37,16 @@ export default function AddVerseScreen() {
   const [isLoading, setIsLoading] = useState(false);
   
   // Track selected verse details to preserve picker state
-  const [selectedBook, setSelectedBook] = useState<string>('');
-  const [selectedChapter, setSelectedChapter] = useState<number>(0);
-  const [selectedVerse, setSelectedVerse] = useState<number>(0);
+  const [selectedBook, setSelectedBook] = useState<string | undefined>(undefined);
+  const [selectedChapter, setSelectedChapter] = useState<number | undefined>(undefined);
+  const [selectedVerse, setSelectedVerse] = useState<number | undefined>(undefined);
   const [selectedEndVerse, setSelectedEndVerse] = useState<number | undefined>(undefined);
 
   const handleVerseSelect = async (book: string, chapter: number, verse?: number, endVerse?: number) => {
     // Store the selection
     setSelectedBook(book);
     setSelectedChapter(chapter);
-    setSelectedVerse(verse || 0);
+    setSelectedVerse(verse);
     setSelectedEndVerse(endVerse);
     
     setIsLoading(true);
@@ -239,9 +239,9 @@ export default function AddVerseScreen() {
             <BibleVersePicker
               mode={mode === 'single' ? 'verse' : 'chapter'}
               onSelect={handleVerseSelect}
-              initialBook={selectedBook || undefined}
-              initialChapter={selectedChapter || undefined}
-              initialVerse={selectedVerse || undefined}
+              initialBook={selectedBook}
+              initialChapter={selectedChapter}
+              initialVerse={selectedVerse}
               initialEndVerse={selectedEndVerse}
             />
             
