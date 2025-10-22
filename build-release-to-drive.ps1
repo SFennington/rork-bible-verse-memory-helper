@@ -1,7 +1,7 @@
 # Build Release and Copy to Google Drive
-# This script builds both APK and AAB files and copies them to your Google Drive
+# This script builds AAB file and copies it to your Google Drive
 
-Write-Host "Building Release APK and AAB for Google Drive..." -ForegroundColor Cyan
+Write-Host "Building Release AAB for Google Drive..." -ForegroundColor Cyan
 Write-Host ""
 
 # Set environment variables
@@ -37,18 +37,6 @@ Write-Host ""
 # Navigate to android directory
 Set-Location android
 
-# Build APK
-Write-Host "Building Release APK..." -ForegroundColor Yellow
-.\gradlew.bat assembleRelease
-
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "APK build failed!" -ForegroundColor Red
-    Set-Location ..
-    exit 1
-}
-Write-Host "APK build successful!" -ForegroundColor Green
-Write-Host ""
-
 # Build AAB
 Write-Host "Building Release AAB (for Play Store)..." -ForegroundColor Yellow
 .\gradlew.bat bundleRelease
@@ -67,18 +55,9 @@ Set-Location ..
 # Create timestamped filename
 $timestamp = Get-Date -Format "yyyy-MM-dd_HH-mm"
 
-# Copy APK to Google Drive
-Write-Host "Copying files to Google Drive..." -ForegroundColor Yellow
-$apkSource = "android\app\build\outputs\apk\release\app-release.apk"
+# Copy AAB to Google Drive
+Write-Host "Copying AAB to Google Drive..." -ForegroundColor Yellow
 $aabSource = "android\app\build\outputs\bundle\release\app-release.aab"
-
-if (Test-Path $apkSource) {
-    $apkDest = "$drivePath\HeartScript-$timestamp.apk"
-    Copy-Item $apkSource -Destination $apkDest -Force
-    Write-Host "Copied APK: HeartScript-$timestamp.apk" -ForegroundColor Green
-} else {
-    Write-Host "Warning: APK not found at $apkSource" -ForegroundColor Yellow
-}
 
 if (Test-Path $aabSource) {
     $aabDest = "$drivePath\HeartScript-$timestamp.aab"
@@ -89,11 +68,9 @@ if (Test-Path $aabSource) {
 }
 
 Write-Host ""
-Write-Host "Build complete! Files saved to:" -ForegroundColor Cyan
+Write-Host "Build complete! File saved to:" -ForegroundColor Cyan
 Write-Host "  $drivePath" -ForegroundColor White
 Write-Host ""
-Write-Host "Ready for:" -ForegroundColor Green
-Write-Host "  - APK: Direct installation on devices" -ForegroundColor White
-Write-Host "  - AAB: Google Play Store submission" -ForegroundColor White
+Write-Host "Ready for Google Play Store submission!" -ForegroundColor Green
 Write-Host ""
 
