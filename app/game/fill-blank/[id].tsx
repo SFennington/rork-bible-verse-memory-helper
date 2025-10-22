@@ -130,6 +130,27 @@ export default function FillBlankGameScreen() {
     ]).start();
   };
 
+  const handleWordRemove = (blankIndex: number) => {
+    setSelectedWords(prev => {
+      const newWords = { ...prev };
+      delete newWords[blankIndex];
+      return newWords;
+    });
+
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
   const handleCheck = () => {
     setShowResult(true);
     const isCorrect = gameData.blanks.every(
@@ -258,27 +279,37 @@ export default function FillBlankGameScreen() {
                         { transform: [{ scale: scaleAnim }] },
                       ]}
                     >
-                      <View
-                        style={[
-                          styles.blank,
-                          { backgroundColor: theme.border, borderColor: theme.border },
-                          selectedWord && styles.blankFilled,
-                          selectedWord && { backgroundColor: '#e0e7ff', borderColor: '#818cf8' },
-                          isWrong && styles.blankWrong,
-                          showResult && (selectedWord || '').toLowerCase() === correctWord.toLowerCase() && styles.blankCorrect,
-                        ]}
+                      <TouchableOpacity
+                        onPress={() => {
+                          if (!showResult && selectedWord) {
+                            handleWordRemove(blankPosition);
+                          }
+                        }}
+                        disabled={!selectedWord || showResult}
+                        activeOpacity={0.7}
                       >
-                        <Text
+                        <View
                           style={[
-                            styles.blankText,
-                            { color: theme.textTertiary },
-                            selectedWord && styles.blankTextFilled,
-                            selectedWord && { color: theme.text },
+                            styles.blank,
+                            { backgroundColor: theme.border, borderColor: theme.border },
+                            selectedWord && styles.blankFilled,
+                            selectedWord && { backgroundColor: '#e0e7ff', borderColor: '#818cf8' },
+                            isWrong && styles.blankWrong,
+                            showResult && (selectedWord || '').toLowerCase() === correctWord.toLowerCase() && styles.blankCorrect,
                           ]}
                         >
-                          {selectedWord || '____'}
-                        </Text>
-                      </View>
+                          <Text
+                            style={[
+                              styles.blankText,
+                              { color: theme.textTertiary },
+                              selectedWord && styles.blankTextFilled,
+                              selectedWord && { color: theme.text },
+                            ]}
+                          >
+                            {selectedWord || '____'}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
                     </Animated.View>
                   );
                 }

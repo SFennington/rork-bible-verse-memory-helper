@@ -43,7 +43,10 @@ export default function SpeedTapGameScreen() {
   const gameData = useMemo(() => {
     if (!verse) return null;
 
-    const correctWords = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
+    // Split into words and keep all words (don't filter out any)
+    const allWords = verse.text.split(' ').filter(word => word.trim().length > 0);
+    // Strip punctuation only for comparison, not for filtering
+    const correctWords = allWords.map(word => stripPunctuation(word));
     
     // Create a mix of correct and incorrect words based on difficulty
     let wrongWordPercentage = 0.3; // 30% wrong words
@@ -74,7 +77,11 @@ export default function SpeedTapGameScreen() {
     const shuffledWords = correctWords.map((word, index) => {
       if (wrongIndices.has(index)) {
         // Insert a random word from the verse in the wrong position
-        const randomIndex = Math.floor(Math.random() * correctWords.length);
+        let randomIndex = Math.floor(Math.random() * correctWords.length);
+        // Make sure we don't accidentally pick the same word
+        while (randomIndex === index && correctWords.length > 1) {
+          randomIndex = Math.floor(Math.random() * correctWords.length);
+        }
         return correctWords[randomIndex];
       }
       return word;

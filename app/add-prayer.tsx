@@ -26,6 +26,7 @@ export default function AddPrayerScreen() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<PrayerCategory>('Personal');
   const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [prayingFor, setPrayingFor] = useState('');
 
   // Set category from URL parameter if provided
   useEffect(() => {
@@ -48,6 +49,9 @@ export default function AddPrayerScreen() {
         status: 'active',
         priority,
         reminderEnabled: false,
+        isCustom: true,
+        isInProgress: false,
+        prayingFor: category === 'Prayer Requests' ? prayingFor.trim() || undefined : undefined,
       });
 
       Alert.alert('Success', 'Prayer request added!', [

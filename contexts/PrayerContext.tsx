@@ -78,12 +78,12 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
   };
 
   const rotateDailyPrayers = useCallback(async () => {
-    const activeRequests = prayerRequests.filter(p => p.status === 'active');
+    const progressRequests = prayerRequests.filter(p => p.status === 'active' && p.isInProgress === true);
     
-    if (activeRequests.length === 0) return;
+    if (progressRequests.length === 0) return;
 
-    // Shuffle and select 5 prayers for today
-    const shuffled = [...activeRequests].sort(() => Math.random() - 0.5);
+    // Shuffle and select 5 prayers for today from progress prayers only
+    const shuffled = [...progressRequests].sort(() => Math.random() - 0.5);
     const selected = shuffled.slice(0, Math.min(5, shuffled.length)).map(p => p.id);
 
     const today = getToday();

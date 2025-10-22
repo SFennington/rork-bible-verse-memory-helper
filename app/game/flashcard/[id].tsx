@@ -222,7 +222,7 @@ export default function FlashcardGameScreen() {
           </View>
 
           <TouchableOpacity 
-            activeOpacity={1} 
+            activeOpacity={0.9} 
             onPress={handleFlip}
             disabled={showResult}
             style={styles.cardContainer}
@@ -236,7 +236,6 @@ export default function FlashcardGameScreen() {
                   transform: [{ rotateY: frontRotate }],
                   opacity: frontOpacity,
                 },
-                isFlipped && styles.cardHidden,
               ]}
               pointerEvents={isFlipped ? 'none' : 'auto'}
             >
@@ -266,7 +265,6 @@ export default function FlashcardGameScreen() {
                   transform: [{ rotateY: backRotate }],
                   opacity: backOpacity,
                 },
-                !isFlipped && styles.cardHidden,
               ]}
               pointerEvents={!isFlipped ? 'none' : 'auto'}
             >
