@@ -246,7 +246,7 @@ export default function VerseDetailScreen() {
           headerLeft: () => (
             <TouchableOpacity
               style={styles.optionsButton}
-              onPress={() => router.push('/(tabs)/verses' as any)}
+              onPress={() => router.back()}
             >
               <ArrowRight color="#fff" size={24} style={{ transform: [{ rotate: '180deg' }] }} />
             </TouchableOpacity>
