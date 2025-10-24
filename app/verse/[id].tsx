@@ -245,8 +245,8 @@ export default function VerseDetailScreen() {
           headerBackVisible: false,
           headerLeft: () => (
             <TouchableOpacity
-              style={styles.optionsButton}
-              onPress={() => router.back()}
+              style={styles.backButton}
+              onPress={() => router.push('/progress' as any)}
             >
               <ArrowRight color="#fff" size={24} style={{ transform: [{ rotate: '180deg' }] }} />
             </TouchableOpacity>
@@ -1042,6 +1042,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#fff',
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: 8,
   },
   optionsButton: {
     padding: 8,
