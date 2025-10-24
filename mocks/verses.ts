@@ -431,4 +431,5 @@ export const CATEGORIES: { name: string; color: string; gradient: [string, strin
   { name: 'Faith', color: '#6BBF73', gradient: ['#6BBF73', '#88D18F'] },
   { name: 'Hope', color: '#F4A261', gradient: ['#F4A261', '#F7B77F'] },
   { name: 'Promises', color: '#9333EA', gradient: ['#9333EA', '#A855F7'] },
+  { name: 'Custom', color: '#667eea', gradient: ['#667eea', '#764ba2'] },
 ];

@@ -120,19 +120,22 @@ export default function BibleVersePicker({
 
   return (
     <View style={styles.container}>
-      <View style={styles.pickerRow}>
-        {/* Book Picker */}
+      {/* First Row: Book Name */}
+      <View style={styles.bookRow}>
         <TouchableOpacity
-          style={[styles.pickerButton, { backgroundColor: theme.background, borderColor: theme.border }]}
+          style={[styles.bookButton, { backgroundColor: theme.background, borderColor: theme.border }]}
           onPress={() => setShowBookPicker(true)}
           activeOpacity={0.7}
         >
-          <Text style={[styles.pickerButtonText, { color: theme.text }]} numberOfLines={1}>
+          <Text style={[styles.bookButtonText, { color: theme.text }]}>
             {selectedBook}
           </Text>
           <ChevronDown color={theme.textSecondary} size={20} />
         </TouchableOpacity>
+      </View>
 
+      {/* Second Row: Chapter and Verse Pickers */}
+      <View style={styles.pickerRow}>
         {/* Chapter Picker */}
         <TouchableOpacity
           style={[styles.pickerButtonSmall, { backgroundColor: theme.background, borderColor: theme.border }]}
@@ -140,15 +143,13 @@ export default function BibleVersePicker({
           activeOpacity={0.7}
         >
           <Text style={[styles.pickerButtonText, { color: theme.text }]}>
-            {selectedChapter}
+            Ch {selectedChapter}
           </Text>
           <ChevronDown color={theme.textSecondary} size={18} />
         </TouchableOpacity>
 
         {mode === 'verse' && (
           <>
-            <Text style={[styles.separator, { color: theme.textSecondary }]}>:</Text>
-            
             {/* Verse Picker */}
             <TouchableOpacity
               style={[styles.pickerButtonSmall, { backgroundColor: theme.background, borderColor: theme.border }]}
@@ -156,7 +157,7 @@ export default function BibleVersePicker({
               activeOpacity={0.7}
             >
               <Text style={[styles.pickerButtonText, { color: theme.text }]}>
-                {selectedVerse}
+                Vs {selectedVerse}
               </Text>
               <ChevronDown color={theme.textSecondary} size={18} />
             </TouchableOpacity>
@@ -168,7 +169,7 @@ export default function BibleVersePicker({
               activeOpacity={0.7}
             >
               <Text style={[styles.rangeButtonText, { color: theme.textSecondary }]}>
-                {selectedEndVerse ? `-${selectedEndVerse}` : '+'}
+                {selectedEndVerse ? `to ${selectedEndVerse}` : 'Range'}
               </Text>
             </TouchableOpacity>
           </>
@@ -360,49 +361,52 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
   },
+  bookRow: {
+    marginBottom: 8,
+  },
+  bookButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  bookButtonText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+  },
   pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  pickerButton: {
+  pickerButtonSmall: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  pickerButtonSmall: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'center',
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    minWidth: 60,
   },
   pickerButtonText: {
-    fontSize: 16,
-    fontWeight: '600' as const,
-  },
-  separator: {
-    fontSize: 20,
+    fontSize: 15,
     fontWeight: '600' as const,
   },
   rangeButton: {
+    flex: 1,
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    minWidth: 50,
     alignItems: 'center',
   },
   rangeButtonText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600' as const,
   },
   referenceDisplay: {

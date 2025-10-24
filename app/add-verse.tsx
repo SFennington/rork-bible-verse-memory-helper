@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -34,10 +34,11 @@ export default function AddVerseScreen() {
   const [reference, setReference] = useState('');
   const [text, setText] = useState('');
   const [chapterText, setChapterText] = useState('');
-  const [category, setCategory] = useState<VerseCategory>('Faith');
+  const [category, setCategory] = useState<VerseCategory>('Custom');
   const [isLoading, setIsLoading] = useState(false);
   const [showVersionPicker, setShowVersionPicker] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState(globalVersion);
+  const categoryScrollRef = useRef<ScrollView>(null);
   
   // Track selected verse details to preserve picker state
   const [selectedBook, setSelectedBook] = useState<string | undefined>(undefined);
@@ -78,6 +79,14 @@ export default function AddVerseScreen() {
     setIsLoading(true);
     
     try {
+      // Auto-select Custom category when fetching
+      setCategory('Custom');
+      
+      // Scroll to show Custom category (it's at the end)
+      setTimeout(() => {
+        categoryScrollRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      
       if (mode === 'single') {
         // Fetch single verse or verse range
         const ref = selectedEndVerse && selectedEndVerse > selectedVerse! 
@@ -310,6 +319,7 @@ export default function AddVerseScreen() {
 
             <Text style={[styles.label, { color: theme.text }]}>Category</Text>
             <ScrollView
+              ref={categoryScrollRef}
               horizontal
               showsHorizontalScrollIndicator={false}
               style={styles.categoryScroll}
