@@ -10,10 +10,11 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { BookOpen, FileText } from 'lucide-react-native';
+import { BookOpen, FileText, RefreshCw, ChevronDown } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useBibleVersion } from '@/contexts/BibleVersionContext';
@@ -28,13 +29,15 @@ export default function AddVerseScreen() {
   const router = useRouter();
   const { addCustomVerse, addChapter, addToProgress } = useVerses();
   const { theme } = useTheme();
-  const { selectedVersion } = useBibleVersion();
+  const { selectedVersion: globalVersion, availableVersions } = useBibleVersion();
   const [mode, setMode] = useState<InputMode>('single');
   const [reference, setReference] = useState('');
   const [text, setText] = useState('');
   const [chapterText, setChapterText] = useState('');
   const [category, setCategory] = useState<VerseCategory>('Faith');
   const [isLoading, setIsLoading] = useState(false);
+  const [showVersionPicker, setShowVersionPicker] = useState(false);
+  const [selectedVersion, setSelectedVersion] = useState(globalVersion);
   
   // Track selected verse details to preserve picker state
   const [selectedBook, setSelectedBook] = useState<string | undefined>(undefined);
@@ -42,30 +45,53 @@ export default function AddVerseScreen() {
   const [selectedVerse, setSelectedVerse] = useState<number | undefined>(undefined);
   const [selectedEndVerse, setSelectedEndVerse] = useState<number | undefined>(undefined);
 
-  const handleVerseSelect = async (book: string, chapter: number, verse?: number, endVerse?: number) => {
-    // Store the selection
+  const handleVerseSelect = (book: string, chapter: number, verse?: number, endVerse?: number) => {
+    // Just store the selection - don't auto-fetch
     setSelectedBook(book);
     setSelectedChapter(chapter);
     setSelectedVerse(verse);
     setSelectedEndVerse(endVerse);
+    
+    // Update reference for display
+    if (mode === 'single') {
+      const ref = endVerse && endVerse > verse! 
+        ? `${book} ${chapter}:${verse}-${endVerse}`
+        : `${book} ${chapter}:${verse}`;
+      setReference(ref);
+    } else {
+      const ref = `${book} ${chapter}`;
+      setReference(ref);
+    }
+  };
+
+  const handleFetchVerse = async () => {
+    if (!selectedBook || !selectedChapter) {
+      Alert.alert('Error', 'Please select a book and chapter');
+      return;
+    }
+
+    if (mode === 'single' && !selectedVerse) {
+      Alert.alert('Error', 'Please select a verse');
+      return;
+    }
     
     setIsLoading(true);
     
     try {
       if (mode === 'single') {
         // Fetch single verse or verse range
-        const ref = endVerse && endVerse > verse! 
-          ? `${book} ${chapter}:${verse}-${endVerse}`
-          : `${book} ${chapter}:${verse}`;
+        const ref = selectedEndVerse && selectedEndVerse > selectedVerse! 
+          ? `${selectedBook} ${selectedChapter}:${selectedVerse}-${selectedEndVerse}`
+          : `${selectedBook} ${selectedChapter}:${selectedVerse}`;
         
         setReference(ref);
         const result = await fetchBibleVerse(ref, selectedVersion.id);
         setText(result.text);
       } else {
         // Fetch entire chapter
-        const ref = `${book} ${chapter}`;
+        const ref = `${selectedBook} ${selectedChapter}`;
         setReference(ref);
-        const result = await fetchBibleChapter(book, chapter, selectedVersion.id);
+        const result = await fetchBibleChapter(selectedBook, selectedChapter, selectedVersion.id);
         const formattedText = result.verses.map(v => v.text).join('\n');
         setChapterText(formattedText);
       }
@@ -228,11 +254,22 @@ export default function AddVerseScreen() {
           </View>
 
           <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
-            <View style={styles.versionBadge}>
-              <Text style={[styles.versionText, { color: theme.textSecondary }]}>
-                Using: {selectedVersion.abbreviation}
-              </Text>
-            </View>
+            <Text style={[styles.label, { color: theme.text }]}>Bible Version</Text>
+            <TouchableOpacity
+              style={[styles.versionPicker, { backgroundColor: theme.background, borderColor: theme.border }]}
+              onPress={() => setShowVersionPicker(true)}
+              activeOpacity={0.7}
+            >
+              <View>
+                <Text style={[styles.versionPickerText, { color: theme.text }]}>
+                  {selectedVersion.abbreviation}
+                </Text>
+                <Text style={[styles.versionPickerSubtext, { color: theme.textSecondary }]}>
+                  {selectedVersion.name}
+                </Text>
+              </View>
+              <ChevronDown color={theme.textSecondary} size={24} />
+            </TouchableOpacity>
 
             <Text style={[styles.label, { color: theme.text }]}>Select {mode === 'single' ? 'Verse' : 'Chapter'}</Text>
             
@@ -244,12 +281,29 @@ export default function AddVerseScreen() {
               initialVerse={selectedVerse}
               initialEndVerse={selectedEndVerse}
             />
+
+            <TouchableOpacity
+              style={[styles.fetchButton, { backgroundColor: '#667eea' }]}
+              onPress={handleFetchVerse}
+              activeOpacity={0.8}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <>
+                  <RefreshCw color="#fff" size={20} />
+                  <Text style={styles.fetchButtonText}>
+                    Fetch Verse
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
             
             {isLoading && (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator color="#667eea" size="small" />
                 <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
-                  Fetching verse...
+                  Fetching from {selectedVersion.abbreviation}...
                 </Text>
               </View>
             )}
@@ -355,6 +409,54 @@ export default function AddVerseScreen() {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Version Picker Modal */}
+      <Modal visible={showVersionPicker} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: theme.text }]}>Select Bible Version</Text>
+              <TouchableOpacity onPress={() => setShowVersionPicker(false)}>
+                <Text style={[styles.modalClose, { color: '#667eea' }]}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalScroll}>
+              {availableVersions.map((version) => (
+                <TouchableOpacity
+                  key={version.id}
+                  style={[
+                    styles.versionItem,
+                    selectedVersion.id === version.id && { backgroundColor: 'rgba(102, 126, 234, 0.1)' },
+                  ]}
+                  onPress={() => {
+                    setSelectedVersion(version);
+                    setShowVersionPicker(false);
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={[
+                        styles.versionItemTitle,
+                        { color: selectedVersion.id === version.id ? '#667eea' : theme.text },
+                      ]}
+                    >
+                      {version.abbreviation}
+                    </Text>
+                    <Text style={[styles.versionItemSubtitle, { color: theme.textSecondary }]}>
+                      {version.name}
+                    </Text>
+                  </View>
+                  {selectedVersion.id === version.id && (
+                    <View style={styles.checkmark}>
+                      <Text style={{ color: '#667eea', fontSize: 20 }}>✓</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -406,17 +508,37 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  versionBadge: {
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(102, 126, 234, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
+  versionPicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 16,
     marginBottom: 16,
   },
-  versionText: {
-    fontSize: 12,
-    fontWeight: '600' as const,
+  versionPickerText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    marginBottom: 4,
+  },
+  versionPickerSubtext: {
+    fontSize: 13,
+  },
+  fetchButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  fetchButtonText: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#fff',
   },
   label: {
     fontSize: 16,
@@ -486,5 +608,55 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700' as const,
     color: '#fff',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    maxHeight: '70%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+  },
+  modalClose: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  modalScroll: {
+    maxHeight: 500,
+  },
+  versionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0, 0, 0, 0.05)',
+  },
+  versionItemTitle: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    marginBottom: 4,
+  },
+  versionItemSubtitle: {
+    fontSize: 13,
+  },
+  checkmark: {
+    marginLeft: 12,
   },
 });
