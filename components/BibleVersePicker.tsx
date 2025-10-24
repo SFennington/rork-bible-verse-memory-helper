@@ -143,13 +143,15 @@ export default function BibleVersePicker({
           activeOpacity={0.7}
         >
           <Text style={[styles.pickerButtonText, { color: theme.text }]}>
-            Ch {selectedChapter}
+            {selectedChapter}
           </Text>
           <ChevronDown color={theme.textSecondary} size={18} />
         </TouchableOpacity>
 
         {mode === 'verse' && (
           <>
+            <Text style={[styles.separator, { color: theme.textSecondary }]}>:</Text>
+            
             {/* Verse Picker */}
             <TouchableOpacity
               style={[styles.pickerButtonSmall, { backgroundColor: theme.background, borderColor: theme.border }]}
@@ -157,7 +159,7 @@ export default function BibleVersePicker({
               activeOpacity={0.7}
             >
               <Text style={[styles.pickerButtonText, { color: theme.text }]}>
-                Vs {selectedVerse}
+                {selectedVerse}
               </Text>
               <ChevronDown color={theme.textSecondary} size={18} />
             </TouchableOpacity>
@@ -169,7 +171,7 @@ export default function BibleVersePicker({
               activeOpacity={0.7}
             >
               <Text style={[styles.rangeButtonText, { color: theme.textSecondary }]}>
-                {selectedEndVerse ? `to ${selectedEndVerse}` : 'Range'}
+                {selectedEndVerse ? `-${selectedEndVerse}` : '+'}
               </Text>
             </TouchableOpacity>
           </>
@@ -383,30 +385,33 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   pickerButtonSmall: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
     gap: 4,
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
+    minWidth: 60,
   },
   pickerButtonText: {
-    fontSize: 15,
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  separator: {
+    fontSize: 20,
     fontWeight: '600' as const,
   },
   rangeButton: {
-    flex: 1,
     paddingHorizontal: 12,
     paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
+    minWidth: 50,
     alignItems: 'center',
   },
   rangeButtonText: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600' as const,
   },
   referenceDisplay: {

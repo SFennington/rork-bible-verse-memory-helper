@@ -136,9 +136,8 @@ export default function AddVerseScreen() {
         isCustom: true,
       });
       
-      Alert.alert('Success', 'Verse added to your progress!', [
-        { text: 'OK', onPress: () => router.back() },
-      ]);
+      // Navigate directly to progress screen
+      router.push('/progress' as any);
     } catch (error) {
       Alert.alert('Error', 'Failed to add verse');
       console.error(error);
@@ -181,11 +180,8 @@ export default function AddVerseScreen() {
         addToProgress(verse.id, verse);
       });
 
-      Alert.alert(
-        'Success',
-        `Chapter with ${lines.length} verses added to your progress!`,
-        [{ text: 'OK', onPress: () => router.back() }]
-      );
+      // Navigate directly to progress screen
+      router.push('/progress' as any);
     } catch (error) {
       Alert.alert('Error', 'Failed to add chapter');
       console.error(error);
