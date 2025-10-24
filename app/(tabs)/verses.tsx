@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Dimensions,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,8 +15,6 @@ import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 import { VerseCategory } from '@/types/verse';
-
-const { width } = Dimensions.get('window');
 
 const DIFFICULTY_LABELS = [
   '',
@@ -92,26 +89,26 @@ export default function HomeScreen() {
           <Text style={styles.subtitle}>Hide God&apos;s Word in your heart</Text>
           
           {selectedTab === 'progress' && versesInProgress.length > 0 && (
-            <View style={styles.statsGrid}>
+            <View style={styles.statsRow}>
               <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
-                <Target color="#667eea" size={20} />
+                <Target color="#667eea" size={16} />
                 <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{versesInProgress.length}</Text>
-                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>In Progress</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Active</Text>
               </View>
               <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
-                <Flame color="#f59e0b" size={20} />
+                <Flame color="#f59e0b" size={16} />
                 <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{totalStreak}</Text>
-                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Total Streak</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Streak</Text>
               </View>
               <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
-                <Calendar color="#10b981" size={20} />
+                <Calendar color="#10b981" size={16} />
                 <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{dueVersesCount}</Text>
-                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Due Today</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Due</Text>
               </View>
               <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
-                <TrendingUp color="#8b5cf6" size={20} />
+                <TrendingUp color="#8b5cf6" size={16} />
                 <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{avgProgress.toFixed(0)}%</Text>
-                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Avg Progress</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Avg</Text>
               </View>
             </View>
           )}
@@ -518,19 +515,18 @@ const styles = StyleSheet.create({
     marginLeft: 44,
     marginBottom: 16,
   },
-  statsGrid: {
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
+    gap: 6,
     marginBottom: 8,
   },
   statCard: {
-    width: (width - 64) / 2,
+    flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 10,
+    padding: 8,
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -541,7 +537,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   statValue: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: '700' as const,
     color: '#1f2937',
   },
@@ -549,7 +545,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   statLabel: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: '600' as const,
     color: '#6b7280',
     textAlign: 'center',

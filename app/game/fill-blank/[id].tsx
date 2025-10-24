@@ -323,6 +323,59 @@ export default function FillBlankGameScreen() {
             </View>
           </View>
 
+          {showResult && (
+            <View
+              style={[
+                styles.resultCard,
+                { backgroundColor: isCorrect ? theme.resultSuccess : theme.resultError },
+              ]}
+            >
+              <View style={styles.resultHeader}>
+                {isCorrect ? (
+                  <CheckCircle2 color="#4ade80" size={32} />
+                ) : (
+                  <XCircle color="#f87171" size={32} />
+                )}
+                <Text style={[styles.resultTitle, { color: isCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
+                  {isCorrect ? 'Perfect!' : 'Not quite right'}
+                </Text>
+              </View>
+              <Text style={[styles.resultText, { color: isCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
+                {isCorrect
+                  ? 'You completed this memory game!'
+                  : 'Try again to master this verse'}
+              </Text>
+            </View>
+          )}
+
+          {showResult && (
+            <View style={styles.buttonGroup}>
+              {isCorrect && (
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.exitButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                  onPress={handleExit}
+                  activeOpacity={0.9}
+                >
+                  <Home color={theme.textSecondary} size={20} />
+                  <Text style={[styles.exitButtonText, { color: theme.textSecondary }]}>Exit</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={[styles.actionButton, styles.continueButton, { backgroundColor: theme.cardBackground }, !isCorrect && styles.fullWidthButton]}
+                onPress={handleContinue}
+                activeOpacity={0.9}
+              >
+                <Text style={[styles.continueButtonText, { color: theme.text }]}>
+                  {isCorrect ? 'Continue' : 'Try Again'}
+                </Text>
+                <ArrowRight color={theme.text} size={20} />
+              </TouchableOpacity>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* Fixed Word Bank at Bottom */}
+        <View style={styles.fixedBottomSection}>
           <View style={styles.optionsSection}>
             <Text style={styles.optionsTitle}>Word Bank</Text>
             <View style={styles.optionsGrid}>
@@ -367,31 +420,6 @@ export default function FillBlankGameScreen() {
             </View>
           </View>
 
-          {showResult && (
-            <View
-              style={[
-                styles.resultCard,
-                { backgroundColor: isCorrect ? theme.resultSuccess : theme.resultError },
-              ]}
-            >
-              <View style={styles.resultHeader}>
-                {isCorrect ? (
-                  <CheckCircle2 color="#4ade80" size={32} />
-                ) : (
-                  <XCircle color="#f87171" size={32} />
-                )}
-                <Text style={[styles.resultTitle, { color: isCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
-                  {isCorrect ? 'Perfect!' : 'Not quite right'}
-                </Text>
-              </View>
-              <Text style={[styles.resultText, { color: isCorrect ? theme.resultSuccessText : theme.resultErrorText }]}>
-                {isCorrect
-                  ? 'You completed this memory game!'
-                  : 'Try again to master this verse'}
-              </Text>
-            </View>
-          )}
-
           {!showResult && (
             <TouchableOpacity
               style={[styles.checkButton, { backgroundColor: theme.cardBackground }]}
@@ -402,32 +430,7 @@ export default function FillBlankGameScreen() {
               <ArrowRight color="#fff" size={20} />
             </TouchableOpacity>
           )}
-
-          {showResult && (
-            <View style={styles.buttonGroup}>
-              {isCorrect && (
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.exitButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
-                  onPress={handleExit}
-                  activeOpacity={0.9}
-                >
-                  <Home color={theme.textSecondary} size={20} />
-                  <Text style={[styles.exitButtonText, { color: theme.textSecondary }]}>Exit</Text>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[styles.actionButton, styles.continueButton, { backgroundColor: theme.cardBackground }, !isCorrect && styles.fullWidthButton]}
-                onPress={handleContinue}
-                activeOpacity={0.9}
-              >
-                <Text style={[styles.continueButtonText, { color: theme.text }]}>
-                  {isCorrect ? 'Continue' : 'Try Again'}
-                </Text>
-                <ArrowRight color={theme.text} size={20} />
-              </TouchableOpacity>
-            </View>
-          )}
-        </ScrollView>
+        </View>
       </LinearGradient>
     </View>
   );
@@ -445,7 +448,19 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingBottom: 40,
+    paddingBottom: 300,
+  },
+  fixedBottomSection: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
   },
   instructionCard: {
     borderRadius: 12,
