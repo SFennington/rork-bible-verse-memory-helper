@@ -6,17 +6,27 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Dimensions,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Book, Target, Plus, Play, PlusCircle, Crown, Archive, TrendingUp, Flame, CheckCircle2 } from 'lucide-react-native';
+import { Book, Target, Plus, Play, PlusCircle, Crown, Archive, TrendingUp, Flame, CheckCircle2, Calendar } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 import { VerseCategory } from '@/types/verse';
 
+const { width } = Dimensions.get('window');
 
+const DIFFICULTY_LABELS = [
+  '',
+  'Level 1',
+  'Level 2',
+  'Level 3',
+  'Level 4',
+  'Level 5',
+];
 
 type TabType = 'browse' | 'progress';
 
@@ -42,27 +52,22 @@ export default function HomeScreen() {
     setSelectedTab('progress');
   };
 
-  const stats = useMemo(() => {
-    const completedVerses = versesInProgress.filter(v => v.progress.overallProgress === 100).length;
-    const completedArchived = archivedVerses.filter(v => v.progress.overallProgress === 100).length;
-    const totalCompleted = completedVerses + completedArchived;
-    
-    const allProgress = Object.values(progress);
-    const totalDaysInProgress = allProgress.reduce((max, p) => 
-      Math.max(max, p.daysInProgress || 0), 0
-    );
-    
-    const currentStreak = allProgress.reduce((max, p) => 
-      Math.max(max, p.streakDays || 0), 0
-    );
-    
-    return {
-      totalCompleted,
-      totalDaysInProgress,
-      currentStreak,
-      activeVerses: versesInProgress.length,
-    };
-  }, [versesInProgress, archivedVerses, progress]);
+  // Separate incomplete and completed verses
+  const incompleteVerses = versesInProgress.filter(item => {
+    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    return item.progress.completedGamesToday < requiredGames;
+  });
+  
+  const completedVerses = versesInProgress.filter(item => {
+    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    return item.progress.completedGamesToday >= requiredGames;
+  });
+
+  // Better stats calculation
+  const totalStreak = versesInProgress.reduce((sum, item) => sum + item.progress.streakDays, 0);
+  const avgProgress = versesInProgress.length > 0
+    ? versesInProgress.reduce((sum, item) => sum + item.progress.overallProgress, 0) / versesInProgress.length
+    : 0;
 
   return (
     <View style={styles.container}>
@@ -86,24 +91,27 @@ export default function HomeScreen() {
           </View>
           <Text style={styles.subtitle}>Hide God&apos;s Word in your heart</Text>
           
-          {selectedTab === 'progress' && (versesInProgress.length > 0 || archivedVerses.length > 0) && (
-            <View style={styles.statsContainer}>
-              <View style={styles.statRow}>
-                <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
-                  <CheckCircle2 color="#10b981" size={16} fill="#10b981" />
-                  <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{stats.totalCompleted}</Text>
-                  <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Completed</Text>
-                </View>
-                <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
-                  <Flame color="#f59e0b" size={16} fill="#f59e0b" />
-                  <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{stats.currentStreak}</Text>
-                  <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Day Streak</Text>
-                </View>
-                <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
-                  <TrendingUp color="#3b82f6" size={16} />
-                  <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{stats.totalDaysInProgress}</Text>
-                  <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Days Active</Text>
-                </View>
+          {selectedTab === 'progress' && versesInProgress.length > 0 && (
+            <View style={styles.statsGrid}>
+              <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
+                <Target color="#667eea" size={20} />
+                <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{versesInProgress.length}</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>In Progress</Text>
+              </View>
+              <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
+                <Flame color="#f59e0b" size={20} />
+                <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{totalStreak}</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Total Streak</Text>
+              </View>
+              <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
+                <Calendar color="#10b981" size={20} />
+                <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{dueVersesCount}</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Due Today</Text>
+              </View>
+              <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
+                <TrendingUp color="#8b5cf6" size={20} />
+                <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{avgProgress.toFixed(0)}%</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Avg Progress</Text>
               </View>
             </View>
           )}
@@ -220,56 +228,143 @@ export default function HomeScreen() {
                 </View>
               ) : (
                 <>
-                  {versesInProgress.length > 0 && versesInProgress.map(({ verse, progress: verseProgress }) => {
-                  const category = CATEGORIES.find(c => c.name === verse.category);
-                  const requiredGames = verseProgress.difficultyLevel === 5 ? 1 : 3;
-                  const isDue = verseProgress.completedGamesToday < requiredGames;
-
-                  return (
-                    <TouchableOpacity
-                      key={verse.id}
-                      style={styles.verseCard}
-                      onPress={() => router.push(`/verse/${verse.id}`)}
-                      activeOpacity={0.9}
-                    >
-                      <LinearGradient
-                        colors={category?.gradient || ['#667eea', '#764ba2']}
-                        style={styles.verseGradient}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                      >
-                        <View style={styles.verseHeader}>
-                          <Text style={styles.verseReference}>{verse.reference}</Text>
-                          {isDue ? (
-                            <View style={styles.dueIndicator}>
-                              <Play color="#fff" size={14} fill="#fff" />
-                            </View>
-                          ) : (
-                            <View style={styles.completedIndicator}>
-                              <CheckCircle2 color="#10b981" size={20} />
-                            </View>
-                          )}
+                  {/* Continue Learning Section */}
+                  {incompleteVerses.length > 0 && (
+                    <>
+                      <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>Continue Learning</Text>
+                        <View style={styles.dueBadgeSection}>
+                          <Text style={styles.dueBadgeTextSection}>{incompleteVerses.length}</Text>
                         </View>
-                        <Text style={styles.verseText} numberOfLines={3}>
-                          {verse.text}
-                        </Text>
-                        {verseProgress.overallProgress === 100 ? (
-                          <View style={styles.masteredContainer}>
-                            <Crown color="#10b981" size={24} fill="#10b981" />
-                            <Text style={styles.masteredText}>Mastered</Text>
-                          </View>
-                        ) : (
-                          <View style={styles.verseFooter}>
-                            <View style={styles.progressBarContainer}>
-                              <View style={[styles.progressBar, { width: `${verseProgress.overallProgress}%` }]} />
+                      </View>
+                      {incompleteVerses.map(({ verse, progress: verseProgress }) => {
+                        const category = CATEGORIES.find(c => c.name === verse.category);
+                        const difficultyLabel = DIFFICULTY_LABELS[verseProgress.difficultyLevel];
+                        const requiredGames = verseProgress.difficultyLevel === 5 ? 1 : 3;
+                        
+                        const completedGames = verseProgress.gameSessions
+                          .filter(s => {
+                            const sessionDate = new Date(s.completedAt);
+                            const today = new Date();
+                            return sessionDate.toDateString() === today.toDateString() && s.difficultyLevel === verseProgress.difficultyLevel;
+                          })
+                          .map(s => s.gameType);
+                        
+                        const nextGame = verseProgress.currentDayGames.find(game => !completedGames.includes(game)) || verseProgress.currentDayGames[0];
+
+                        return (
+                          <TouchableOpacity
+                            key={verse.id}
+                            style={styles.verseCard}
+                            onPress={() => router.push(`/verse/${verse.id}`)}
+                            activeOpacity={0.9}
+                          >
+                            <LinearGradient
+                              colors={category?.gradient || ['#667eea', '#764ba2']}
+                              style={styles.verseGradient}
+                              start={{ x: 0, y: 0 }}
+                              end={{ x: 1, y: 1 }}
+                            >
+                              <View style={styles.verseHeader}>
+                                <Text style={styles.verseReference}>{verse.reference}</Text>
+                                <View style={styles.headerActions}>
+                                  {verseProgress.completedGamesToday >= requiredGames && (
+                                    <View style={styles.completedBadge}>
+                                      <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
+                                    </View>
+                                  )}
+                                  <TouchableOpacity 
+                                    style={styles.playButton}
+                                    onPress={(e) => {
+                                      e.stopPropagation();
+                                      router.push(`/game/${nextGame}/${verse.id}`);
+                                    }}
+                                  >
+                                    <Play color="#fff" size={16} fill="#fff" />
+                                  </TouchableOpacity>
+                                </View>
+                              </View>
+                              <Text style={styles.verseText} numberOfLines={2}>
+                                {verse.text}
+                              </Text>
+                              <View style={styles.verseFooter}>
+                                {verseProgress.overallProgress === 100 ? (
+                                  <View style={styles.masteredContainer}>
+                                    <Crown color="#10b981" size={24} fill="#10b981" />
+                                    <Text style={styles.masteredText}>Mastered</Text>
+                                  </View>
+                                ) : (
+                                  <>
+                                    <View style={styles.progressRow}>
+                                      <View style={styles.progressBarContainer}>
+                                        <View style={[styles.progressBar, { width: `${verseProgress.overallProgress}%` }]} />
+                                      </View>
+                                      <Text style={styles.progressPercentage}>{verseProgress.overallProgress}%</Text>
+                                    </View>
+                                    <View style={styles.badgeRow}>
+                                      <View style={styles.masteryBadge}>
+                                        <Text style={styles.masteryBadgeText}>{difficultyLabel}</Text>
+                                      </View>
+                                      <View style={styles.gamesBadge}>
+                                        <Text style={styles.gamesBadgeText}>{verseProgress.completedGamesToday}/{requiredGames} today</Text>
+                                      </View>
+                                    </View>
+                                  </>
+                                )}
+                              </View>
+                            </LinearGradient>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </>
+                  )}
+
+                  {/* Completed Today Section */}
+                  {completedVerses.length > 0 && (
+                    <>
+                      <Text style={styles.sectionTitle}>Completed Today</Text>
+                      {completedVerses.map(({ verse, progress: verseProgress }) => {
+                        const category = CATEGORIES.find(c => c.name === verse.category);
+                        const difficultyLabel = DIFFICULTY_LABELS[verseProgress.difficultyLevel];
+
+                        return (
+                          <TouchableOpacity
+                            key={verse.id}
+                            style={styles.completedCard}
+                            onPress={() => router.push(`/verse/${verse.id}`)}
+                            activeOpacity={0.9}
+                          >
+                            <View style={styles.completedContent}>
+                              <View style={styles.completedHeader}>
+                                <Text style={styles.completedReference}>{verse.reference}</Text>
+                                <CheckCircle2 color="#10b981" size={24} fill="#10b981" />
+                              </View>
+                              <Text style={styles.completedText} numberOfLines={1}>
+                                {verse.text}
+                              </Text>
+                              <View style={styles.completedFooter}>
+                                {verseProgress.overallProgress === 100 ? (
+                                  <View style={styles.masteredBadge}>
+                                    <Crown color="#10b981" size={16} fill="#10b981" />
+                                    <Text style={styles.masteredBadgeText}>Mastered</Text>
+                                  </View>
+                                ) : (
+                                  <>
+                                    <View style={styles.completedMasteryBadge}>
+                                      <Text style={styles.completedMasteryText}>{difficultyLabel}</Text>
+                                    </View>
+                                    <Text style={styles.nextReviewText}>
+                                      {verseProgress.overallProgress}% memorized
+                                    </Text>
+                                  </>
+                                )}
+                              </View>
                             </View>
-                            <Text style={styles.progressText}>{verseProgress.overallProgress}%</Text>
-                          </View>
-                        )}
-                      </LinearGradient>
-                    </TouchableOpacity>
-                  );
-                })}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </>
+                  )}
 
                   {archivedVerses.length > 0 && (
                     <TouchableOpacity
@@ -412,14 +507,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
-  settingsButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   title: {
     fontSize: 24,
     fontWeight: '700' as const,
@@ -429,7 +516,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: 'rgba(255, 255, 255, 0.9)',
     marginLeft: 44,
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 8,
+  },
+  statCard: {
+    width: (width - 64) / 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 12,
+    padding: 12,
+    alignItems: 'center',
+    gap: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statCardDark: {
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  statValueDark: {
+    color: '#fff',
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  statLabelDark: {
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   tabsContainer: {
     flexDirection: 'row',
@@ -472,47 +598,6 @@ const styles = StyleSheet.create({
     fontWeight: '700' as const,
     color: '#fff',
   },
-  statsContainer: {
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  statRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  statCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 10,
-    padding: 8,
-    alignItems: 'center',
-    gap: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  statCardDark: {
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  statValue: {
-    fontSize: 18,
-    fontWeight: '700' as const,
-    color: '#1f2937',
-  },
-  statValueDark: {
-    color: '#fff',
-  },
-  statLabel: {
-    fontSize: 9,
-    fontWeight: '600' as const,
-    color: '#6b7280',
-    textAlign: 'center',
-  },
-  statLabelDark: {
-    color: 'rgba(255, 255, 255, 0.8)',
-  },
   categoriesContainer: {
     marginBottom: 16,
   },
@@ -549,6 +634,28 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingBottom: 40,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700' as const,
+    color: '#fff',
+  },
+  dueBadgeSection: {
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  dueBadgeTextSection: {
+    fontSize: 13,
+    fontWeight: '700' as const,
+    color: '#fff',
+  },
   verseCard: {
     borderRadius: 16,
     overflow: 'hidden',
@@ -559,20 +666,25 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   verseGradient: {
-    padding: 16,
+    padding: 20,
   },
   verseHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 12,
   },
   verseReference: {
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#fff',
   },
-  dueIndicator: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  completedBadge: {
     width: 32,
     height: 32,
     borderRadius: 16,
@@ -580,11 +692,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  completedIndicator: {
+  playButton: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -596,10 +708,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  verseText: {
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#fff',
+    marginBottom: 12,
+  },
   verseFooter: {
+    gap: 8,
+  },
+  progressRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+    marginBottom: 8,
   },
   progressBarContainer: {
     flex: 1,
@@ -613,22 +735,116 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 4,
   },
+  progressPercentage: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#fff',
+    minWidth: 40,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  masteryBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    flex: 1,
+  },
+  masteryBadgeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  gamesBadge: {
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  gamesBadgeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
   progressText: {
     fontSize: 14,
     fontWeight: '700' as const,
     color: '#fff',
     minWidth: 40,
   },
-  masteryInfo: {
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+  masteredContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  masteredText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#10b981',
+  },
+  completedCard: {
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  completedContent: {
+    gap: 8,
+  },
+  completedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  completedReference: {
+    fontSize: 16,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  completedText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#6b7280',
+  },
+  completedFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  completedMasteryBadge: {
+    backgroundColor: '#e5e7eb',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 10,
   },
-  masteryText: {
-    fontSize: 12,
+  completedMasteryText: {
+    fontSize: 11,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: '#6b7280',
+  },
+  nextReviewText: {
+    fontSize: 12,
+    fontWeight: '500' as const,
+    color: '#9ca3af',
+  },
+  masteredBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  masteredBadgeText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+    color: '#10b981',
   },
   emptyState: {
     alignItems: 'center',
@@ -659,12 +875,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700' as const,
     color: '#667eea',
-  },
-  verseText: {
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#fff',
-    marginBottom: 8,
   },
   categoryBadge: {
     alignSelf: 'flex-start',
@@ -702,26 +912,6 @@ const styles = StyleSheet.create({
     color: 'rgba(255, 255, 255, 0.9)',
     textAlign: 'center',
     lineHeight: 20,
-  },
-  masteredContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  masteredText: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: '#10b981',
   },
   archivedToggle: {
     flexDirection: 'row',

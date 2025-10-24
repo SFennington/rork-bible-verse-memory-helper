@@ -137,7 +137,7 @@ export default function AddVerseScreen() {
       });
       
       // Navigate directly to progress screen
-      router.push('/progress' as any);
+      router.push('/(tabs)/verses' as any);
     } catch (error) {
       Alert.alert('Error', 'Failed to add verse');
       console.error(error);
@@ -181,7 +181,7 @@ export default function AddVerseScreen() {
       });
 
       // Navigate directly to progress screen
-      router.push('/progress' as any);
+      router.push('/(tabs)/verses' as any);
     } catch (error) {
       Alert.alert('Error', 'Failed to add chapter');
       console.error(error);
