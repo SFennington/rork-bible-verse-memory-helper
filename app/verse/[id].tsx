@@ -247,8 +247,9 @@ export default function VerseDetailScreen() {
             <TouchableOpacity
               style={styles.backButton}
               onPress={() => router.push('/(tabs)/verses' as any)}
+              activeOpacity={0.7}
             >
-              <ArrowLeft color="#fff" size={24} />
+              <ArrowLeft color="#fff" size={24} strokeWidth={2.5} />
             </TouchableOpacity>
           ),
           headerRight: () => (
@@ -1047,10 +1048,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
   },
   optionsButton: {
     padding: 8,
