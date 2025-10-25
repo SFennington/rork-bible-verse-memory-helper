@@ -708,12 +708,20 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       .map(p => {
         console.log('Looking for verseId:', p.verseId, 'isChapter flag:', p.isChapter);
         
-        // For chapters, find in chapters array
+        // For chapters, find in chapters array and convert to verse-like object
         if (p.isChapter) {
           const chapter = chapters.find(c => c.id === p.verseId);
           if (chapter) {
             console.log('Found chapter:', chapter.reference);
-            return { verse: chapter as any as BibleVerse, progress: p };
+            // Create a verse-like representation of the chapter for display
+            const chapterAsVerse: BibleVerse = {
+              id: chapter.id,
+              reference: `${chapter.reference} (${chapter.verses.length} verses)`,
+              text: chapter.verses[0]?.text || 'Chapter with multiple verses',
+              category: chapter.category,
+              isCustom: chapter.isCustom,
+            };
+            return { verse: chapterAsVerse, progress: p };
           } else {
             console.log('WARNING: Chapter not found in chapters array:', p.verseId);
           }
@@ -747,12 +755,28 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   const archivedVerses = useMemo(() => {
     return Object.values(archivedProgress)
       .map(p => {
+        // Handle chapters in archived list
+        if (p.isChapter) {
+          const chapter = chapters.find(c => c.id === p.verseId);
+          if (chapter) {
+            const chapterAsVerse: BibleVerse = {
+              id: chapter.id,
+              reference: `${chapter.reference} (${chapter.verses.length} verses)`,
+              text: chapter.verses[0]?.text || 'Chapter with multiple verses',
+              category: chapter.category,
+              isCustom: chapter.isCustom,
+            };
+            return { verse: chapterAsVerse, progress: p };
+          }
+          return null;
+        }
+        
         const verse = allVerses.find(v => v.id === p.verseId);
         return verse ? { verse, progress: p } : null;
       })
       .filter((item): item is { verse: BibleVerse; progress: VerseProgress } => item !== null)
       .sort((a, b) => new Date(b.progress.archivedAt || 0).getTime() - new Date(a.progress.archivedAt || 0).getTime());
-  }, [archivedProgress, allVerses]);
+  }, [archivedProgress, allVerses, chapters]);
 
   const dueVersesCount = useMemo(() => {
     return Object.values(progress).filter(p => {
