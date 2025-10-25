@@ -82,7 +82,7 @@ export default function ProgressiveReviewGameScreen() {
   };
 
   const checkAnswer = () => {
-    const normalized User = normalizeText(userInput);
+    const normalizedUser = normalizeText(userInput);
     const normalizedCorrect = normalizeText(currentVerse.text);
     
     const distance = levenshteinDistance(normalizedUser, normalizedCorrect);
