@@ -101,7 +101,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     }
   };
 
-  const addToProgress = useCallback((verseId: string, verseOverride?: BibleVerse | Chapter) => {
+  const addToProgress = useCallback(async (verseId: string, verseOverride?: BibleVerse | Chapter) => {
     if (progress[verseId]) {
       console.log('Already in progress:', verseId);
       return;
@@ -157,7 +157,8 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       };
 
       console.log('Saving chapter progress:', newProgress);
-      saveProgress(updatedProgress);
+      await saveProgress(updatedProgress);
+      console.log('Chapter progress saved successfully');
     } else {
       // Regular verse
       const verse = verseOverride as BibleVerse || [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
@@ -191,7 +192,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         [verseId]: newProgress,
       };
 
-      saveProgress(updatedProgress);
+      await saveProgress(updatedProgress);
     }
   }, [progress, customVerses, chapters]);
 

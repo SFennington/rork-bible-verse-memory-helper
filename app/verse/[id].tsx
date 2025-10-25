@@ -104,9 +104,9 @@ export default function VerseDetailScreen() {
     );
   }
 
-  const handleAddToProgress = () => {
+  const handleAddToProgress = async () => {
     if (id) {
-      addToProgress(id);
+      await addToProgress(id);
     }
   };
 

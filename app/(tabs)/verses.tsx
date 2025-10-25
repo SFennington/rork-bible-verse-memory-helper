@@ -60,8 +60,8 @@ export default function HomeScreen() {
     return !!progress[verseId];
   };
 
-  const handleAddToProgress = (verseId: string) => {
-    addToProgress(verseId);
+  const handleAddToProgress = async (verseId: string) => {
+    await addToProgress(verseId);
     setSelectedTab('progress');
   };
 
@@ -741,8 +741,8 @@ export default function HomeScreen() {
                 <View style={styles.modalActions}>
                   <TouchableOpacity
                     style={styles.addToProgressButton}
-                    onPress={() => {
-                      handleAddToProgress(editingItem.item.id);
+                    onPress={async () => {
+                      await handleAddToProgress(editingItem.item.id);
                       setShowEditModal(false);
                       setEditingItem(null);
                     }}

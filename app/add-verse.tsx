@@ -130,7 +130,7 @@ export default function AddVerseScreen() {
       const verseId = await addCustomVerse(verseData);
       
       // Pass the full verse object to addToProgress to avoid race condition
-      addToProgress(verseId, {
+      await addToProgress(verseId, {
         ...verseData,
         id: verseId,
         isCustom: true,
@@ -174,7 +174,8 @@ export default function AddVerseScreen() {
 
       // Add chapter to progress, passing the chapter object to avoid stale state
       console.log('Calling addToProgress with:', newChapter.id, newChapter);
-      addToProgress(newChapter.id, newChapter);
+      await addToProgress(newChapter.id, newChapter);
+      console.log('addToProgress completed');
 
       // Navigate directly to verses tab
       router.push('/(tabs)/verses' as any);
