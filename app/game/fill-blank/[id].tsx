@@ -375,53 +375,53 @@ export default function FillBlankGameScreen() {
           )}
         </ScrollView>
 
-        {/* Fixed Word Bank at Bottom */}
-        <View style={styles.fixedBottomSection}>
-          <View style={styles.optionsSection}>
-            <Text style={styles.optionsTitle}>Word Bank</Text>
-            <View style={styles.optionsGrid}>
-              {gameData.options.map((word, index) => {
-                const timesUsed = Object.values(selectedWords).filter(w => w === word).length;
-                const timesNeeded = gameData.options.filter(w => w === word).length;
-                const isUsed = timesUsed >= timesNeeded;
+        {/* Fixed Word Bank at Bottom - Hide when results are shown */}
+        {!showResult && (
+          <View style={styles.fixedBottomSection}>
+            <View style={styles.optionsSection}>
+              <Text style={styles.optionsTitle}>Word Bank</Text>
+              <View style={styles.optionsGrid}>
+                {gameData.options.map((word, index) => {
+                  const timesUsed = Object.values(selectedWords).filter(w => w === word).length;
+                  const timesNeeded = gameData.options.filter(w => w === word).length;
+                  const isUsed = timesUsed >= timesNeeded;
 
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.optionButton,
-                      { backgroundColor: theme.cardBackground },
-                      isUsed && styles.optionButtonUsed,
-                    ]}
-                    onPress={() => {
-                      if (!showResult && !isUsed) {
-                        const nextBlankIndex = gameData.blanks.findIndex(
-                          (_, i) => !selectedWords[i]
-                        );
-                        if (nextBlankIndex !== -1) {
-                          handleWordSelect(nextBlankIndex, word);
-                        }
-                      }
-                    }}
-                    disabled={isUsed || showResult}
-                    activeOpacity={0.8}
-                  >
-                    <Text
+                  return (
+                    <TouchableOpacity
+                      key={index}
                       style={[
-                        styles.optionText,
-                        { color: theme.text },
-                        isUsed && styles.optionTextUsed,
+                        styles.optionButton,
+                        { backgroundColor: theme.cardBackground },
+                        isUsed && styles.optionButtonUsed,
                       ]}
+                      onPress={() => {
+                        if (!showResult && !isUsed) {
+                          const nextBlankIndex = gameData.blanks.findIndex(
+                            (_, i) => !selectedWords[i]
+                          );
+                          if (nextBlankIndex !== -1) {
+                            handleWordSelect(nextBlankIndex, word);
+                          }
+                        }
+                      }}
+                      disabled={isUsed || showResult}
+                      activeOpacity={0.8}
                     >
-                      {word}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+                      <Text
+                        style={[
+                          styles.optionText,
+                          { color: theme.text },
+                          isUsed && styles.optionTextUsed,
+                        ]}
+                      >
+                        {word}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-          </View>
 
-          {!showResult && (
             <TouchableOpacity
               style={[styles.checkButton, { backgroundColor: theme.cardBackground }]}
               onPress={handleCheck}
@@ -430,8 +430,8 @@ export default function FillBlankGameScreen() {
               <Text style={[styles.checkButtonText, { color: theme.text }]}>Check Answers</Text>
               <ArrowRight color="#fff" size={20} />
             </TouchableOpacity>
-          )}
-        </View>
+          </View>
+        )}
       </LinearGradient>
     </View>
   );
