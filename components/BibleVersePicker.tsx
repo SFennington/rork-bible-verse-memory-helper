@@ -51,6 +51,15 @@ export default function BibleVersePicker({
   useEffect(() => {
     setSelectedEndVerse(initialEndVerse);
   }, [initialEndVerse]);
+
+  // Notify parent of initial selection
+  useEffect(() => {
+    if (mode === 'chapter') {
+      onSelect(selectedBook, selectedChapter);
+    } else {
+      onSelect(selectedBook, selectedChapter, selectedVerse, selectedEndVerse);
+    }
+  }, [mode]); // Only run when mode changes
   
   const [showBookPicker, setShowBookPicker] = useState(false);
   const [showChapterPicker, setShowChapterPicker] = useState(false);

@@ -29,16 +29,25 @@ type TabType = 'browse' | 'progress';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses } = useVerses();
+  const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses, chapters } = useVerses();
   const { theme, themeMode } = useTheme();
   const [selectedTab, setSelectedTab] = useState<TabType>('progress');
   const [selectedCategory, setSelectedCategory] = useState<VerseCategory | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const insets = useSafeAreaInsets();
 
+  // Filter out individual verses that are part of chapters from browse view
+  const browsableVerses = useMemo(() => {
+    return verses.filter(v => !v.chapterId); // Only show verses not part of a chapter
+  }, [verses]);
+
   const filteredVerses = selectedCategory
-    ? verses.filter(v => v.category === selectedCategory)
-    : verses;
+    ? browsableVerses.filter(v => v.category === selectedCategory)
+    : browsableVerses;
+  
+  const filteredChapters = selectedCategory
+    ? chapters.filter(c => c.category === selectedCategory)
+    : chapters;
 
   const isInProgress = (verseId: string) => {
     return !!progress[verseId];
@@ -439,6 +448,45 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
+              
+              {/* Display Chapters */}
+              {filteredChapters.map(chapter => {
+              const inProgress = isInProgress(chapter.id);
+              const category = CATEGORIES.find(c => c.name === chapter.category);
+
+              return (
+                <TouchableOpacity
+                  key={chapter.id}
+                  style={styles.verseCard}
+                  onPress={() => inProgress ? router.push(`/verse/${chapter.id}`) : handleAddToProgress(chapter.id)}
+                  activeOpacity={0.9}
+                >
+                  <LinearGradient
+                    colors={category?.gradient || ['#667eea', '#764ba2']}
+                    style={styles.verseGradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                  >
+                    <View style={styles.verseHeader}>
+                      <Text style={styles.verseReference}>{chapter.reference} ({chapter.verses.length} verses)</Text>
+                      {!inProgress && (
+                        <View style={styles.addButton}>
+                          <Plus color="#fff" size={20} strokeWidth={3} />
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.verseText} numberOfLines={3}>
+                      {chapter.verses[0]?.text}...
+                    </Text>
+                    <View style={styles.categoryBadge}>
+                      <Text style={styles.categoryBadgeText}>{chapter.category}</Text>
+                    </View>
+                  </LinearGradient>
+                </TouchableOpacity>
+              );
+              })}
+              
+              {/* Display Individual Verses */}
               {filteredVerses.map(verse => {
               const inProgress = isInProgress(verse.id);
               const category = CATEGORIES.find(c => c.name === verse.category);

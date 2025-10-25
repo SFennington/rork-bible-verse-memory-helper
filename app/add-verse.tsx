@@ -299,7 +299,7 @@ export default function AddVerseScreen() {
                 <>
                   <RefreshCw color="#fff" size={20} />
                   <Text style={styles.fetchButtonText}>
-                    Fetch Verse
+                    {mode === 'single' ? 'Fetch Verse' : 'Fetch Chapter'}
                   </Text>
                 </>
               )}

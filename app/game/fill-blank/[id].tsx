@@ -45,9 +45,10 @@ export default function FillBlankGameScreen() {
     if (!verse) return null;
 
     // Keep original words WITH punctuation for display
-    const displayWords = verse.text.split(' ').filter(word => word.length > 0);
+    // Split on whitespace and filter out empty strings
+    const displayWords = verse.text.split(/\s+/).filter(word => word.trim().length > 0);
     // Strip punctuation for comparison
-    const cleanWords = displayWords.map(word => stripPunctuation(word));
+    const cleanWords = displayWords.map(word => stripPunctuation(word)).filter(word => word.length > 0);
     
     let blankPercentage = 0.3;
     let extraOptionsCount = 0;
