@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BibleVerse, VerseProgress, GameType, VerseCategory, DifficultyLevel, DIFFICULTY_LEVELS, GameSession, Chapter, CHAPTER_GAME_TYPES, ChapterProgress } from '@/types/verse';
+import { BibleVerse, VerseProgress, GameType, VerseCategory, DifficultyLevel, DIFFICULTY_LEVELS, GameSession, Chapter, CHAPTER_SINGLE_VERSE_GAMES, CHAPTER_MULTI_VERSE_GAMES, ChapterProgress } from '@/types/verse';
 import { BIBLE_VERSES } from '@/mocks/verses';
 
 const STORAGE_KEY = 'verse_progress';
@@ -140,6 +140,9 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         isComplete: false,
       };
 
+      // Use single verse games when only 1 verse is unlocked
+      const initialGames = CHAPTER_SINGLE_VERSE_GAMES;
+
       const newProgress: VerseProgress = {
         verseId,
         difficultyLevel: 1,
@@ -147,7 +150,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         lastReviewedAt: now,
         reviewCount: 0,
         gameSessions: [],
-        currentDayGames: CHAPTER_GAME_TYPES,
+        currentDayGames: initialGames,
         completedGamesToday: 0,
         streakDays: 0,
         overallProgress: 0,
@@ -300,6 +303,23 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
     const lastReviewedAt = now.toISOString();
 
+    // Determine the correct games for next time
+    let nextDayGames: GameType[];
+    if (verseProgress.isChapter && verseProgress.chapterProgress) {
+      // For chapters, use appropriate games based on unlocked verses
+      const unlockedCount = verseProgress.chapterProgress.unlockedVerses.length;
+      if (unlockedCount === 1) {
+        // Only one verse: use single-verse games
+        nextDayGames = CHAPTER_SINGLE_VERSE_GAMES;
+      } else {
+        // Multiple verses: use multi-verse games
+        nextDayGames = CHAPTER_MULTI_VERSE_GAMES;
+      }
+    } else {
+      // Regular verse: use difficulty-based games
+      nextDayGames = DIFFICULTY_LEVELS[newDifficultyLevel];
+    }
+
     const updatedProgress = {
       ...progress,
       [verseId]: {
@@ -308,7 +328,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         lastReviewedAt,
         reviewCount: newReviewCount,
         gameSessions: updatedSessions,
-        currentDayGames: DIFFICULTY_LEVELS[newDifficultyLevel],
+        currentDayGames: nextDayGames,
         completedGamesToday,
         streakDays: newStreakDays,
         overallProgress,
@@ -332,12 +352,21 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
     const newDifficultyLevel = Math.min(5, verseProgress.difficultyLevel + 1) as DifficultyLevel;
     
+    // Determine the correct games
+    let newGames: GameType[];
+    if (verseProgress.isChapter && verseProgress.chapterProgress) {
+      const unlockedCount = verseProgress.chapterProgress.unlockedVerses.length;
+      newGames = unlockedCount === 1 ? CHAPTER_SINGLE_VERSE_GAMES : CHAPTER_MULTI_VERSE_GAMES;
+    } else {
+      newGames = DIFFICULTY_LEVELS[newDifficultyLevel];
+    }
+    
     const updatedProgress = {
       ...progress,
       [verseId]: {
         ...verseProgress,
         difficultyLevel: newDifficultyLevel,
-        currentDayGames: DIFFICULTY_LEVELS[newDifficultyLevel],
+        currentDayGames: newGames,
         completedGamesToday: 0,
         lastReviewedAt: new Date().toISOString(),
       },
@@ -378,12 +407,21 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       return;
     }
 
+    // Determine the correct games
+    let newGames: GameType[];
+    if (verseProgress.isChapter && verseProgress.chapterProgress) {
+      const unlockedCount = verseProgress.chapterProgress.unlockedVerses.length;
+      newGames = unlockedCount === 1 ? CHAPTER_SINGLE_VERSE_GAMES : CHAPTER_MULTI_VERSE_GAMES;
+    } else {
+      newGames = DIFFICULTY_LEVELS[targetLevel];
+    }
+
     const updatedProgress = {
       ...progress,
       [verseId]: {
         ...verseProgress,
         difficultyLevel: targetLevel,
-        currentDayGames: DIFFICULTY_LEVELS[targetLevel],
+        currentDayGames: newGames,
         completedGamesToday: 0,
         lastReviewedAt: new Date().toISOString(),
       },
@@ -424,11 +462,16 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       daysInSequence: cp.daysInSequence + 1,
     };
 
+    // Update games based on new unlocked count
+    const newUnlockedCount = updatedChapterProgress.unlockedVerses.length;
+    const newGames = newUnlockedCount === 1 ? CHAPTER_SINGLE_VERSE_GAMES : CHAPTER_MULTI_VERSE_GAMES;
+
     const updatedProgress = {
       ...progress,
       [chapterId]: {
         ...chapterProgress,
         chapterProgress: updatedChapterProgress,
+        currentDayGames: newGames,
         completedGamesToday: 0, // Reset daily games for new verse
         lastReviewedAt: new Date().toISOString(),
       },

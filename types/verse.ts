@@ -11,7 +11,10 @@ export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
 };
 
 // Chapter-specific games (used for chapter memorization)
-export const CHAPTER_GAME_TYPES: GameType[] = ['verse-order', 'progressive-review'];
+// For single verse: practice the current verse
+export const CHAPTER_SINGLE_VERSE_GAMES: GameType[] = ['progressive-reveal', 'flashcard'];
+// For multiple verses: practice all unlocked verses  
+export const CHAPTER_MULTI_VERSE_GAMES: GameType[] = ['verse-order', 'progressive-review'];
 
 export type DifficultyLevel = 1 | 2 | 3 | 4 | 5;
 
