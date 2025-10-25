@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive, Crown, Heart } from 'lucide-react-native';
+import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, ArrowLeft, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive, Crown, Heart } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -248,7 +248,7 @@ export default function VerseDetailScreen() {
               style={styles.backButton}
               onPress={() => router.push('/(tabs)/verses' as any)}
             >
-              <ArrowRight color="#fff" size={24} style={{ transform: [{ rotate: '180deg' }] }} />
+              <ArrowLeft color="#fff" size={24} />
             </TouchableOpacity>
           ),
           headerRight: () => (
