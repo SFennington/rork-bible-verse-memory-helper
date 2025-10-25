@@ -103,12 +103,16 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
   const addToProgress = useCallback((verseId: string, verseOverride?: BibleVerse | Chapter) => {
     if (progress[verseId]) {
+      console.log('Already in progress:', verseId);
       return;
     }
 
-    // Check if it's a chapter
-    const chapter = chapters.find(c => c.id === verseId);
+    // Check if it's a chapter - use override if provided, otherwise search in chapters
+    const chapterOverride = verseOverride && 'verses' in verseOverride ? verseOverride as Chapter : null;
+    const chapter = chapterOverride || chapters.find(c => c.id === verseId);
     const isChapter = !!chapter;
+
+    console.log('addToProgress called:', { verseId, isChapter, hasOverride: !!verseOverride, hasChapter: !!chapter });
 
     if (isChapter && chapter) {
       // Initialize chapter progress
@@ -152,12 +156,13 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         [verseId]: newProgress,
       };
 
+      console.log('Saving chapter progress:', newProgress);
       saveProgress(updatedProgress);
     } else {
       // Regular verse
       const verse = verseOverride as BibleVerse || [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
       if (!verse) {
-        console.error('Verse not found');
+        console.error('Verse not found:', verseId, 'Override:', verseOverride);
         return;
       }
 
@@ -573,15 +578,17 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   }, [customVerses]);
 
   const addChapter = useCallback(async (chapter: Omit<Chapter, 'id' | 'isCustom'>) => {
+    const timestamp = Date.now();
+    const chapterId = `chapter-${timestamp}`;
     const newChapter: Chapter = {
       ...chapter,
-      id: `chapter-${Date.now()}`,
+      id: chapterId,
       isCustom: true,
       verses: chapter.verses.map((v, i) => ({
         ...v,
-        id: `chapter-${Date.now()}-verse-${i}`,
+        id: `${chapterId}-verse-${i}`,
         isCustom: true,
-        chapterId: `chapter-${Date.now()}`,
+        chapterId,
       })),
     };
     const updated = [...chapters, newChapter];
@@ -591,7 +598,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     } catch (error) {
       console.error('Failed to save chapter:', error);
     }
-    return newChapter.id;
+    return newChapter;
   }, [chapters]);
 
   const deleteCustomVerse = useCallback(async (verseId: string) => {

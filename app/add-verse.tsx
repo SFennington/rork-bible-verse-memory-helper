@@ -157,28 +157,24 @@ export default function AddVerseScreen() {
     }
 
     try {
-      const timestamp = Date.now();
-      const chapterId = `chapter-${timestamp}`;
-      
       const versesData = lines.map((line, index) => ({
-        id: `${chapterId}-verse-${index}`,
         reference: `${reference.trim()}:${index + 1}`,
         text: line.trim(),
         category,
-        isCustom: true as const,
-        chapterId,
       }));
 
-      const chapterData = {
+      const chapterDataForAdding = {
         reference: reference.trim(),
         verses: versesData,
         category,
       };
 
-      const newChapterId = await addChapter(chapterData);
+      const newChapter = await addChapter(chapterDataForAdding);
+      console.log('Chapter added:', newChapter);
 
-      // Add chapter as a single unit to progress (not individual verses)
-      addToProgress(newChapterId);
+      // Add chapter to progress, passing the chapter object to avoid stale state
+      console.log('Calling addToProgress with:', newChapter.id, newChapter);
+      addToProgress(newChapter.id, newChapter);
 
       // Navigate directly to verses tab
       router.push('/(tabs)/verses' as any);
