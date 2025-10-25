@@ -102,8 +102,15 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   };
 
   const addToProgress = useCallback(async (verseId: string, verseOverride?: BibleVerse | Chapter) => {
+    console.log('=== ADD TO PROGRESS DEBUG START ===');
+    console.log('1. Input verseId:', verseId);
+    console.log('2. Has verseOverride:', !!verseOverride);
+    console.log('3. Total chapters in state:', chapters.length);
+    console.log('4. Chapter IDs in state:', chapters.map(c => c.id));
+    
     if (progress[verseId]) {
-      console.log('Already in progress:', verseId);
+      console.log('5. Already in progress:', verseId);
+      console.log('=== ADD TO PROGRESS DEBUG END (already exists) ===');
       return;
     }
 
@@ -112,7 +119,10 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     const chapter = chapterOverride || chapters.find(c => c.id === verseId);
     const isChapter = !!chapter;
 
-    console.log('addToProgress called:', { verseId, isChapter, hasOverride: !!verseOverride, hasChapter: !!chapter });
+    console.log('5. Chapter override:', chapterOverride ? 'YES' : 'NO');
+    console.log('6. Found chapter in state:', chapter ? 'YES' : 'NO');
+    console.log('7. Is chapter:', isChapter);
+    console.log('8. Chapter data:', chapter ? { id: chapter.id, reference: chapter.reference, versesCount: chapter.verses.length } : 'NULL');
 
     if (isChapter && chapter) {
       // Initialize chapter progress
@@ -156,10 +166,15 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         [verseId]: newProgress,
       };
 
-      console.log('Saving chapter progress:', newProgress);
+      console.log('9. Chapter progress object created:', JSON.stringify(newProgress, null, 2));
+      console.log('10. About to save to AsyncStorage...');
       await saveProgress(updatedProgress);
-      console.log('Chapter progress saved successfully');
+      console.log('11. AsyncStorage save completed');
+      console.log('12. State should update now');
+      console.log('=== ADD TO PROGRESS DEBUG END (chapter saved) ===');
     } else {
+      console.log('9. NOT A CHAPTER - processing as regular verse');
+      console.log('10. Verse override:', verseOverride);
       // Regular verse
       const verse = verseOverride as BibleVerse || [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
       if (!verse) {
@@ -192,7 +207,9 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         [verseId]: newProgress,
       };
 
+      console.log('11. Verse progress saved');
       await saveProgress(updatedProgress);
+      console.log('=== ADD TO PROGRESS DEBUG END (verse saved) ===');
     }
   }, [progress, customVerses, chapters]);
 
@@ -681,10 +698,34 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   }, [allVerses]);
 
   const versesInProgress = useMemo(() => {
-    return Object.values(progress)
+    console.log('>>> COMPUTING versesInProgress <<<');
+    console.log('Progress keys:', Object.keys(progress));
+    console.log('AllVerses count:', allVerses.length);
+    console.log('Chapters count:', chapters.length);
+    
+    const result = Object.values(progress)
       .filter(p => !p.isArchived)
       .map(p => {
+        console.log('Looking for verseId:', p.verseId, 'isChapter flag:', p.isChapter);
+        
+        // For chapters, find in chapters array
+        if (p.isChapter) {
+          const chapter = chapters.find(c => c.id === p.verseId);
+          if (chapter) {
+            console.log('Found chapter:', chapter.reference);
+            return { verse: chapter as any as BibleVerse, progress: p };
+          } else {
+            console.log('WARNING: Chapter not found in chapters array:', p.verseId);
+          }
+        }
+        
+        // For regular verses
         const verse = allVerses.find(v => v.id === p.verseId);
+        if (verse) {
+          console.log('Found verse:', verse.reference);
+        } else {
+          console.log('WARNING: Verse not found:', p.verseId);
+        }
         return verse ? { verse, progress: p } : null;
       })
       .filter((item): item is { verse: BibleVerse; progress: VerseProgress } => item !== null)
@@ -697,7 +738,11 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
         if (!aIncomplete && bIncomplete) return 1;
         return b.progress.overallProgress - a.progress.overallProgress;
       });
-  }, [progress, allVerses]);
+    
+    console.log('Final versesInProgress count:', result.length);
+    console.log('>>> END COMPUTING versesInProgress <<<');
+    return result;
+  }, [progress, allVerses, chapters]);
 
   const archivedVerses = useMemo(() => {
     return Object.values(archivedProgress)

@@ -1,0 +1,64 @@
+CHAPTER LOADING DEBUG SYSTEM - QUICK START
+===========================================
+
+I've added comprehensive logging to help us find exactly why chapters aren't 
+showing up in "My Progress". This is a systematic approach that will tell us 
+exactly where the problem is occurring.
+
+WHAT I DID:
+-----------
+1. Added detailed console.log statements throughout the code that handles:
+   - Adding chapters to progress
+   - Displaying chapters in the progress list
+   - Finding chapters in the app's state
+
+2. Created helper scripts:
+   - view-logs.ps1: View app logs in real-time
+   - DEBUG-CHAPTER-LOADING.md: Full debugging guide
+
+HOW TO USE:
+-----------
+1. Build & install the app:
+   ./build-and-install.ps1
+
+2. In a SEPARATE PowerShell window, run:
+   ./view-logs.ps1
+
+3. In the app:
+   - Go to Verses → Browse
+   - Add a new chapter (or use existing one)
+   - Click the chapter to add it to progress
+   - Go to "My Progress" tab
+
+4. Watch the logs in the PowerShell window - they will tell us exactly what's 
+   happening and where the problem is.
+
+WHAT THE LOGS WILL SHOW:
+-------------------------
+- Whether the chapter exists in state when trying to add it
+- What gets saved to storage
+- Whether the chapter is found when displaying progress
+- Any ID mismatches or missing data
+
+WHY THIS APPROACH:
+------------------
+Instead of guessing and trying fixes blindly, we're using logging to see 
+exactly what's happening at each step. This means we'll fix the actual 
+problem on the FIRST try, not the 6th try.
+
+The logs will clearly show:
+✓ Where the chapter data exists
+✗ Where it goes missing
+→ What needs to be fixed
+
+NEXT STEPS:
+-----------
+After you run the test, the logs will show us one of these scenarios:
+1. Chapter not found when adding (state issue)
+2. Chapter not found when displaying (storage/retrieval issue)  
+3. Wrong flag set (isChapter not set correctly)
+
+Then we can make the precise fix needed.
+
+See DEBUG-CHAPTER-LOADING.md for full details.
+

@@ -61,7 +61,11 @@ export default function HomeScreen() {
   };
 
   const handleAddToProgress = async (verseId: string) => {
+    console.log('>>> verses.tsx: handleAddToProgress called with verseId:', verseId);
+    console.log('>>> verses.tsx: Total chapters available:', chapters.length);
+    console.log('>>> verses.tsx: Is this a chapter?', chapters.some(c => c.id === verseId));
     await addToProgress(verseId);
+    console.log('>>> verses.tsx: addToProgress completed, switching to progress tab');
     setSelectedTab('progress');
   };
 
