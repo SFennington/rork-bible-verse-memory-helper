@@ -70,7 +70,7 @@ const DIFFICULTY_LABELS = [
 export default function VerseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse } = useVerses();
+  const { verses, chapters, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse, getChapterUnlockedVerses } = useVerses();
   const { addPrayerRequest, reloadPrayers } = usePrayer();
   const { theme } = useTheme();
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);
@@ -80,9 +80,13 @@ export default function VerseDetailScreen() {
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [isGeneratingPrayer, setIsGeneratingPrayer] = useState(false);
 
-  const verse = verses.find(v => v.id === id);
+  // Check if it's a chapter or regular verse
+  const chapter = chapters.find(c => c.id === id);
+  const verse = chapter || verses.find(v => v.id === id);
+  const isChapter = !!chapter;
   const verseProgress = getVerseProgress(id || '');
   const category = CATEGORIES.find(c => c.name === verse?.category);
+  const unlockedVerses = isChapter ? getChapterUnlockedVerses(id || '') : [];
 
   if (!verse) {
     return (
@@ -115,14 +119,16 @@ export default function VerseDetailScreen() {
   };
 
   const currentPathGames = verseProgress?.currentDayGames || [];
-  const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
+  const requiredGames = isChapter ? 2 : (verseProgress?.difficultyLevel === 5 ? 1 : 3);
   const isDue = verseProgress ? verseProgress.completedGamesToday < requiredGames : false;
   const isDayComplete = verseProgress ? areAllGamesCompleted() : false;
-  const isMastered = verseProgress ? verseProgress.difficultyLevel === 5 && verseProgress.overallProgress === 100 : false;
+  const isMastered = isChapter 
+    ? (verseProgress?.chapterProgress?.isComplete || false)
+    : (verseProgress ? verseProgress.difficultyLevel === 5 && verseProgress.overallProgress === 100 : false);
   const canAdvanceToNextLevel = verseProgress ? isDayComplete && verseProgress.completedGamesToday >= requiredGames : false;
   const firstIncompleteLevel = id ? getFirstIncompleteLevel(id) : null;
   const hasIncompleteLevels = firstIncompleteLevel !== null && verseProgress && firstIncompleteLevel < verseProgress.difficultyLevel;
-  const isStuck = hasIncompleteLevels && isDayComplete;
+  const isStuck = !isChapter && hasIncompleteLevels && isDayComplete;
 
   const handleAdvanceLevel = () => {
     if (id) {
@@ -345,6 +351,52 @@ export default function VerseDetailScreen() {
                   </View>
                 </View>
               </View>
+
+              {isChapter && verseProgress.chapterProgress && (
+                <View style={[styles.chapterInfoCard, { backgroundColor: theme.cardBackground }]}>
+                  <Text style={[styles.chapterInfoTitle, { color: theme.text }]}>Chapter Progress</Text>
+                  <Text style={[styles.chapterInfoText, { color: theme.textSecondary }]}>
+                    Learning verse {verseProgress.chapterProgress.currentVerseIndex + 1} of {chapter.verses.length}
+                  </Text>
+                  <View style={styles.versesProgressContainer}>
+                    {chapter.verses.map((v, index) => {
+                      const isUnlocked = verseProgress.chapterProgress!.unlockedVerses.includes(index);
+                      const isMastered = verseProgress.chapterProgress!.masteredVerses.includes(index);
+                      const isCurrent = index === verseProgress.chapterProgress!.currentVerseIndex;
+                      
+                      return (
+                        <View key={v.id} style={[
+                          styles.verseProgressItem,
+                          { backgroundColor: isUnlocked ? '#10b981' : theme.border },
+                          isMastered && { backgroundColor: '#f59e0b' },
+                          isCurrent && styles.verseProgressItemCurrent,
+                        ]}>
+                          <Text style={[
+                            styles.verseProgressText,
+                            { color: isUnlocked ? '#fff' : theme.textSecondary }
+                          ]}>
+                            {index + 1}
+                          </Text>
+                        </View>
+                      );
+                    })}
+                  </View>
+                  <View style={styles.legendRow}>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+                      <Text style={[styles.legendText, { color: theme.textSecondary }]}>Unlocked</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+                      <Text style={[styles.legendText, { color: theme.textSecondary }]}>Mastered</Text>
+                    </View>
+                    <View style={styles.legendItem}>
+                      <View style={[styles.legendDot, { backgroundColor: theme.border }]} />
+                      <Text style={[styles.legendText, { color: theme.textSecondary }]}>Locked</Text>
+                    </View>
+                  </View>
+                </View>
+              )}
 
               <View style={styles.gamesSection}>
                 <View style={styles.gamesSectionHeader}>
@@ -1084,5 +1136,64 @@ const styles = StyleSheet.create({
   optionText: {
     fontSize: 17,
     fontWeight: '600' as const,
+  },
+  // Chapter-specific styles
+  chapterInfoCard: {
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  chapterInfoTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    marginBottom: 8,
+  },
+  chapterInfoText: {
+    fontSize: 14,
+    marginBottom: 16,
+  },
+  versesProgressContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  verseProgressItem: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verseProgressItemCurrent: {
+    borderWidth: 3,
+    borderColor: '#667eea',
+  },
+  verseProgressText: {
+    fontSize: 14,
+    fontWeight: '700' as const,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    gap: 16,
+    flexWrap: 'wrap',
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  legendText: {
+    fontSize: 12,
   },
 });

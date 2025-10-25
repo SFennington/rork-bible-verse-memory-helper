@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BibleVerse, VerseProgress, GameType, VerseCategory, DifficultyLevel, DIFFICULTY_LEVELS, GameSession, Chapter } from '@/types/verse';
+import { BibleVerse, VerseProgress, GameType, VerseCategory, DifficultyLevel, DIFFICULTY_LEVELS, GameSession, Chapter, CHAPTER_GAME_TYPES, ChapterProgress } from '@/types/verse';
 import { BIBLE_VERSES } from '@/mocks/verses';
 
 const STORAGE_KEY = 'verse_progress';
@@ -101,45 +101,93 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     }
   };
 
-  const addToProgress = useCallback((verseId: string, verseOverride?: BibleVerse) => {
+  const addToProgress = useCallback((verseId: string, verseOverride?: BibleVerse | Chapter) => {
     if (progress[verseId]) {
       return;
     }
 
-    // Use provided verse or find it in the existing verses
-    const verse = verseOverride || [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
-    if (!verse) {
-      console.error('Verse not found');
-      return;
+    // Check if it's a chapter
+    const chapter = chapters.find(c => c.id === verseId);
+    const isChapter = !!chapter;
+
+    if (isChapter && chapter) {
+      // Initialize chapter progress
+      const now = new Date().toISOString();
+      const firstVerse = chapter.verses[0];
+      const totalWords = chapter.verses.reduce((sum, v) => sum + v.text.split(' ').length, 0);
+      
+      const chapterProgress: ChapterProgress = {
+        currentVerseIndex: 0,
+        unlockedVerses: [0], // Start with first verse unlocked
+        masteredVerses: [],
+        startedAt: now,
+        lastAdvancedAt: now,
+        daysInSequence: 1,
+        isComplete: false,
+      };
+
+      const newProgress: VerseProgress = {
+        verseId,
+        difficultyLevel: 1,
+        addedToProgressAt: now,
+        lastReviewedAt: now,
+        reviewCount: 0,
+        gameSessions: [],
+        currentDayGames: CHAPTER_GAME_TYPES,
+        completedGamesToday: 0,
+        streakDays: 0,
+        overallProgress: 0,
+        totalCorrectWords: 0,
+        totalWords,
+        isChapter: true,
+        chapterId: verseId,
+        chapterProgress,
+        lastStreakDate: undefined,
+        daysInProgress: 0,
+        uniqueDaysWorked: [],
+      };
+
+      const updatedProgress = {
+        ...progress,
+        [verseId]: newProgress,
+      };
+
+      saveProgress(updatedProgress);
+    } else {
+      // Regular verse
+      const verse = verseOverride as BibleVerse || [...BIBLE_VERSES, ...customVerses, ...chapters.flatMap(c => c.verses)].find(v => v.id === verseId);
+      if (!verse) {
+        console.error('Verse not found');
+        return;
+      }
+
+      const totalWords = verse.text.split(' ').length;
+      const now = new Date().toISOString();
+      const newProgress: VerseProgress = {
+        verseId,
+        difficultyLevel: 1,
+        addedToProgressAt: now,
+        lastReviewedAt: now,
+        reviewCount: 0,
+        gameSessions: [],
+        currentDayGames: DIFFICULTY_LEVELS[1],
+        completedGamesToday: 0,
+        streakDays: 0,
+        overallProgress: 0,
+        totalCorrectWords: 0,
+        totalWords,
+        lastStreakDate: undefined,
+        daysInProgress: 0,
+        uniqueDaysWorked: [],
+      };
+
+      const updatedProgress = {
+        ...progress,
+        [verseId]: newProgress,
+      };
+
+      saveProgress(updatedProgress);
     }
-
-    const totalWords = verse.text.split(' ').length;
-    const now = new Date().toISOString();
-    const today = getDateString(new Date());
-    const newProgress: VerseProgress = {
-      verseId,
-      difficultyLevel: 1,
-      addedToProgressAt: now,
-      lastReviewedAt: now,
-      reviewCount: 0,
-      gameSessions: [],
-      currentDayGames: DIFFICULTY_LEVELS[1],
-      completedGamesToday: 0,
-      streakDays: 0,
-      overallProgress: 0,
-      totalCorrectWords: 0,
-      totalWords,
-      lastStreakDate: undefined,
-      daysInProgress: 0,
-      uniqueDaysWorked: [],
-    };
-
-    const updatedProgress = {
-      ...progress,
-      [verseId]: newProgress,
-    };
-
-    saveProgress(updatedProgress);
   }, [progress, customVerses, chapters]);
 
   const completeGameSession = useCallback((verseId: string, session: GameSession) => {
@@ -320,6 +368,111 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
     saveProgress(updatedProgress);
   }, [progress]);
+
+  // Chapter-specific functions
+  const unlockNextVerseInChapter = useCallback(async (chapterId: string) => {
+    const chapterProgress = progress[chapterId];
+    if (!chapterProgress || !chapterProgress.isChapter || !chapterProgress.chapterProgress) {
+      console.error('Chapter not found or not a chapter');
+      return false;
+    }
+
+    const chapter = chapters.find(c => c.id === chapterId);
+    if (!chapter) {
+      console.error('Chapter data not found');
+      return false;
+    }
+
+    const cp = chapterProgress.chapterProgress;
+    const nextIndex = cp.currentVerseIndex + 1;
+
+    // Check if there's a next verse
+    if (nextIndex >= chapter.verses.length) {
+      // All verses unlocked
+      return false;
+    }
+
+    // Unlock the next verse
+    const updatedChapterProgress: ChapterProgress = {
+      ...cp,
+      currentVerseIndex: nextIndex,
+      unlockedVerses: [...cp.unlockedVerses, nextIndex],
+      lastAdvancedAt: new Date().toISOString(),
+      daysInSequence: cp.daysInSequence + 1,
+    };
+
+    const updatedProgress = {
+      ...progress,
+      [chapterId]: {
+        ...chapterProgress,
+        chapterProgress: updatedChapterProgress,
+        completedGamesToday: 0, // Reset daily games for new verse
+        lastReviewedAt: new Date().toISOString(),
+      },
+    };
+
+    await saveProgress(updatedProgress);
+    return true;
+  }, [progress, chapters]);
+
+  const getChapterUnlockedVerses = useCallback((chapterId: string): BibleVerse[] => {
+    const chapterProgress = progress[chapterId];
+    if (!chapterProgress || !chapterProgress.isChapter || !chapterProgress.chapterProgress) {
+      return [];
+    }
+
+    const chapter = chapters.find(c => c.id === chapterId);
+    if (!chapter) {
+      return [];
+    }
+
+    const unlockedIndices = chapterProgress.chapterProgress.unlockedVerses;
+    return chapter.verses.filter((_, index) => unlockedIndices.includes(index));
+  }, [progress, chapters]);
+
+  const advanceChapterProgress = useCallback(async (chapterId: string, verseIndex: number) => {
+    const chapterProgress = progress[chapterId];
+    if (!chapterProgress || !chapterProgress.isChapter || !chapterProgress.chapterProgress) {
+      return;
+    }
+
+    const chapter = chapters.find(c => c.id === chapterId);
+    if (!chapter) {
+      return;
+    }
+
+    const cp = chapterProgress.chapterProgress;
+    
+    // Mark verse as mastered if not already
+    let updatedMasteredVerses = [...cp.masteredVerses];
+    if (!updatedMasteredVerses.includes(verseIndex)) {
+      updatedMasteredVerses.push(verseIndex);
+    }
+
+    // Check if chapter is complete
+    const isComplete = updatedMasteredVerses.length === chapter.verses.length;
+
+    // Calculate overall progress based on mastered verses
+    const overallProgress = Math.round((updatedMasteredVerses.length / chapter.verses.length) * 100);
+
+    const updatedChapterProgress: ChapterProgress = {
+      ...cp,
+      masteredVerses: updatedMasteredVerses,
+      isComplete,
+    };
+
+    const updatedProgress = {
+      ...progress,
+      [chapterId]: {
+        ...chapterProgress,
+        chapterProgress: updatedChapterProgress,
+        overallProgress,
+        lastReviewedAt: new Date().toISOString(),
+      },
+    };
+
+    await saveProgress(updatedProgress);
+  }, [progress, chapters]);
 
   const deleteVerse = useCallback(async (verseId: string) => {
     const updatedProgress = { ...progress };
@@ -508,7 +661,10 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     archiveVerse,
     unarchiveVerse,
     archivedVerses,
-  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse, unarchiveVerse, archivedVerses]);
+    unlockNextVerseInChapter,
+    getChapterUnlockedVerses,
+    advanceChapterProgress,
+  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse, unarchiveVerse, archivedVerses, unlockNextVerseInChapter, getChapterUnlockedVerses, advanceChapterProgress]);
 });
 
 export const useFilteredVerses = (category: VerseCategory | null) => {

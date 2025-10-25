@@ -162,25 +162,25 @@ export default function AddVerseScreen() {
       
       const versesData = lines.map((line, index) => ({
         id: `${chapterId}-verse-${index}`,
-        reference: `${reference.trim()} ${index + 1}`,
+        reference: `${reference.trim()}:${index + 1}`,
         text: line.trim(),
         category,
         isCustom: true as const,
         chapterId,
       }));
 
-      await addChapter({
+      const chapterData = {
         reference: reference.trim(),
         verses: versesData,
         category,
-      });
+      };
 
-      // Add each verse to progress with the verse data to avoid race condition
-      versesData.forEach((verse) => {
-        addToProgress(verse.id, verse);
-      });
+      const newChapterId = await addChapter(chapterData);
 
-      // Navigate directly to progress screen
+      // Add chapter as a single unit to progress (not individual verses)
+      addToProgress(newChapterId);
+
+      // Navigate directly to verses tab
       router.push('/(tabs)/verses' as any);
     } catch (error) {
       Alert.alert('Error', 'Failed to add chapter');

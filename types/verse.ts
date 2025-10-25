@@ -1,6 +1,6 @@
 export type VerseCategory = 'Comfort' | 'Strength' | 'Peace' | 'Love' | 'Faith' | 'Hope' | 'Promises' | 'Custom';
 
-export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse' | 'word-scramble' | 'missing-vowels' | 'flashcard' | 'speed-tap' | 'progressive-reveal';
+export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse' | 'word-scramble' | 'missing-vowels' | 'flashcard' | 'speed-tap' | 'progressive-reveal' | 'verse-order' | 'progressive-review';
 
 export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
   1: ['flashcard', 'fill-blank', 'word-order'],          // Easy: Simple memorization and selection
@@ -9,6 +9,9 @@ export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
   4: ['flashcard', 'progressive-reveal', 'fill-blank'],  // Expert: Minimal hints
   5: ['full-verse'],                                     // Master: Full recall, type entire verse
 };
+
+// Chapter-specific games (used for chapter memorization)
+export const CHAPTER_GAME_TYPES: GameType[] = ['verse-order', 'progressive-review'];
 
 export type DifficultyLevel = 1 | 2 | 3 | 4 | 5;
 
@@ -40,6 +43,16 @@ export interface GameSession {
   difficultyLevel: DifficultyLevel;
 }
 
+export interface ChapterProgress {
+  currentVerseIndex: number;        // Which verse they're currently learning (0-based)
+  unlockedVerses: number[];         // Indices of verses unlocked so far
+  masteredVerses: number[];         // Indices of verses fully mastered
+  startedAt: string;                // When chapter memorization began
+  lastAdvancedAt: string;           // When they last unlocked a new verse
+  daysInSequence: number;           // Consecutive days working on this chapter
+  isComplete: boolean;              // All verses mastered
+}
+
 export interface VerseProgress {
   verseId: string;
   difficultyLevel: DifficultyLevel;
@@ -55,6 +68,7 @@ export interface VerseProgress {
   totalWords: number;
   isChapter?: boolean;
   chapterId?: string;
+  chapterProgress?: ChapterProgress; // Progressive chapter tracking
   lastStreakDate?: string;
   daysInProgress: number;
   uniqueDaysWorked: string[];
