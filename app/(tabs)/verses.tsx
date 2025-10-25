@@ -6,15 +6,17 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  Modal,
+  Alert,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Book, Target, Plus, Play, PlusCircle, Crown, Archive, TrendingUp, Flame, CheckCircle2, Calendar } from 'lucide-react-native';
+import { Book, Target, Plus, Play, PlusCircle, Crown, Archive, TrendingUp, Flame, CheckCircle2, Calendar, Edit2, Trash2, Check, X } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
-import { VerseCategory } from '@/types/verse';
+import { VerseCategory, BibleVerse, Chapter } from '@/types/verse';
 
 const DIFFICULTY_LABELS = [
   '',
@@ -29,11 +31,16 @@ type TabType = 'browse' | 'progress';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses, chapters } = useVerses();
+  const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses, chapters, customVerses, deleteCustomVerse, deleteCustomChapter, updateVerseCategory, updateChapterCategory, bulkDeleteCustomVerses, bulkDeleteCustomChapters } = useVerses();
   const { theme, themeMode } = useTheme();
   const [selectedTab, setSelectedTab] = useState<TabType>('progress');
   const [selectedCategory, setSelectedCategory] = useState<VerseCategory | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [bulkSelectMode, setBulkSelectMode] = useState(false);
+  const [selectedVerseIds, setSelectedVerseIds] = useState<string[]>([]);
+  const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>([]);
+  const [editingItem, setEditingItem] = useState<{type: 'verse' | 'chapter', item: BibleVerse | Chapter} | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const insets = useSafeAreaInsets();
 
   // Filter out individual verses that are part of chapters from browse view
@@ -56,6 +63,113 @@ export default function HomeScreen() {
   const handleAddToProgress = (verseId: string) => {
     addToProgress(verseId);
     setSelectedTab('progress');
+  };
+
+  const toggleBulkSelectMode = () => {
+    setBulkSelectMode(!bulkSelectMode);
+    setSelectedVerseIds([]);
+    setSelectedChapterIds([]);
+  };
+
+  const toggleVerseSelection = (verseId: string) => {
+    setSelectedVerseIds(prev => 
+      prev.includes(verseId) ? prev.filter(id => id !== verseId) : [...prev, verseId]
+    );
+  };
+
+  const toggleChapterSelection = (chapterId: string) => {
+    setSelectedChapterIds(prev => 
+      prev.includes(chapterId) ? prev.filter(id => id !== chapterId) : [...prev, chapterId]
+    );
+  };
+
+  const handleBulkDelete = () => {
+    const totalSelected = selectedVerseIds.length + selectedChapterIds.length;
+    if (totalSelected === 0) return;
+
+    Alert.alert(
+      'Delete Items',
+      `Are you sure you want to delete ${totalSelected} item(s)?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (selectedVerseIds.length > 0) {
+              await bulkDeleteCustomVerses(selectedVerseIds);
+            }
+            if (selectedChapterIds.length > 0) {
+              await bulkDeleteCustomChapters(selectedChapterIds);
+            }
+            setBulkSelectMode(false);
+            setSelectedVerseIds([]);
+            setSelectedChapterIds([]);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleItemClick = (type: 'verse' | 'chapter', item: BibleVerse | Chapter) => {
+    const isCustom = type === 'verse' ? customVerses.some(v => v.id === item.id) : true;
+    
+    if (bulkSelectMode && isCustom) {
+      if (type === 'verse') {
+        toggleVerseSelection(item.id);
+      } else {
+        toggleChapterSelection(item.id);
+      }
+    } else if (isCustom && selectedTab === 'browse') {
+      // Show edit modal for custom items in browse
+      setEditingItem({ type, item });
+      setShowEditModal(true);
+    } else {
+      // Regular behavior for non-custom items or items in progress tab
+      const inProgress = isInProgress(item.id);
+      if (inProgress) {
+        router.push(`/verse/${item.id}`);
+      } else {
+        handleAddToProgress(item.id);
+      }
+    }
+  };
+
+  const handleDeleteItem = async () => {
+    if (!editingItem) return;
+
+    Alert.alert(
+      'Delete Item',
+      `Are you sure you want to delete this ${editingItem.type}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (editingItem.type === 'verse') {
+              await deleteCustomVerse(editingItem.item.id);
+            } else {
+              await deleteCustomChapter(editingItem.item.id);
+            }
+            setShowEditModal(false);
+            setEditingItem(null);
+          },
+        },
+      ]
+    );
+  };
+
+  const handleUpdateCategory = async (newCategory: VerseCategory) => {
+    if (!editingItem) return;
+
+    if (editingItem.type === 'verse') {
+      await updateVerseCategory(editingItem.item.id, newCategory);
+    } else {
+      await updateChapterCategory(editingItem.item.id, newCategory);
+    }
+    setShowEditModal(false);
+    setEditingItem(null);
   };
 
   // Separate incomplete and completed verses
@@ -448,17 +562,48 @@ export default function HomeScreen() {
                   </Text>
                 </View>
               </TouchableOpacity>
+
+              {/* Bulk Select Controls */}
+              {(customVerses.length > 0 || chapters.length > 0) && (
+                <View style={styles.bulkSelectBar}>
+                  <TouchableOpacity
+                    style={[styles.bulkButton, bulkSelectMode && styles.bulkButtonActive]}
+                    onPress={toggleBulkSelectMode}
+                    activeOpacity={0.7}
+                  >
+                    <Edit2 color={bulkSelectMode ? "#fff" : "#667eea"} size={18} />
+                    <Text style={[styles.bulkButtonText, bulkSelectMode && styles.bulkButtonTextActive]}>
+                      {bulkSelectMode ? 'Cancel' : 'Select'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {bulkSelectMode && (
+                    <TouchableOpacity
+                      style={[styles.bulkDeleteButton, (selectedVerseIds.length === 0 && selectedChapterIds.length === 0) && styles.bulkDeleteButtonDisabled]}
+                      onPress={handleBulkDelete}
+                      activeOpacity={0.7}
+                      disabled={selectedVerseIds.length === 0 && selectedChapterIds.length === 0}
+                    >
+                      <Trash2 color="#fff" size={18} />
+                      <Text style={styles.bulkButtonText}>
+                        Delete ({selectedVerseIds.length + selectedChapterIds.length})
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              )}
               
               {/* Display Chapters */}
               {filteredChapters.map(chapter => {
               const inProgress = isInProgress(chapter.id);
               const category = CATEGORIES.find(c => c.name === chapter.category);
+              const isSelected = selectedChapterIds.includes(chapter.id);
 
               return (
                 <TouchableOpacity
                   key={chapter.id}
-                  style={styles.verseCard}
-                  onPress={() => inProgress ? router.push(`/verse/${chapter.id}`) : handleAddToProgress(chapter.id)}
+                  style={[styles.verseCard, isSelected && styles.verseCardSelected]}
+                  onPress={() => handleItemClick('chapter', chapter)}
                   activeOpacity={0.9}
                 >
                   <LinearGradient
@@ -469,7 +614,12 @@ export default function HomeScreen() {
                   >
                     <View style={styles.verseHeader}>
                       <Text style={styles.verseReference}>{chapter.reference} ({chapter.verses.length} verses)</Text>
-                      {!inProgress && (
+                      {bulkSelectMode && (
+                        <View style={[styles.selectCheckbox, isSelected && styles.selectCheckboxSelected]}>
+                          {isSelected && <Check color="#fff" size={16} />}
+                        </View>
+                      )}
+                      {!inProgress && !bulkSelectMode && (
                         <View style={styles.addButton}>
                           <Plus color="#fff" size={20} strokeWidth={3} />
                         </View>
@@ -490,12 +640,14 @@ export default function HomeScreen() {
               {filteredVerses.map(verse => {
               const inProgress = isInProgress(verse.id);
               const category = CATEGORIES.find(c => c.name === verse.category);
+              const isCustom = customVerses.some(v => v.id === verse.id);
+              const isSelected = selectedVerseIds.includes(verse.id);
 
               return (
                 <TouchableOpacity
                   key={verse.id}
-                  style={styles.verseCard}
-                  onPress={() => inProgress ? router.push(`/verse/${verse.id}`) : handleAddToProgress(verse.id)}
+                  style={[styles.verseCard, isSelected && styles.verseCardSelected]}
+                  onPress={() => handleItemClick('verse', verse)}
                   activeOpacity={0.9}
                 >
                   <LinearGradient
@@ -506,7 +658,12 @@ export default function HomeScreen() {
                   >
                     <View style={styles.verseHeader}>
                       <Text style={styles.verseReference}>{verse.reference}</Text>
-                      {!inProgress && (
+                      {bulkSelectMode && isCustom && (
+                        <View style={[styles.selectCheckbox, isSelected && styles.selectCheckboxSelected]}>
+                          {isSelected && <Check color="#fff" size={16} />}
+                        </View>
+                      )}
+                      {!inProgress && !bulkSelectMode && (
                         <View style={styles.addButton}>
                           <Plus color="#fff" size={20} strokeWidth={3} />
                         </View>
@@ -526,6 +683,87 @@ export default function HomeScreen() {
           )}
         </ScrollView>
       </LinearGradient>
+
+      {/* Edit Modal */}
+      <Modal
+        visible={showEditModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowEditModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, themeMode === 'dark' && styles.modalContentDark]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, themeMode === 'dark' && styles.modalTitleDark]}>
+                Edit {editingItem?.type === 'chapter' ? 'Chapter' : 'Verse'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowEditModal(false)}>
+                <X color={themeMode === 'dark' ? '#fff' : '#333'} size={24} />
+              </TouchableOpacity>
+            </View>
+
+            {editingItem && (
+              <>
+                <View style={styles.modalSection}>
+                  <Text style={[styles.modalLabel, themeMode === 'dark' && styles.modalLabelDark]}>Reference</Text>
+                  <Text style={[styles.modalValue, themeMode === 'dark' && styles.modalValueDark]}>
+                    {editingItem.type === 'chapter' 
+                      ? (editingItem.item as Chapter).reference 
+                      : (editingItem.item as BibleVerse).reference}
+                  </Text>
+                </View>
+
+                <View style={styles.modalSection}>
+                  <Text style={[styles.modalLabel, themeMode === 'dark' && styles.modalLabelDark]}>Category</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categorySelectorScroll}>
+                    {CATEGORIES.map(cat => (
+                      <TouchableOpacity
+                        key={cat.name}
+                        style={[
+                          styles.categoryOption,
+                          editingItem.item.category === cat.name && styles.categoryOptionSelected
+                        ]}
+                        onPress={() => handleUpdateCategory(cat.name as VerseCategory)}
+                      >
+                        <LinearGradient
+                          colors={cat.gradient}
+                          style={styles.categoryOptionGradient}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                        >
+                          <Text style={styles.categoryOptionText}>{cat.name}</Text>
+                        </LinearGradient>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+
+                <View style={styles.modalActions}>
+                  <TouchableOpacity
+                    style={styles.addToProgressButton}
+                    onPress={() => {
+                      handleAddToProgress(editingItem.item.id);
+                      setShowEditModal(false);
+                      setEditingItem(null);
+                    }}
+                  >
+                    <Play color="#fff" size={20} />
+                    <Text style={styles.addToProgressButtonText}>Add to Progress</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={handleDeleteItem}
+                  >
+                    <Trash2 color="#fff" size={20} />
+                    <Text style={styles.deleteButtonText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -996,6 +1234,168 @@ const styles = StyleSheet.create({
   },
   archivedBadgeText: {
     fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  bulkSelectBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
+    paddingHorizontal: 4,
+  },
+  bulkButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#667eea',
+  },
+  bulkButtonActive: {
+    backgroundColor: '#667eea',
+    borderColor: '#667eea',
+  },
+  bulkButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#667eea',
+  },
+  bulkButtonTextActive: {
+    color: '#fff',
+  },
+  bulkDeleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: '#ef4444',
+  },
+  bulkDeleteButtonDisabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.5,
+  },
+  selectCheckbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+  },
+  selectCheckboxSelected: {
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  verseCardSelected: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    minHeight: 400,
+  },
+  modalContentDark: {
+    backgroundColor: '#1f2937',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: '700' as const,
+    color: '#1f2937',
+  },
+  modalTitleDark: {
+    color: '#fff',
+  },
+  modalSection: {
+    marginBottom: 24,
+  },
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#6b7280',
+    marginBottom: 8,
+  },
+  modalLabelDark: {
+    color: '#9ca3af',
+  },
+  modalValue: {
+    fontSize: 18,
+    fontWeight: '600' as const,
+    color: '#1f2937',
+  },
+  modalValueDark: {
+    color: '#fff',
+  },
+  categorySelectorScroll: {
+    marginTop: 8,
+  },
+  categoryOption: {
+    marginRight: 12,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  categoryOptionSelected: {
+    transform: [{ scale: 1.05 }],
+  },
+  categoryOptionGradient: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  categoryOptionText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  modalActions: {
+    gap: 12,
+    marginTop: 8,
+  },
+  addToProgressButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#667eea',
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  addToProgressButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#fff',
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#ef4444',
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  deleteButtonText: {
+    fontSize: 16,
     fontWeight: '600' as const,
     color: '#fff',
   },

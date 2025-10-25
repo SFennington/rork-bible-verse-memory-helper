@@ -56,6 +56,14 @@ const GAME_INFO: Record<GameType, { title: string; description: string }> = {
     title: 'Progressive Reveal',
     description: 'Reveal words one at a time to build memory',
   },
+  'verse-order': {
+    title: 'Verse Order',
+    description: 'Arrange verses in the correct order',
+  },
+  'progressive-review': {
+    title: 'Progressive Review',
+    description: 'Type each unlocked verse from memory',
+  },
 };
 
 const DIFFICULTY_LABELS = [

@@ -594,6 +594,74 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     return newChapter.id;
   }, [chapters]);
 
+  const deleteCustomVerse = useCallback(async (verseId: string) => {
+    const updated = customVerses.filter(v => v.id !== verseId);
+    setCustomVerses(updated);
+    try {
+      await AsyncStorage.setItem(CUSTOM_VERSES_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to delete custom verse:', error);
+    }
+  }, [customVerses]);
+
+  const deleteCustomChapter = useCallback(async (chapterId: string) => {
+    const updated = chapters.filter(c => c.id !== chapterId);
+    setChapters(updated);
+    try {
+      await AsyncStorage.setItem(CHAPTERS_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to delete chapter:', error);
+    }
+  }, [chapters]);
+
+  const updateVerseCategory = useCallback(async (verseId: string, newCategory: VerseCategory) => {
+    const updated = customVerses.map(v => 
+      v.id === verseId ? { ...v, category: newCategory } : v
+    );
+    setCustomVerses(updated);
+    try {
+      await AsyncStorage.setItem(CUSTOM_VERSES_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to update verse category:', error);
+    }
+  }, [customVerses]);
+
+  const updateChapterCategory = useCallback(async (chapterId: string, newCategory: VerseCategory) => {
+    const updated = chapters.map(c => 
+      c.id === chapterId ? { 
+        ...c, 
+        category: newCategory,
+        verses: c.verses.map(v => ({ ...v, category: newCategory }))
+      } : c
+    );
+    setChapters(updated);
+    try {
+      await AsyncStorage.setItem(CHAPTERS_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to update chapter category:', error);
+    }
+  }, [chapters]);
+
+  const bulkDeleteCustomVerses = useCallback(async (verseIds: string[]) => {
+    const updated = customVerses.filter(v => !verseIds.includes(v.id));
+    setCustomVerses(updated);
+    try {
+      await AsyncStorage.setItem(CUSTOM_VERSES_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to bulk delete verses:', error);
+    }
+  }, [customVerses]);
+
+  const bulkDeleteCustomChapters = useCallback(async (chapterIds: string[]) => {
+    const updated = chapters.filter(c => !chapterIds.includes(c.id));
+    setChapters(updated);
+    try {
+      await AsyncStorage.setItem(CHAPTERS_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Failed to bulk delete chapters:', error);
+    }
+  }, [chapters]);
+
   const allVerses = useMemo(() => {
     const chapterVerses = chapters.flatMap(c => c.verses);
     return [...BIBLE_VERSES, ...customVerses, ...chapterVerses];
@@ -664,7 +732,13 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     unlockNextVerseInChapter,
     getChapterUnlockedVerses,
     advanceChapterProgress,
-  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse, unarchiveVerse, archivedVerses, unlockNextVerseInChapter, getChapterUnlockedVerses, advanceChapterProgress]);
+    deleteCustomVerse,
+    deleteCustomChapter,
+    updateVerseCategory,
+    updateChapterCategory,
+    bulkDeleteCustomVerses,
+    bulkDeleteCustomChapters,
+  }), [progress, isLoading, addToProgress, completeGameSession, getVerseProgress, getVersesByCategory, versesInProgress, dueVersesCount, addCustomVerse, addChapter, chapters, customVerses, allVerses, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse, unarchiveVerse, archivedVerses, unlockNextVerseInChapter, getChapterUnlockedVerses, advanceChapterProgress, deleteCustomVerse, deleteCustomChapter, updateVerseCategory, updateChapterCategory, bulkDeleteCustomVerses, bulkDeleteCustomChapters]);
 });
 
 export const useFilteredVerses = (category: VerseCategory | null) => {
