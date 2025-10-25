@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, ArrowLeft, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive, Crown, Heart } from 'lucide-react-native';
+import { Target, CheckCircle2, Flame, TrendingUp, Play, Trophy, ArrowRight, ArrowLeft, AlertCircle, RotateCcw, MoreVertical, Trash2, Archive, Crown, Heart, ChevronDown, ChevronUp } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { usePrayer } from '@/contexts/PrayerContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -87,6 +87,7 @@ export default function VerseDetailScreen() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [isGeneratingPrayer, setIsGeneratingPrayer] = useState(false);
+  const [isChapterProgressExpanded, setIsChapterProgressExpanded] = useState(false);
 
   // Check if it's a chapter or regular verse
   const chapter = chapters.find(c => c.id === id);
@@ -182,7 +183,17 @@ export default function VerseDetailScreen() {
     const firstIncompleteGame = currentGames.find(gameType => !isGameCompleted(gameType));
     
     if (firstIncompleteGame) {
-      router.push(`/game/${firstIncompleteGame}/${id}`);
+      // For chapters, determine game target and include chapter ID for progress tracking
+      let gameTargetId = id;
+      let chapterParam = '';
+      if (isChapter && verseProgress.chapterProgress) {
+        if (firstIncompleteGame === 'progressive-reveal' || firstIncompleteGame === 'flashcard') {
+          const currentVerse = unlockedVerses[verseProgress.chapterProgress.currentVerseIndex];
+          gameTargetId = currentVerse?.id || id;
+          chapterParam = `?chapterId=${id}`;
+        }
+      }
+      router.push(`/game/${firstIncompleteGame}/${gameTargetId}${chapterParam}`);
     }
   };
 
@@ -361,49 +372,78 @@ export default function VerseDetailScreen() {
               </View>
 
               {isChapter && verseProgress.chapterProgress && (
-                <View style={[styles.chapterInfoCard, { backgroundColor: theme.cardBackground }]}>
-                  <Text style={[styles.chapterInfoTitle, { color: theme.text }]}>Chapter Progress</Text>
-                  <Text style={[styles.chapterInfoText, { color: theme.textSecondary }]}>
-                    Learning verse {verseProgress.chapterProgress.currentVerseIndex + 1} of {chapter.verses.length}
-                  </Text>
-                  <View style={styles.versesProgressContainer}>
-                    {chapter.verses.map((v, index) => {
-                      const isUnlocked = verseProgress.chapterProgress!.unlockedVerses.includes(index);
-                      const isMastered = verseProgress.chapterProgress!.masteredVerses.includes(index);
-                      const isCurrent = index === verseProgress.chapterProgress!.currentVerseIndex;
-                      
-                      return (
-                        <View key={v.id} style={[
-                          styles.verseProgressItem,
-                          { backgroundColor: isUnlocked ? '#10b981' : theme.border },
-                          isMastered && { backgroundColor: '#f59e0b' },
-                          isCurrent && styles.verseProgressItemCurrent,
-                        ]}>
-                          <Text style={[
-                            styles.verseProgressText,
-                            { color: isUnlocked ? '#fff' : theme.textSecondary }
-                          ]}>
-                            {index + 1}
-                          </Text>
+                <TouchableOpacity 
+                  style={[styles.chapterInfoCard, { backgroundColor: theme.cardBackground }]}
+                  onPress={() => setIsChapterProgressExpanded(!isChapterProgressExpanded)}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.chapterInfoHeader}>
+                    <View style={styles.chapterInfoHeaderLeft}>
+                      <Text style={[styles.chapterInfoTitle, { color: theme.text }]}>
+                        Learning verse {verseProgress.chapterProgress.currentVerseIndex + 1} of {chapter.verses.length}
+                      </Text>
+                      {/* Progress bar */}
+                      <View style={[styles.chapterProgressBar, { backgroundColor: theme.border }]}>
+                        <View 
+                          style={[
+                            styles.chapterProgressBarFill, 
+                            { 
+                              backgroundColor: category?.color || '#667eea',
+                              width: `${((verseProgress.chapterProgress.currentVerseIndex + 1) / chapter.verses.length) * 100}%`
+                            }
+                          ]} 
+                        />
+                      </View>
+                    </View>
+                    {isChapterProgressExpanded ? (
+                      <ChevronUp color={theme.textSecondary} size={24} />
+                    ) : (
+                      <ChevronDown color={theme.textSecondary} size={24} />
+                    )}
+                  </View>
+                  
+                  {isChapterProgressExpanded && (
+                    <>
+                      <View style={styles.versesProgressContainer}>
+                        {chapter.verses.map((v, index) => {
+                          const isUnlocked = verseProgress.chapterProgress!.unlockedVerses.includes(index);
+                          const isMastered = verseProgress.chapterProgress!.masteredVerses.includes(index);
+                          const isCurrent = index === verseProgress.chapterProgress!.currentVerseIndex;
+                          
+                          return (
+                            <View key={v.id} style={[
+                              styles.verseProgressItem,
+                              { backgroundColor: isUnlocked ? '#10b981' : theme.border },
+                              isMastered && { backgroundColor: '#f59e0b' },
+                              isCurrent && styles.verseProgressItemCurrent,
+                            ]}>
+                              <Text style={[
+                                styles.verseProgressText,
+                                { color: isUnlocked ? '#fff' : theme.textSecondary }
+                              ]}>
+                                {index + 1}
+                              </Text>
+                            </View>
+                          );
+                        })}
+                      </View>
+                      <View style={styles.legendRow}>
+                        <View style={styles.legendItem}>
+                          <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
+                          <Text style={[styles.legendText, { color: theme.textSecondary }]}>Unlocked</Text>
                         </View>
-                      );
-                    })}
-                  </View>
-                  <View style={styles.legendRow}>
-                    <View style={styles.legendItem}>
-                      <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-                      <Text style={[styles.legendText, { color: theme.textSecondary }]}>Unlocked</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                      <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
-                      <Text style={[styles.legendText, { color: theme.textSecondary }]}>Mastered</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                      <View style={[styles.legendDot, { backgroundColor: theme.border }]} />
-                      <Text style={[styles.legendText, { color: theme.textSecondary }]}>Locked</Text>
-                    </View>
-                  </View>
-                </View>
+                        <View style={styles.legendItem}>
+                          <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
+                          <Text style={[styles.legendText, { color: theme.textSecondary }]}>Mastered</Text>
+                        </View>
+                        <View style={styles.legendItem}>
+                          <View style={[styles.legendDot, { backgroundColor: theme.border }]} />
+                          <Text style={[styles.legendText, { color: theme.textSecondary }]}>Locked</Text>
+                        </View>
+                      </View>
+                    </>
+                  )}
+                </TouchableOpacity>
               )}
 
               <View style={styles.gamesSection}>
@@ -467,11 +507,13 @@ export default function VerseDetailScreen() {
 
                     // For chapters, determine which ID to pass to the game
                     let gameTargetId = id;
+                    let chapterParam = '';
                     if (isChapter && verseProgress?.chapterProgress) {
                       // Single-verse games: pass current verse ID
                       if (gameType === 'progressive-reveal' || gameType === 'flashcard') {
                         const currentVerse = unlockedVerses[verseProgress.chapterProgress.currentVerseIndex];
                         gameTargetId = currentVerse?.id || id;
+                        chapterParam = `?chapterId=${id}`; // Pass chapter ID for progress tracking
                       }
                       // Multi-verse games: pass chapter ID (already set)
                     }
@@ -480,7 +522,7 @@ export default function VerseDetailScreen() {
                       <TouchableOpacity
                         key={`${gameType}-${index}`}
                         style={[styles.gameCard, { backgroundColor: theme.cardBackground }]}
-                        onPress={() => router.push(`/game/${gameType}/${gameTargetId}`)}
+                        onPress={() => router.push(`/game/${gameType}/${gameTargetId}${chapterParam}`)}
                         activeOpacity={0.9}
                       >
                         <View style={styles.gameCardContent}>
@@ -1167,10 +1209,28 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
+  chapterInfoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  chapterInfoHeaderLeft: {
+    flex: 1,
+  },
   chapterInfoTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700' as const,
     marginBottom: 8,
+  },
+  chapterProgressBar: {
+    height: 8,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  chapterProgressBarFill: {
+    height: '100%',
+    borderRadius: 4,
   },
   chapterInfoText: {
     fontSize: 14,

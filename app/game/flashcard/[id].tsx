@@ -21,7 +21,7 @@ function isToday(dateString: string): boolean {
 }
 
 export default function FlashcardGameScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, chapterId } = useLocalSearchParams<{ id: string; chapterId?: string }>();
   const router = useRouter();
   const { verses, completeGameSession, getVerseProgress } = useVerses();
   const { theme } = useTheme();
@@ -34,7 +34,9 @@ export default function FlashcardGameScreen() {
 
   const verse = verses.find(v => v.id === id);
   const category = CATEGORIES.find(c => c.name === verse?.category);
-  const verseProgress = getVerseProgress(id || '');
+  // For chapters, get progress from chapter ID
+  const progressId = chapterId || id || '';
+  const verseProgress = getVerseProgress(progressId);
   const difficultyLevel = verseProgress?.difficultyLevel || 1;
 
   if (!verse) {
@@ -110,7 +112,8 @@ export default function FlashcardGameScreen() {
     const words = verse.text.split(' ').length;
 
     if (knewIt) {
-      completeGameSession(id || '', {
+      // For chapters, record progress under chapter ID, not verse ID
+      completeGameSession(progressId, {
         gameType: 'flashcard',
         completedAt: new Date().toISOString(),
         accuracy,
@@ -125,8 +128,7 @@ export default function FlashcardGameScreen() {
 
   const handleContinue = () => {
     if (userKnewIt) {
-      const verseProgress = getVerseProgress(id || '');
-      const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
+      const requiredGames = verseProgress?.isChapter ? 2 : (verseProgress?.difficultyLevel === 5 ? 1 : 3);
       const games = verseProgress?.currentDayGames || [];
       const completedGames = verseProgress?.gameSessions
         .filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress?.difficultyLevel)
@@ -135,9 +137,12 @@ export default function FlashcardGameScreen() {
       const nextGame = games.find(g => !completedGames.includes(g));
       
       if (nextGame) {
-        router.replace(`/game/${nextGame}/${id}`);
+        // Keep the chapter param when navigating to next game
+        const chapterParam = chapterId ? `?chapterId=${chapterId}` : '';
+        router.replace(`/game/${nextGame}/${id}${chapterParam}`);
       } else {
-        router.push(`/verse/${id}`);
+        // Return to the chapter/verse detail page
+        router.push(`/verse/${progressId}`);
       }
     } else {
       // Try again

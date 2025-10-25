@@ -378,11 +378,13 @@ export default function HomeScreen() {
 
                         // Determine game target ID (for chapters with single-verse games, use current verse ID)
                         let gameTargetId = verse.id;
+                        let chapterParam = '';
                         if (verseProgress.isChapter && verseProgress.chapterProgress) {
                           if (nextGame === 'progressive-reveal' || nextGame === 'flashcard') {
                             const unlockedVerses = getChapterUnlockedVerses(verse.id);
                             const currentVerse = unlockedVerses[verseProgress.chapterProgress.currentVerseIndex];
                             gameTargetId = currentVerse?.id || verse.id;
+                            chapterParam = `?chapterId=${verse.id}`; // Pass chapter ID for progress tracking
                           }
                         }
 
@@ -411,7 +413,7 @@ export default function HomeScreen() {
                                     style={styles.playButton}
                                     onPress={(e) => {
                                       e.stopPropagation();
-                                      router.push(`/game/${nextGame}/${gameTargetId}`);
+                                      router.push(`/game/${nextGame}/${gameTargetId}${chapterParam}`);
                                     }}
                                   >
                                     <Play color="#fff" size={16} fill="#fff" />
