@@ -216,12 +216,16 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     }
   }, [progress, customVerses, chapters]);
 
-  const completeGameSession = useCallback((verseId: string, session: GameSession) => {
+  const completeGameSession = useCallback(async (verseId: string, session: GameSession) => {
     const verseProgress = progress[verseId];
     if (!verseProgress) {
-      console.error('Verse not in progress');
+      console.error('❌ Verse not in progress:', verseId);
+      console.error('Available progress IDs:', Object.keys(progress));
+      console.error('Session details:', session);
       return;
     }
+    
+    console.log('✅ Completing game session for:', verseId, 'Game:', session.gameType);
 
     const now = new Date();
     const updatedSessions = [...verseProgress.gameSessions, session];
@@ -342,7 +346,28 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       },
     };
 
-    saveProgress(updatedProgress);
+    await saveProgress(updatedProgress);
+
+    // For chapters: if all games completed today AND high accuracy, unlock next verse
+    if (verseProgress.isChapter && verseProgress.chapterProgress && allGamesCompletedToday && !wasCompletedBefore) {
+      if (avgAccuracyToday >= 80) {
+        const chapter = chapters.find(c => c.id === verseId);
+        if (chapter) {
+          const currentVerseIndex = verseProgress.chapterProgress.currentVerseIndex;
+          const hasMoreVerses = currentVerseIndex < chapter.verses.length - 1;
+          
+          if (hasMoreVerses) {
+            console.log('✅ Chapter verse completed with good accuracy! Unlocking next verse...');
+            // Mark current verse as mastered and unlock next
+            await unlockNextVerseInChapter(verseId);
+          } else {
+            console.log('✅ Final verse in chapter completed!');
+            // Mark as complete
+            await advanceChapterProgress(verseId, currentVerseIndex);
+          }
+        }
+      }
+    }
   }, [progress, customVerses, chapters]);
 
   const advanceToNextLevel = useCallback((verseId: string) => {
@@ -455,11 +480,18 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       return false;
     }
 
-    // Unlock the next verse
+    // Mark current verse as mastered and unlock the next verse
+    const currentIndex = cp.currentVerseIndex;
+    let updatedMasteredVerses = [...cp.masteredVerses];
+    if (!updatedMasteredVerses.includes(currentIndex)) {
+      updatedMasteredVerses.push(currentIndex);
+    }
+
     const updatedChapterProgress: ChapterProgress = {
       ...cp,
       currentVerseIndex: nextIndex,
       unlockedVerses: [...cp.unlockedVerses, nextIndex],
+      masteredVerses: updatedMasteredVerses,
       lastAdvancedAt: new Date().toISOString(),
       daysInSequence: cp.daysInSequence + 1,
     };

@@ -410,16 +410,26 @@ export default function VerseDetailScreen() {
                           const isMastered = verseProgress.chapterProgress!.masteredVerses.includes(index);
                           const isCurrent = index === verseProgress.chapterProgress!.currentVerseIndex;
                           
+                          // Color scheme: mastered=green, unlocked=yellow, locked=gray
+                          let backgroundColor = theme.border; // locked (gray)
+                          let textColor = theme.textSecondary;
+                          if (isMastered) {
+                            backgroundColor = '#10b981'; // mastered (green)
+                            textColor = '#fff';
+                          } else if (isUnlocked) {
+                            backgroundColor = '#f59e0b'; // unlocked (yellow/orange)
+                            textColor = '#fff';
+                          }
+                          
                           return (
                             <View key={v.id} style={[
                               styles.verseProgressItem,
-                              { backgroundColor: isUnlocked ? '#10b981' : theme.border },
-                              isMastered && { backgroundColor: '#f59e0b' },
+                              { backgroundColor },
                               isCurrent && styles.verseProgressItemCurrent,
                             ]}>
                               <Text style={[
                                 styles.verseProgressText,
-                                { color: isUnlocked ? '#fff' : theme.textSecondary }
+                                { color: textColor }
                               ]}>
                                 {index + 1}
                               </Text>
@@ -430,11 +440,11 @@ export default function VerseDetailScreen() {
                       <View style={styles.legendRow}>
                         <View style={styles.legendItem}>
                           <View style={[styles.legendDot, { backgroundColor: '#10b981' }]} />
-                          <Text style={[styles.legendText, { color: theme.textSecondary }]}>Unlocked</Text>
+                          <Text style={[styles.legendText, { color: theme.textSecondary }]}>Mastered</Text>
                         </View>
                         <View style={styles.legendItem}>
                           <View style={[styles.legendDot, { backgroundColor: '#f59e0b' }]} />
-                          <Text style={[styles.legendText, { color: theme.textSecondary }]}>Mastered</Text>
+                          <Text style={[styles.legendText, { color: theme.textSecondary }]}>Unlocked</Text>
                         </View>
                         <View style={styles.legendItem}>
                           <View style={[styles.legendDot, { backgroundColor: theme.border }]} />
