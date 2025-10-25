@@ -230,13 +230,14 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     const todaysSessions = updatedSessions.filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress.difficultyLevel);
     const completedGamesToday = todaysSessions.length;
     
+    // For chapters: always 2 games. For verses: 3 games per level, except level 5 (1 game)
     const requiredGamesPerLevel = [
-      0,
-      3,
-      3,
-      3,
-      3,
-      1,
+      0,  // Level 0 (not used)
+      3,  // Level 1
+      3,  // Level 2
+      3,  // Level 3
+      3,  // Level 4
+      1,  // Level 5 (master)
     ];
 
     const today = getDateString(now);
@@ -262,7 +263,8 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
       ? Math.min(100, Math.round((totalCorrectWords / totalPossibleWords) * 100))
       : 0;
 
-    const requiredGames = requiredGamesPerLevel[verseProgress.difficultyLevel];
+    // Calculate required games: 2 for chapters, otherwise use level-based requirements
+    const requiredGames = verseProgress.isChapter ? 2 : requiredGamesPerLevel[verseProgress.difficultyLevel];
     const allGamesCompletedToday = completedGamesToday >= requiredGames;
     const avgAccuracyToday = todaysSessions.reduce((sum, s) => sum + s.accuracy, 0) / todaysSessions.length;
     
@@ -823,7 +825,7 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
   const dueVersesCount = useMemo(() => {
     return Object.values(progress).filter(p => {
-      const requiredGames = p.difficultyLevel === 5 ? 1 : 3;
+      const requiredGames = p.isChapter ? 2 : (p.difficultyLevel === 5 ? 1 : 3);
       return p.completedGamesToday < requiredGames && !p.isArchived;
     }).length;
   }, [progress]);

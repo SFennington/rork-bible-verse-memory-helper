@@ -178,12 +178,12 @@ export default function HomeScreen() {
 
   // Separate incomplete and completed verses
   const incompleteVerses = versesInProgress.filter(item => {
-    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    const requiredGames = item.progress.isChapter ? 2 : (item.progress.difficultyLevel === 5 ? 1 : 3);
     return item.progress.completedGamesToday < requiredGames;
   });
   
   const completedVerses = versesInProgress.filter(item => {
-    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    const requiredGames = item.progress.isChapter ? 2 : (item.progress.difficultyLevel === 5 ? 1 : 3);
     return item.progress.completedGamesToday >= requiredGames;
   });
 
@@ -364,7 +364,7 @@ export default function HomeScreen() {
                       {incompleteVerses.map(({ verse, progress: verseProgress }) => {
                         const category = CATEGORIES.find(c => c.name === verse.category);
                         const difficultyLabel = DIFFICULTY_LABELS[verseProgress.difficultyLevel];
-                        const requiredGames = verseProgress.difficultyLevel === 5 ? 1 : 3;
+                        const requiredGames = verseProgress.isChapter ? 2 : (verseProgress.difficultyLevel === 5 ? 1 : 3);
                         
                         const completedGames = verseProgress.gameSessions
                           .filter(s => {

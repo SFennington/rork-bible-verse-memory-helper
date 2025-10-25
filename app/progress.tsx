@@ -32,11 +32,11 @@ export default function ProgressScreen() {
   const { theme } = useTheme();
 
   const incompleteVerses = versesInProgress.filter(item => {
-    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    const requiredGames = item.progress.isChapter ? 2 : (item.progress.difficultyLevel === 5 ? 1 : 3);
     return item.progress.completedGamesToday < requiredGames;
   });
   const completedVerses = versesInProgress.filter(item => {
-    const requiredGames = item.progress.difficultyLevel === 5 ? 1 : 3;
+    const requiredGames = item.progress.isChapter ? 2 : (item.progress.difficultyLevel === 5 ? 1 : 3);
     return item.progress.completedGamesToday >= requiredGames;
   });
 
@@ -98,7 +98,7 @@ export default function ProgressScreen() {
             {incompleteVerses.map(({ verse, progress }) => {
               const category = CATEGORIES.find(c => c.name === verse.category);
               const difficultyLabel = DIFFICULTY_LABELS[progress.difficultyLevel];
-              const requiredGames = progress.difficultyLevel === 5 ? 1 : 3;
+              const requiredGames = progress.isChapter ? 2 : (progress.difficultyLevel === 5 ? 1 : 3);
               
               const completedGames = progress.gameSessions
                 .filter(s => {
