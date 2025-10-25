@@ -28,7 +28,7 @@ const DIFFICULTY_LABELS = [
 
 export default function ProgressScreen() {
   const router = useRouter();
-  const { versesInProgress, dueVersesCount } = useVerses();
+  const { versesInProgress, dueVersesCount, chapters, getChapterUnlockedVerses } = useVerses();
   const { theme } = useTheme();
 
   const incompleteVerses = versesInProgress.filter(item => {
@@ -110,6 +110,16 @@ export default function ProgressScreen() {
               
               const nextGame = progress.currentDayGames.find(game => !completedGames.includes(game)) || progress.currentDayGames[0];
 
+              // Determine game target ID (for chapters with single-verse games, use current verse ID)
+              let gameTargetId = verse.id;
+              if (progress.isChapter && progress.chapterProgress) {
+                if (nextGame === 'progressive-reveal' || nextGame === 'flashcard') {
+                  const unlockedVerses = getChapterUnlockedVerses(verse.id);
+                  const currentVerse = unlockedVerses[progress.chapterProgress.currentVerseIndex];
+                  gameTargetId = currentVerse?.id || verse.id;
+                }
+              }
+
               return (
                 <TouchableOpacity
                   key={verse.id}
@@ -135,7 +145,7 @@ export default function ProgressScreen() {
                           style={styles.playButton}
                           onPress={(e) => {
                             e.stopPropagation();
-                            router.push(`/game/${nextGame}/${verse.id}`);
+                            router.push(`/game/${nextGame}/${gameTargetId}`);
                           }}
                         >
                           <Play color="#fff" size={16} fill="#fff" />

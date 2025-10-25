@@ -31,7 +31,7 @@ type TabType = 'browse' | 'progress';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses, chapters, customVerses, deleteCustomVerse, deleteCustomChapter, updateVerseCategory, updateChapterCategory, bulkDeleteCustomVerses, bulkDeleteCustomChapters } = useVerses();
+  const { verses, progress, versesInProgress, dueVersesCount, addToProgress, archivedVerses, chapters, customVerses, deleteCustomVerse, deleteCustomChapter, updateVerseCategory, updateChapterCategory, bulkDeleteCustomVerses, bulkDeleteCustomChapters, getChapterUnlockedVerses } = useVerses();
   const { theme, themeMode } = useTheme();
   const [selectedTab, setSelectedTab] = useState<TabType>('progress');
   const [selectedCategory, setSelectedCategory] = useState<VerseCategory | null>(null);
@@ -376,6 +376,16 @@ export default function HomeScreen() {
                         
                         const nextGame = verseProgress.currentDayGames.find(game => !completedGames.includes(game)) || verseProgress.currentDayGames[0];
 
+                        // Determine game target ID (for chapters with single-verse games, use current verse ID)
+                        let gameTargetId = verse.id;
+                        if (verseProgress.isChapter && verseProgress.chapterProgress) {
+                          if (nextGame === 'progressive-reveal' || nextGame === 'flashcard') {
+                            const unlockedVerses = getChapterUnlockedVerses(verse.id);
+                            const currentVerse = unlockedVerses[verseProgress.chapterProgress.currentVerseIndex];
+                            gameTargetId = currentVerse?.id || verse.id;
+                          }
+                        }
+
                         return (
                           <TouchableOpacity
                             key={verse.id}
@@ -401,7 +411,7 @@ export default function HomeScreen() {
                                     style={styles.playButton}
                                     onPress={(e) => {
                                       e.stopPropagation();
-                                      router.push(`/game/${nextGame}/${verse.id}`);
+                                      router.push(`/game/${nextGame}/${gameTargetId}`);
                                     }}
                                   >
                                     <Play color="#fff" size={16} fill="#fff" />

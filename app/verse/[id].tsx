@@ -465,11 +465,22 @@ export default function VerseDetailScreen() {
                     const gameInfo = GAME_INFO[gameType];
                     const isCompleted = isGameCompleted(gameType);
 
+                    // For chapters, determine which ID to pass to the game
+                    let gameTargetId = id;
+                    if (isChapter && verseProgress?.chapterProgress) {
+                      // Single-verse games: pass current verse ID
+                      if (gameType === 'progressive-reveal' || gameType === 'flashcard') {
+                        const currentVerse = unlockedVerses[verseProgress.chapterProgress.currentVerseIndex];
+                        gameTargetId = currentVerse?.id || id;
+                      }
+                      // Multi-verse games: pass chapter ID (already set)
+                    }
+
                     return (
                       <TouchableOpacity
                         key={`${gameType}-${index}`}
                         style={[styles.gameCard, { backgroundColor: theme.cardBackground }]}
-                        onPress={() => router.push(`/game/${gameType}/${id}`)}
+                        onPress={() => router.push(`/game/${gameType}/${gameTargetId}`)}
                         activeOpacity={0.9}
                       >
                         <View style={styles.gameCardContent}>
