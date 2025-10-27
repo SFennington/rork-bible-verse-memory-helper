@@ -10,15 +10,30 @@ export function useDateChange(onDateChange: () => void) {
   const [currentDate, setCurrentDate] = useState(getDateString());
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const appStateRef = useRef(AppState.currentState);
+  const callbackRef = useRef(onDateChange);
+  const isMountedRef = useRef(false);
+
+  // Update callback ref when it changes
+  useEffect(() => {
+    callbackRef.current = onDateChange;
+  }, [onDateChange]);
 
   useEffect(() => {
+    // Mark as mounted
+    isMountedRef.current = true;
+
     // Function to check if date has changed
     const checkDateChange = () => {
       const newDate = getDateString();
       if (newDate !== currentDate) {
         console.log(`📅 Date changed from ${currentDate} to ${newDate}`);
         setCurrentDate(newDate);
-        onDateChange();
+        
+        // Only call callback if component is mounted
+        if (isMountedRef.current) {
+          callbackRef.current();
+        }
+        
         // Reschedule for next midnight
         scheduleNextCheck();
       }
@@ -58,12 +73,13 @@ export function useDateChange(onDateChange: () => void) {
 
     // Cleanup
     return () => {
+      isMountedRef.current = false;
       if (intervalRef.current) {
         clearTimeout(intervalRef.current);
       }
       subscription.remove();
     };
-  }, [currentDate, onDateChange]);
+  }, [currentDate]);
 
   return currentDate;
 }

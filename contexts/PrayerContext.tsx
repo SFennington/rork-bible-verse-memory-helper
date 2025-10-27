@@ -24,14 +24,6 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
     loadData();
   }, []);
 
-  useEffect(() => {
-    // Check if we need to rotate daily prayers
-    const today = getToday();
-    if (lastRotationDate !== today) {
-      rotateDailyPrayers();
-    }
-  }, [lastRotationDate, prayerRequests]);
-
   const loadData = async () => {
     try {
       const [requestsData, logsData, dailyData, rotationData] = await Promise.all([
@@ -98,6 +90,14 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       console.error('Failed to save daily prayers:', error);
     }
   }, [prayerRequests]);
+
+  // Check if we need to rotate daily prayers when date or requests change
+  useEffect(() => {
+    const today = getToday();
+    if (lastRotationDate !== today) {
+      rotateDailyPrayers();
+    }
+  }, [lastRotationDate, prayerRequests, rotateDailyPrayers]);
 
   const savePrayerLogs = async (logs: PrayerLog[]) => {
     try {
