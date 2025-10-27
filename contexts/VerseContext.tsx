@@ -25,12 +25,6 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     loadArchivedProgress();
   }, []);
 
-  // Handle date changes (midnight rollover)
-  useDateChange(useCallback(() => {
-    console.log('📅 Date changed! Resetting daily verse progress...');
-    resetDailyProgress();
-  }, [progress]));
-
   const loadProgress = async () => {
     try {
       const stored = await AsyncStorage.getItem(STORAGE_KEY);
@@ -668,6 +662,12 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   useEffect(() => {
     resetDailyProgress();
   }, []);
+
+  // Handle date changes (midnight rollover)
+  useDateChange(() => {
+    console.log('📅 Date changed! Resetting daily verse progress...');
+    resetDailyProgress();
+  });
 
   const getVerseProgress = useCallback((verseId: string): VerseProgress | undefined => {
     return progress[verseId];

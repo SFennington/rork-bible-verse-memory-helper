@@ -32,15 +32,6 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
     }
   }, [lastRotationDate, prayerRequests]);
 
-  // Handle date changes (midnight rollover)
-  useDateChange(useCallback(() => {
-    console.log('📅 Date changed! Rotating daily prayers...');
-    const today = getToday();
-    if (lastRotationDate !== today) {
-      rotateDailyPrayers();
-    }
-  }, [lastRotationDate, prayerRequests, rotateDailyPrayers]));
-
   const loadData = async () => {
     try {
       const [requestsData, logsData, dailyData, rotationData] = await Promise.all([
@@ -349,6 +340,15 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       console.error('Failed to reload prayers:', error);
     }
   }, []);
+
+  // Handle date changes (midnight rollover)
+  useDateChange(() => {
+    console.log('📅 Date changed! Rotating daily prayers...');
+    const today = getToday();
+    if (lastRotationDate !== today) {
+      rotateDailyPrayers();
+    }
+  });
 
   return useMemo(
     () => ({
