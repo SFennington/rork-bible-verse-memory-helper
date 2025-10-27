@@ -342,13 +342,14 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
   }, []);
 
   // Handle date changes (midnight rollover)
-  useDateChange(() => {
-    console.log('📅 Date changed! Rotating daily prayers...');
-    const today = getToday();
-    if (lastRotationDate !== today) {
-      rotateDailyPrayers();
-    }
-  });
+  // Temporarily disabled to debug navigation issues
+  // useDateChange(() => {
+  //   console.log('📅 Date changed! Rotating daily prayers...');
+  //   const today = getToday();
+  //   if (lastRotationDate !== today) {
+  //     rotateDailyPrayers();
+  //   }
+  // });
 
   return useMemo(
     () => ({

@@ -664,10 +664,11 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   }, []);
 
   // Handle date changes (midnight rollover)
-  useDateChange(() => {
-    console.log('📅 Date changed! Resetting daily verse progress...');
-    resetDailyProgress();
-  });
+  // Temporarily disabled to debug navigation issues
+  // useDateChange(() => {
+  //   console.log('📅 Date changed! Resetting daily verse progress...');
+  //   resetDailyProgress();
+  // });
 
   const getVerseProgress = useCallback((verseId: string): VerseProgress | undefined => {
     return progress[verseId];
