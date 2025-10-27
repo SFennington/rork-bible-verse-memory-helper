@@ -30,6 +30,7 @@ export default function PrayerDetailScreen() {
     logPrayer,
     markAsAnswered,
     deletePrayerRequest,
+    prayedTodayIds,
   } = usePrayer();
   const { theme } = useTheme();
 
@@ -54,6 +55,7 @@ export default function PrayerDetailScreen() {
   const category = PRAYER_CATEGORIES.find(c => c.name === prayer.category);
   const totalPrayed = logs.length;
   const lastPrayed = logs.length > 0 ? new Date(logs[0].prayedAt).toLocaleDateString() : 'Never';
+  const prayedToday = prayedTodayIds.has(id as string);
 
   const handleDelete = () => {
     Alert.alert(
@@ -79,6 +81,10 @@ export default function PrayerDetailScreen() {
   };
 
   const handlePray = async () => {
+    if (prayedToday) {
+      // Already prayed today, don't log again
+      return;
+    }
     await logPrayer(prayer.id);
     // Prayer logged silently - no popup needed
   };
@@ -179,19 +185,30 @@ export default function PrayerDetailScreen() {
         {prayer.status === 'active' && (
           <View style={styles.actionButtons}>
             <TouchableOpacity
-              style={[styles.actionButton, styles.prayButton]}
+              style={[
+                styles.actionButton,
+                prayedToday ? styles.prayedTodayButton : styles.prayButton
+              ]}
               onPress={handlePray}
-              activeOpacity={0.9}
+              activeOpacity={prayedToday ? 1 : 0.9}
+              disabled={prayedToday}
             >
-              <LinearGradient
-                colors={[category?.color || '#667eea', '#764ba2']}
-                style={styles.buttonGradient}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-              >
-                <HandHeart color="#fff" size={20} />
-                <Text style={styles.buttonText}>Pray Now</Text>
-              </LinearGradient>
+              {prayedToday ? (
+                <View style={styles.prayedTodayContent}>
+                  <CheckCircle2 color="#10b981" size={20} fill="#10b981" />
+                  <Text style={styles.prayedTodayText}>Prayed Today ✓</Text>
+                </View>
+              ) : (
+                <LinearGradient
+                  colors={[category?.color || '#667eea', '#764ba2']}
+                  style={styles.buttonGradient}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                >
+                  <HandHeart color="#fff" size={20} />
+                  <Text style={styles.buttonText}>Pray Now</Text>
+                </LinearGradient>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -351,6 +368,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+  },
+  prayedTodayButton: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    borderWidth: 2,
+    borderColor: '#10b981',
+  },
+  prayedTodayContent: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 18,
+  },
+  prayedTodayText: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#10b981',
   },
   answeredButton: {
     borderWidth: 2,
