@@ -20,7 +20,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useBibleVersion } from '@/contexts/BibleVersionContext';
 import { VerseCategory } from '@/types/verse';
 import { CATEGORIES } from '@/mocks/verses';
-import { fetchBibleVerse, fetchBibleChapter } from '@/services/bibleApi';
+import { fetchBibleVerse, fetchBibleChapter, getActualTranslation } from '@/services/bibleApi';
 import BibleVersePicker from '@/components/BibleVersePicker';
 
 type InputMode = 'single' | 'chapter';
@@ -260,7 +260,7 @@ export default function AddVerseScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
+            <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
             <Text style={[styles.label, { color: theme.text }]}>Bible Version</Text>
             <TouchableOpacity
               style={[styles.versionPicker, { backgroundColor: theme.background, borderColor: theme.border }]}
@@ -277,6 +277,14 @@ export default function AddVerseScreen() {
               </View>
               <ChevronDown color={theme.textSecondary} size={24} />
             </TouchableOpacity>
+            
+            {getActualTranslation(selectedVersion.id) !== selectedVersion.abbreviation && (
+              <View style={[styles.warningBox, { backgroundColor: theme.border }]}>
+                <Text style={[styles.warningText, { color: theme.textSecondary }]}>
+                  ℹ️ {selectedVersion.abbreviation} not available. Using {getActualTranslation(selectedVersion.id)} instead.
+                </Text>
+              </View>
+            )}
 
             <Text style={[styles.label, { color: theme.text }]}>Select {mode === 'single' ? 'Verse' : 'Chapter'}</Text>
             
@@ -310,7 +318,7 @@ export default function AddVerseScreen() {
             {isLoading && (
               <View style={styles.loadingContainer}>
                 <Text style={[styles.loadingText, { color: theme.textSecondary }]}>
-                  Fetching from {selectedVersion.abbreviation}...
+                  Fetching from {getActualTranslation(selectedVersion.id)}...
                 </Text>
               </View>
             )}
@@ -666,5 +674,14 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     marginLeft: 12,
+  },
+  warningBox: {
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  warningText: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

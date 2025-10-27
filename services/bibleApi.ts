@@ -20,6 +20,7 @@ export interface BibleApiVerse {
 
 /**
  * Map our version IDs to bible-api.com translation IDs
+ * NOTE: bible-api.com only supports KJV and WEB
  */
 const VERSION_MAP: Record<string, string> = {
   'kjv': 'kjv',
@@ -32,6 +33,16 @@ const VERSION_MAP: Record<string, string> = {
   'msg': 'web', // Use WEB as fallback
   'ehv': 'web', // Use WEB as fallback
 };
+
+/**
+ * Get the display name for the actual translation being used
+ */
+export function getActualTranslation(versionId: string): string {
+  const actualId = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
+  if (actualId === 'kjv') return 'KJV';
+  if (actualId === 'web') return 'WEB (World English Bible)';
+  return actualId.toUpperCase();
+}
 
 /**
  * Fetch a Bible verse from the API
