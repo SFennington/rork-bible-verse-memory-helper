@@ -1,8 +1,7 @@
 /**
  * Bible API Service
- * Uses bible-api.com for fetching Bible verses
- * Free, no authentication required
- * Note: Only supports KJV and WEB translations
+ * Uses GetBible.net API for fetching Bible verses
+ * Free, no authentication required, supports multiple translations
  */
 
 export interface BibleApiVerse {
@@ -21,20 +20,19 @@ export interface BibleApiVerse {
 }
 
 /**
- * Map our version IDs to bible-api.com translation codes
- * Note: bible-api.com only supports KJV and WEB
+ * Map our version IDs to GetBible translation codes
  */
 const VERSION_MAP: Record<string, string> = {
   'kjv': 'kjv',        // King James Version
-  'niv': 'web',        // Use WEB as fallback
-  'esv': 'web',        // Use WEB as fallback
-  'nkjv': 'kjv',       // Use KJV as close alternative
-  'nlt': 'web',        // Use WEB as fallback
-  'nasb': 'web',       // Use WEB as fallback
-  'csb': 'web',        // Use WEB as fallback
-  'msg': 'web',        // Use WEB as fallback
-  'amp': 'web',        // Use WEB as fallback
-  'tpt': 'web',        // Use WEB as fallback
+  'niv': 'niv',        // New International Version  
+  'esv': 'esv',        // English Standard Version (if not available, will fallback)
+  'nkjv': 'nkjv',      // New King James Version
+  'nlt': 'nlt',        // New Living Translation
+  'nasb': 'nasb',      // New American Standard Bible
+  'csb': 'csb',        // Christian Standard Bible (if not available, will fallback)
+  'msg': 'msg',        // The Message (if not available, will fallback)
+  'amp': 'amp',        // Amplified Bible
+  'tpt': 'tpt',        // The Passion Translation (if not available, will fallback)
   'ehv': 'kjv',        // Use KJV as fallback
 };
 
@@ -42,13 +40,6 @@ const VERSION_MAP: Record<string, string> = {
  * Get the display name for the actual translation being used
  */
 export function getActualTranslation(versionId: string): string {
-  const actualId = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
-  if (actualId === 'kjv') {
-    return versionId.toLowerCase() === 'kjv' || versionId.toLowerCase() === 'nkjv' ? versionId.toUpperCase() : `${versionId.toUpperCase()} (using KJV)`;
-  }
-  if (actualId === 'web') {
-    return `${versionId.toUpperCase()} (using WEB)`;
-  }
   return versionId.toUpperCase();
 }
 
@@ -65,11 +56,11 @@ export async function fetchBibleVerse(
   try {
     const translation = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
     
-    // Clean up the reference
-    const cleanReference = reference.trim().replace(/\s+/g, '%20');
+    // Clean up the reference for GetBible API
+    const cleanReference = reference.trim().replace(/\s+/g, '+');
     
-    // Construct API URL
-    const url = `https://bible-api.com/${cleanReference}?translation=${translation}`;
+    // Construct GetBible API URL
+    const url = `https://getbible.net/json?passage=${cleanReference}&version=${translation}`;
     
     console.log('Fetching verse:', url);
     
@@ -79,13 +70,30 @@ export async function fetchBibleVerse(
       throw new Error(`Failed to fetch verse: ${response.status} ${response.statusText}`);
     }
     
-    const data: BibleApiVerse = await response.json();
+    const rawText = await response.text();
     
-    // Return formatted data
+    // GetBible returns JSONP, need to strip the callback wrapper
+    const jsonText = rawText.replace(/^[^(]*\(/, '').replace(/\);?\s*$/, '');
+    const data = JSON.parse(jsonText);
+    
+    // GetBible returns data in book.chapter format
+    const bookData = data.book[0];
+    if (!bookData || !bookData.chapter) {
+      throw new Error('Invalid response from Bible API');
+    }
+    
+    // Extract verses
+    const verses = Object.values(bookData.chapter).map((v: any) => ({
+      verse: parseInt(v.verse_nr),
+      text: v.verse.trim(),
+    }));
+    
+    const text = verses.map((v: any) => v.text).join(' ');
+    
     return {
-      text: data.text.trim(),
-      reference: data.reference,
-      verses: data.verses,
+      text,
+      reference: bookData.book_name + ' ' + bookData.chapter_nr + ':' + verses.map((v: any) => v.verse).join('-'),
+      verses,
     };
   } catch (error) {
     console.error('Error fetching Bible verse:', error);
@@ -111,8 +119,8 @@ export async function fetchBibleChapter(
 ): Promise<{ verses: Array<{ verse: number; text: string; reference: string }> }> {
   try {
     const translation = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
-    const reference = `${book}%20${chapter}`;
-    const url = `https://bible-api.com/${reference}?translation=${translation}`;
+    const passage = `${book}+${chapter}`;
+    const url = `https://getbible.net/json?passage=${passage}&version=${translation}`;
     
     console.log('Fetching chapter:', url);
     
@@ -122,13 +130,22 @@ export async function fetchBibleChapter(
       throw new Error(`Failed to fetch chapter: ${response.status} ${response.statusText}`);
     }
     
-    const data: BibleApiVerse = await response.json();
+    const rawText = await response.text();
+    
+    // GetBible returns JSONP, need to strip the callback wrapper
+    const jsonText = rawText.replace(/^[^(]*\(/, '').replace(/\);?\s*$/, '');
+    const data = JSON.parse(jsonText);
+    
+    const bookData = data.book[0];
+    if (!bookData || !bookData.chapter) {
+      throw new Error('Invalid response from Bible API');
+    }
     
     // Format verses
-    const verses = data.verses.map(v => ({
-      verse: v.verse,
-      text: v.text.trim(),
-      reference: `${v.book_name} ${v.chapter}:${v.verse}`,
+    const verses = Object.values(bookData.chapter).map((v: any) => ({
+      verse: parseInt(v.verse_nr),
+      text: v.verse.trim(),
+      reference: `${bookData.book_name} ${bookData.chapter_nr}:${v.verse_nr}`,
     }));
     
     return { verses };
