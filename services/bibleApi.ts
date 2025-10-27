@@ -1,7 +1,12 @@
 /**
  * Bible API Service
- * Uses bible-api.com for fetching Bible verses
+ * Uses API.Bible (scripture.api.bible) for fetching Bible verses
+ * Supports 2,500+ Bible versions
  */
+
+// API.Bible Key - Get your own at https://scripture.api.bible
+const API_BIBLE_KEY = 'a91be2ec7ed5f7cf61c0f60e5331be8f';
+const API_BIBLE_BASE = 'https://api.scripture.api.bible/v1';
 
 export interface BibleApiVerse {
   reference: string;
@@ -19,29 +24,55 @@ export interface BibleApiVerse {
 }
 
 /**
- * Map our version IDs to bible-api.com translation IDs
- * NOTE: bible-api.com only supports KJV and WEB
+ * Map our version IDs to API.Bible translation IDs
  */
 const VERSION_MAP: Record<string, string> = {
-  'kjv': 'kjv',
-  'niv': 'web', // bible-api.com doesn't have NIV, use WEB as fallback
-  'esv': 'web', // bible-api.com doesn't have ESV, use WEB as fallback
-  'nkjv': 'kjv', // Use KJV as fallback
-  'nlt': 'web', // Use WEB as fallback
-  'nasb': 'web', // Use WEB as fallback
-  'csb': 'web', // Use WEB as fallback
-  'msg': 'web', // Use WEB as fallback
-  'ehv': 'web', // Use WEB as fallback
+  'kjv': 'de4e12af7f28f599-02', // King James Version
+  'niv': '78a9f6124f344018-01', // New International Version
+  'esv': 'f421fe261da7624f-01', // English Standard Version
+  'nkjv': '65eec8e0b60e656b-01', // New King James Version
+  'nlt': '6bab4d6c61b31b80-01', // New Living Translation
+  'nasb': '78a9f6124f344018-02', // New American Standard Bible
+  'csb': 'c315fa9f71d4af3a-01', // Christian Standard Bible
+  'msg': '5c0562691b7f7cee-01', // The Message
+  'ehv': 'de4e12af7f28f599-02', // Use KJV as fallback for EHV (not available)
 };
 
 /**
  * Get the display name for the actual translation being used
  */
 export function getActualTranslation(versionId: string): string {
-  const actualId = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
-  if (actualId === 'kjv') return 'KJV';
-  if (actualId === 'web') return 'WEB (World English Bible)';
-  return actualId.toUpperCase();
+  const versionUpper = versionId.toUpperCase();
+  if (versionId === 'ehv' && VERSION_MAP[versionId] === VERSION_MAP['kjv']) {
+    return 'KJV (EHV not available)';
+  }
+  return versionUpper;
+}
+
+/**
+ * Normalize book name for API.Bible
+ */
+function normalizeBookName(reference: string): string {
+  const bookAbbreviations: Record<string, string> = {
+    'ps': 'PSA', 'psalms': 'PSA', 'psalm': 'PSA',
+    'gen': 'GEN', 'genesis': 'GEN',
+    'exo': 'EXO', 'exodus': 'EXO',
+    'jhn': 'JHN', 'john': 'JHN',
+    'mat': 'MAT', 'matthew': 'MAT',
+    'mrk': 'MRK', 'mark': 'MRK',
+    'luk': 'LUK', 'luke': 'LUK',
+    'rom': 'ROM', 'romans': 'ROM',
+  };
+  
+  const parts = reference.split(/\s+/);
+  const bookPart = parts[0].toLowerCase();
+  const abbrev = bookAbbreviations[bookPart];
+  
+  if (abbrev) {
+    return reference.replace(parts[0], abbrev);
+  }
+  
+  return reference.toUpperCase();
 }
 
 /**
@@ -55,30 +86,38 @@ export async function fetchBibleVerse(
   versionId: string = 'kjv'
 ): Promise<{ text: string; reference: string; verses: any[] }> {
   try {
-    // Clean up the reference
-    const cleanReference = reference.trim().replace(/\s+/g, '%20');
+    // Map version to API.Bible translation ID
+    const bibleId = VERSION_MAP[versionId.toLowerCase()] || VERSION_MAP['kjv'];
     
-    // Map version to API translation
-    const translationId = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
+    // Normalize the reference for API.Bible
+    const normalizedRef = normalizeBookName(reference.trim()).replace(/\s+/g, '.');
     
-    // Construct API URL
-    const url = `https://bible-api.com/${cleanReference}?translation=${translationId}`;
+    // Construct API.Bible URL
+    const url = `${API_BIBLE_BASE}/bibles/${bibleId}/verses/${normalizedRef}?content-type=text&include-notes=false&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false&include-verse-spans=false`;
     
-    console.log('Fetching verse:', url);
+    console.log('Fetching verse from API.Bible:', url);
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'api-key': API_BIBLE_KEY,
+      },
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch verse: ${response.status} ${response.statusText}`);
     }
     
-    const data: BibleApiVerse = await response.json();
+    const data = await response.json();
+    
+    // API.Bible returns data in a different format
+    const verseData = data.data;
+    const text = verseData.content.replace(/[\[\]]/g, '').trim(); // Remove verse markers
     
     // Return formatted data
     return {
-      text: data.text.trim(),
-      reference: data.reference,
-      verses: data.verses,
+      text: text,
+      reference: verseData.reference,
+      verses: [{ text: text, verse: 1 }],
     };
   } catch (error) {
     console.error('Error fetching Bible verse:', error);
@@ -103,26 +142,49 @@ export async function fetchBibleChapter(
   versionId: string = 'kjv'
 ): Promise<{ verses: Array<{ verse: number; text: string; reference: string }> }> {
   try {
-    const reference = `${book}%20${chapter}`;
-    const translationId = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
-    const url = `https://bible-api.com/${reference}?translation=${translationId}`;
+    const bibleId = VERSION_MAP[versionId.toLowerCase()] || VERSION_MAP['kjv'];
+    const reference = `${book} ${chapter}`;
+    const normalizedRef = normalizeBookName(reference).replace(/\s+/g, '.');
     
-    console.log('Fetching chapter:', url);
+    const url = `${API_BIBLE_BASE}/bibles/${bibleId}/chapters/${normalizedRef}?content-type=text&include-notes=false&include-titles=false&include-chapter-numbers=false&include-verse-numbers=true&include-verse-spans=false`;
     
-    const response = await fetch(url);
+    console.log('Fetching chapter from API.Bible:', url);
+    
+    const response = await fetch(url, {
+      headers: {
+        'api-key': API_BIBLE_KEY,
+      },
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch chapter: ${response.status} ${response.statusText}`);
     }
     
-    const data: BibleApiVerse = await response.json();
+    const data = await response.json();
+    const chapterData = data.data;
     
-    // Format verses
-    const verses = data.verses.map(v => ({
-      verse: v.verse,
-      text: v.text.trim(),
-      reference: `${v.book_name} ${v.chapter}:${v.verse}`,
-    }));
+    // API.Bible returns chapter content with verse markers like [1], [2], etc.
+    // Split by verse numbers to get individual verses
+    const content = chapterData.content;
+    const verseMatches = content.match(/\[(\d+)\]\s*([^\[]+)/g);
+    
+    if (!verseMatches) {
+      throw new Error('Could not parse chapter verses');
+    }
+    
+    const verses = verseMatches.map((match: string) => {
+      const verseMatch = match.match(/\[(\d+)\]\s*(.+)/);
+      if (!verseMatch) return null;
+      
+      const verseNum = parseInt(verseMatch[1]);
+      const text = verseMatch[2].trim();
+      
+      return {
+        verse: verseNum,
+        text: text,
+        reference: `${book} ${chapter}:${verseNum}`,
+      };
+    }).filter((v): v is { verse: number; text: string; reference: string } => v !== null);
     
     return { verses };
   } catch (error) {
