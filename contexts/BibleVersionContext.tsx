@@ -19,6 +19,8 @@ export const BIBLE_VERSIONS: BibleVersion[] = [
   { id: 'nlt', name: 'New Living Translation', abbreviation: 'NLT' },
   { id: 'csb', name: 'Christian Standard Bible', abbreviation: 'CSB' },
   { id: 'msg', name: 'The Message', abbreviation: 'MSG' },
+  { id: 'amp', name: 'Amplified Bible', abbreviation: 'AMP' },
+  { id: 'tpt', name: 'The Passion Translation', abbreviation: 'TPT' },
   { id: 'ehv', name: 'English Heritage Version', abbreviation: 'EHV' },
 ];
 
