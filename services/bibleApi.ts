@@ -64,7 +64,12 @@ export async function fetchBibleVerse(
     
     console.log('Fetching verse:', url);
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'HeartScript/1.0',
+        'Accept': 'application/json',
+      },
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch verse: ${response.status} ${response.statusText}`);
@@ -124,7 +129,12 @@ export async function fetchBibleChapter(
     
     console.log('Fetching chapter:', url);
     
-    const response = await fetch(url);
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'HeartScript/1.0',
+        'Accept': 'application/json',
+      },
+    });
     
     if (!response.ok) {
       throw new Error(`Failed to fetch chapter: ${response.status} ${response.statusText}`);
