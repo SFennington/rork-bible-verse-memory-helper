@@ -47,8 +47,21 @@ export default function FillBlankGameScreen() {
     // Keep original words WITH punctuation for display
     // Split on whitespace and filter out empty strings
     const displayWords = verse.text.split(/\s+/).filter(word => word.trim().length > 0);
-    // Strip punctuation for comparison
-    const cleanWords = displayWords.map(word => stripPunctuation(word)).filter(word => word.length > 0);
+    
+    // Create mapping between display indices and clean word indices
+    // Also strip punctuation for comparison
+    const cleanWords: string[] = [];
+    const displayToCleanIndex: number[] = []; // Maps displayWords index to cleanWords index
+    
+    displayWords.forEach((word, displayIdx) => {
+      const cleanWord = stripPunctuation(word);
+      if (cleanWord.length > 0) {
+        displayToCleanIndex[displayIdx] = cleanWords.length;
+        cleanWords.push(cleanWord);
+      } else {
+        displayToCleanIndex[displayIdx] = -1; // Mark as not a valid word
+      }
+    });
     
     let blankPercentage = 0.3;
     let extraOptionsCount = 0;
@@ -103,7 +116,7 @@ export default function FillBlankGameScreen() {
     
     const options = [...correctWords, ...distractorWords].sort(() => Math.random() - 0.5);
 
-    return { displayWords, cleanWords, blanks, options };
+    return { displayWords, cleanWords, blanks, options, displayToCleanIndex };
   }, [verse, difficultyLevel]);
 
   if (!verse || !gameData) {
@@ -155,11 +168,11 @@ export default function FillBlankGameScreen() {
   const handleCheck = () => {
     setShowResult(true);
     const isCorrect = gameData.blanks.every(
-      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()
+      (cleanWordIdx, blankPosition) => (selectedWords[blankPosition] || '').toLowerCase() === gameData.cleanWords[cleanWordIdx].toLowerCase()
     );
 
     const correctBlankCount = gameData.blanks.filter(
-      (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()
+      (cleanWordIdx, blankPosition) => (selectedWords[blankPosition] || '').toLowerCase() === gameData.cleanWords[cleanWordIdx].toLowerCase()
     ).length;
     const accuracy = Math.round((correctBlankCount / gameData.blanks.length) * 100);
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
@@ -201,10 +214,10 @@ export default function FillBlankGameScreen() {
     } else {
       // Only clear incorrect answers, keep correct ones
       const newSelectedWords: Record<number, string> = {};
-      gameData.blanks.forEach((blankIdx, i) => {
-        if ((selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()) {
+      gameData.blanks.forEach((cleanWordIdx, blankPosition) => {
+        if ((selectedWords[blankPosition] || '').toLowerCase() === gameData.cleanWords[cleanWordIdx].toLowerCase()) {
           // Keep correct answer
-          newSelectedWords[i] = selectedWords[i];
+          newSelectedWords[blankPosition] = selectedWords[blankPosition];
         }
       });
       setSelectedWords(newSelectedWords);
@@ -216,9 +229,9 @@ export default function FillBlankGameScreen() {
     router.push('/');
   };
 
-  const isComplete = gameData.blanks.every((_, i) => selectedWords[i]);
+  const isComplete = gameData.blanks.every((_, blankPosition) => selectedWords[blankPosition]);
   const isCorrect = showResult && gameData.blanks.every(
-    (blankIdx, i) => (selectedWords[i] || '').toLowerCase() === gameData.cleanWords[blankIdx].toLowerCase()
+    (cleanWordIdx, blankPosition) => (selectedWords[blankPosition] || '').toLowerCase() === gameData.cleanWords[cleanWordIdx].toLowerCase()
   );
 
   return (
@@ -263,18 +276,29 @@ export default function FillBlankGameScreen() {
           <View style={[styles.verseCard, { backgroundColor: theme.cardBackground }]}>
             <Text style={[styles.verseReference, { color: theme.text }]}>{verse.reference}</Text>
             <View style={styles.verseTextContainer}>
-              {gameData.displayWords.map((word, index) => {
-                const blankPosition = gameData.blanks.indexOf(index);
+              {gameData.displayWords.map((word, displayIndex) => {
+                const cleanIndex = gameData.displayToCleanIndex[displayIndex];
+                
+                // Skip if this is not a valid word (punctuation only)
+                if (cleanIndex === -1) {
+                  return (
+                    <Text key={displayIndex} style={[styles.wordText, { color: theme.text }]}>
+                      {word}{' '}
+                    </Text>
+                  );
+                }
+                
+                const blankPosition = gameData.blanks.indexOf(cleanIndex);
                 const isBlank = blankPosition !== -1;
 
                 if (isBlank) {
                   const selectedWord = selectedWords[blankPosition];
-                  const correctWord = gameData.cleanWords[index];
+                  const correctWord = gameData.cleanWords[cleanIndex];
                   const isWrong = showResult && (selectedWord || '').toLowerCase() !== correctWord.toLowerCase();
 
                   return (
                     <Animated.View
-                      key={index}
+                      key={displayIndex}
                       style={[
                         styles.blankContainer,
                         { transform: [{ scale: scaleAnim }] },
@@ -316,7 +340,7 @@ export default function FillBlankGameScreen() {
                 }
 
                 return (
-                  <Text key={index} style={[styles.wordText, { color: theme.text }]}>
+                  <Text key={displayIndex} style={[styles.wordText, { color: theme.text }]}>
                     {word}{' '}
                   </Text>
                 );
