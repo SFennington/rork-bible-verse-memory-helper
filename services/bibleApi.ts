@@ -30,6 +30,7 @@ const VERSION_MAP: Record<string, string> = {
   'nasb': 'web', // Use WEB as fallback
   'csb': 'web', // Use WEB as fallback
   'msg': 'web', // Use WEB as fallback
+  'ehv': 'web', // Use WEB as fallback
 };
 
 /**

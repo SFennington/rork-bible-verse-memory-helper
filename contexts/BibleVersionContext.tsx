@@ -19,6 +19,7 @@ export const BIBLE_VERSIONS: BibleVersion[] = [
   { id: 'nlt', name: 'New Living Translation', abbreviation: 'NLT' },
   { id: 'csb', name: 'Christian Standard Bible', abbreviation: 'CSB' },
   { id: 'msg', name: 'The Message', abbreviation: 'MSG' },
+  { id: 'ehv', name: 'English Heritage Version', abbreviation: 'EHV' },
 ];
 
 export const [BibleVersionProvider, useBibleVersion] = createContextHook(() => {
