@@ -3,17 +3,15 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PrayerRequest, PrayerLog, PrayerStats, PrayerCategory, PrayerStatus } from '@/types/prayer';
 import { EXAMPLE_PRAYERS } from '@/mocks/prayers';
+import { getDateString, calculateStreak } from '@/utils/dateUtils';
+import { useDateChange } from '@/hooks/useDateChange';
 
 const PRAYER_REQUESTS_KEY = 'prayer_requests';
 const PRAYER_LOGS_KEY = 'prayer_logs';
 const DAILY_PRAYERS_KEY = 'daily_prayers';
 const LAST_ROTATION_DATE_KEY = 'last_rotation_date';
 
-const getDateString = (date: Date) => {
-  return date.toISOString().split('T')[0];
-};
-
-const getToday = () => getDateString(new Date());
+const getToday = () => getDateString();
 
 export const [PrayerProvider, usePrayer] = createContextHook(() => {
   const [prayerRequests, setPrayerRequests] = useState<PrayerRequest[]>([]);
@@ -33,6 +31,15 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
       rotateDailyPrayers();
     }
   }, [lastRotationDate, prayerRequests]);
+
+  // Handle date changes (midnight rollover)
+  useDateChange(useCallback(() => {
+    console.log('📅 Date changed! Rotating daily prayers...');
+    const today = getToday();
+    if (lastRotationDate !== today) {
+      rotateDailyPrayers();
+    }
+  }, [lastRotationDate, prayerRequests, rotateDailyPrayers]));
 
   const loadData = async () => {
     try {
@@ -294,26 +301,31 @@ export const [PrayerProvider, usePrayer] = createContextHook(() => {
 
     const totalPrayerTime = prayerLogs.reduce((sum, log) => sum + (log.duration || 0), 0);
 
-    // Calculate streak
-    const sortedLogs = [...prayerLogs].sort(
-      (a, b) => new Date(b.prayedAt).getTime() - new Date(a.prayedAt).getTime()
-    );
+    // Calculate streak using utility function
+    const uniquePrayerDates = Array.from(
+      new Set(prayerLogs.map(log => getDateString(new Date(log.prayedAt))))
+    ).sort().reverse(); // Sort descending (most recent first)
 
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-    const logDates = new Set(
-      sortedLogs.map(log => new Date(log.prayedAt).toDateString())
-    );
-
-    let checkDate = new Date();
-    while (logDates.has(checkDate.toDateString())) {
-      currentStreak++;
-      checkDate.setDate(checkDate.getDate() - 1);
+    const currentStreak = calculateStreak(uniquePrayerDates);
+    
+    // Calculate longest streak by checking all possible streaks
+    let longestStreak = currentStreak;
+    let tempStreak = 1;
+    
+    if (uniquePrayerDates.length > 0) {
+      for (let i = 0; i < uniquePrayerDates.length - 1; i++) {
+        const current = new Date(uniquePrayerDates[i]);
+        const next = new Date(uniquePrayerDates[i + 1]);
+        const daysDiff = Math.round((current.getTime() - next.getTime()) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff === 1) {
+          tempStreak++;
+          longestStreak = Math.max(longestStreak, tempStreak);
+        } else {
+          tempStreak = 1;
+        }
+      }
     }
-
-    // Calculate longest streak (simplified)
-    longestStreak = Math.max(currentStreak, logDates.size);
 
     return {
       totalPrayers: prayerLogs.length,

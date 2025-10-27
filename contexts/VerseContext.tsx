@@ -3,25 +3,13 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BibleVerse, VerseProgress, GameType, VerseCategory, DifficultyLevel, DIFFICULTY_LEVELS, GameSession, Chapter, CHAPTER_SINGLE_VERSE_GAMES, CHAPTER_MULTI_VERSE_GAMES, ChapterProgress } from '@/types/verse';
 import { BIBLE_VERSES } from '@/mocks/verses';
+import { isToday, getDateString, isSameDay, shouldBreakStreak, getYesterday } from '@/utils/dateUtils';
+import { useDateChange } from '@/hooks/useDateChange';
 
 const STORAGE_KEY = 'verse_progress';
 const CUSTOM_VERSES_KEY = 'custom_verses';
 const CHAPTERS_KEY = 'chapters';
 const ARCHIVED_KEY = 'archived_verses';
-
-function isToday(dateString: string): boolean {
-  const date = new Date(dateString);
-  const today = new Date();
-  return date.toDateString() === today.toDateString();
-}
-
-function getDateString(date: Date): string {
-  return date.toISOString().split('T')[0];
-}
-
-function isSameDay(date1: string, date2: string): boolean {
-  return getDateString(new Date(date1)) === getDateString(new Date(date2));
-}
 
 export const [VerseProvider, useVerses] = createContextHook(() => {
   const [progress, setProgress] = useState<Record<string, VerseProgress>>({});
@@ -36,6 +24,12 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     loadChapters();
     loadArchivedProgress();
   }, []);
+
+  // Handle date changes (midnight rollover)
+  useDateChange(useCallback(() => {
+    console.log('📅 Date changed! Resetting daily verse progress...');
+    resetDailyProgress();
+  }, [progress]));
 
   const loadProgress = async () => {
     try {
@@ -627,23 +621,46 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
   const resetDailyProgress = useCallback(() => {
     const updatedProgress = { ...progress };
     let hasChanges = false;
+    const today = getDateString();
+    const yesterday = getYesterday();
 
     Object.keys(updatedProgress).forEach(verseId => {
       const verseProgress = updatedProgress[verseId];
-      const requiredGames = verseProgress.difficultyLevel === 5 ? 1 : 3;
-      if (verseProgress.completedGamesToday >= requiredGames && !isToday(verseProgress.lastReviewedAt)) {
-        const newDifficultyLevel = Math.min(5, verseProgress.difficultyLevel + 1) as DifficultyLevel;
+      
+      // Reset completedGamesToday if it's a new day
+      if (!isToday(verseProgress.lastReviewedAt)) {
+        // Check if streak should be broken
+        let newStreakDays = verseProgress.streakDays;
+        let newLastStreakDate = verseProgress.lastStreakDate;
+        
+        if (shouldBreakStreak(verseProgress.lastStreakDate)) {
+          console.log(`💔 Breaking streak for verse ${verseId} - last activity: ${verseProgress.lastStreakDate}`);
+          newStreakDays = 0;
+          newLastStreakDate = undefined;
+        }
+        
+        // Determine the correct games
+        let newGames: GameType[];
+        if (verseProgress.isChapter && verseProgress.chapterProgress) {
+          const unlockedCount = verseProgress.chapterProgress.unlockedVerses.length;
+          newGames = unlockedCount === 1 ? CHAPTER_SINGLE_VERSE_GAMES : CHAPTER_MULTI_VERSE_GAMES;
+        } else {
+          newGames = DIFFICULTY_LEVELS[verseProgress.difficultyLevel];
+        }
+        
         updatedProgress[verseId] = {
           ...verseProgress,
-          difficultyLevel: newDifficultyLevel,
-          currentDayGames: DIFFICULTY_LEVELS[newDifficultyLevel],
           completedGamesToday: 0,
+          currentDayGames: newGames,
+          streakDays: newStreakDays,
+          lastStreakDate: newLastStreakDate,
         };
         hasChanges = true;
       }
     });
 
     if (hasChanges) {
+      console.log(`✅ Reset daily progress for ${Object.keys(updatedProgress).length} verses`);
       saveProgress(updatedProgress);
     }
   }, [progress]);
