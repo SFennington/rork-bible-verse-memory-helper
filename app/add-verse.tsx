@@ -40,6 +40,11 @@ export default function AddVerseScreen() {
   const [selectedVersion, setSelectedVersion] = useState(globalVersion);
   const categoryScrollRef = useRef<ScrollView>(null);
   
+  // Sync local version with global version when it changes
+  React.useEffect(() => {
+    setSelectedVersion(globalVersion);
+  }, [globalVersion]);
+  
   // Track selected verse details to preserve picker state
   const [selectedBook, setSelectedBook] = useState<string | undefined>(undefined);
   const [selectedChapter, setSelectedChapter] = useState<number | undefined>(undefined);
