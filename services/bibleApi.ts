@@ -1,7 +1,10 @@
 /**
  * Bible API Service
- * Uses GetBible.net API for fetching Bible verses
- * Free, no authentication required, supports multiple translations
+ * Uses bible-api.com for fetching Bible verses
+ * Free, no authentication required
+ * 
+ * LIMITATION: bible-api.com only supports KJV and WEB translations.
+ * Other versions will use the closest available translation.
  */
 
 export interface BibleApiVerse {
@@ -20,27 +23,37 @@ export interface BibleApiVerse {
 }
 
 /**
- * Map our version IDs to GetBible translation codes
+ * Map our version IDs to bible-api.com translation codes
+ * bible-api.com only has KJV and WEB available
  */
 const VERSION_MAP: Record<string, string> = {
-  'kjv': 'kjv',        // King James Version
-  'niv': 'niv',        // New International Version  
-  'esv': 'esv',        // English Standard Version (if not available, will fallback)
-  'nkjv': 'nkjv',      // New King James Version
-  'nlt': 'nlt',        // New Living Translation
-  'nasb': 'nasb',      // New American Standard Bible
-  'csb': 'csb',        // Christian Standard Bible (if not available, will fallback)
-  'msg': 'msg',        // The Message (if not available, will fallback)
-  'amp': 'amp',        // Amplified Bible
-  'tpt': 'tpt',        // The Passion Translation (if not available, will fallback)
-  'ehv': 'kjv',        // Use KJV as fallback
+  'kjv': 'kjv',        // King James Version ✓ Available
+  'nkjv': 'kjv',       // Maps to KJV (similar style)
+  'nasb': 'web',       // Maps to WEB
+  'niv': 'web',        // Maps to WEB
+  'esv': 'web',        // Maps to WEB
+  'nlt': 'web',        // Maps to WEB
+  'csb': 'web',        // Maps to WEB
+  'msg': 'web',        // Maps to WEB
+  'amp': 'web',        // Maps to WEB
+  'tpt': 'web',        // Maps to WEB
+  'ehv': 'kjv',        // Maps to KJV
 };
 
 /**
  * Get the display name for the actual translation being used
  */
 export function getActualTranslation(versionId: string): string {
-  return versionId.toUpperCase();
+  const actualId = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
+  const requestedAbbr = versionId.toUpperCase();
+  
+  if (actualId === 'kjv') {
+    return requestedAbbr === 'KJV' ? 'KJV' : `${requestedAbbr} (using KJV)`;
+  }
+  if (actualId === 'web') {
+    return `${requestedAbbr} (using WEB)`;
+  }
+  return requestedAbbr;
 }
 
 /**
@@ -56,49 +69,27 @@ export async function fetchBibleVerse(
   try {
     const translation = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
     
-    // Clean up the reference for GetBible API
-    const cleanReference = reference.trim().replace(/\s+/g, '+');
+    // Clean up the reference for bible-api.com
+    const cleanReference = reference.trim().replace(/\s+/g, '%20');
     
-    // Construct GetBible API URL
-    const url = `https://getbible.net/json?passage=${cleanReference}&version=${translation}`;
+    // Construct bible-api.com URL
+    const url = `https://bible-api.com/${cleanReference}?translation=${translation}`;
     
     console.log('Fetching verse:', url);
     
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'HeartScript/1.0',
-        'Accept': 'application/json',
-      },
-    });
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch verse: ${response.status} ${response.statusText}`);
     }
     
-    const rawText = await response.text();
+    const data: BibleApiVerse = await response.json();
     
-    // GetBible returns JSONP, need to strip the callback wrapper
-    const jsonText = rawText.replace(/^[^(]*\(/, '').replace(/\);?\s*$/, '');
-    const data = JSON.parse(jsonText);
-    
-    // GetBible returns data in book.chapter format
-    const bookData = data.book[0];
-    if (!bookData || !bookData.chapter) {
-      throw new Error('Invalid response from Bible API');
-    }
-    
-    // Extract verses
-    const verses = Object.values(bookData.chapter).map((v: any) => ({
-      verse: parseInt(v.verse_nr),
-      text: v.verse.trim(),
-    }));
-    
-    const text = verses.map((v: any) => v.text).join(' ');
-    
+    // Return formatted data
     return {
-      text,
-      reference: bookData.book_name + ' ' + bookData.chapter_nr + ':' + verses.map((v: any) => v.verse).join('-'),
-      verses,
+      text: data.text.trim(),
+      reference: data.reference,
+      verses: data.verses,
     };
   } catch (error) {
     console.error('Error fetching Bible verse:', error);
@@ -124,38 +115,24 @@ export async function fetchBibleChapter(
 ): Promise<{ verses: Array<{ verse: number; text: string; reference: string }> }> {
   try {
     const translation = VERSION_MAP[versionId.toLowerCase()] || 'kjv';
-    const passage = `${book}+${chapter}`;
-    const url = `https://getbible.net/json?passage=${passage}&version=${translation}`;
+    const reference = `${book}%20${chapter}`;
+    const url = `https://bible-api.com/${reference}?translation=${translation}`;
     
     console.log('Fetching chapter:', url);
     
-    const response = await fetch(url, {
-      headers: {
-        'User-Agent': 'HeartScript/1.0',
-        'Accept': 'application/json',
-      },
-    });
+    const response = await fetch(url);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch chapter: ${response.status} ${response.statusText}`);
     }
     
-    const rawText = await response.text();
-    
-    // GetBible returns JSONP, need to strip the callback wrapper
-    const jsonText = rawText.replace(/^[^(]*\(/, '').replace(/\);?\s*$/, '');
-    const data = JSON.parse(jsonText);
-    
-    const bookData = data.book[0];
-    if (!bookData || !bookData.chapter) {
-      throw new Error('Invalid response from Bible API');
-    }
+    const data: BibleApiVerse = await response.json();
     
     // Format verses
-    const verses = Object.values(bookData.chapter).map((v: any) => ({
-      verse: parseInt(v.verse_nr),
-      text: v.verse.trim(),
-      reference: `${bookData.book_name} ${bookData.chapter_nr}:${v.verse_nr}`,
+    const verses = data.verses.map(v => ({
+      verse: v.verse,
+      text: v.text.trim(),
+      reference: `${v.book_name} ${v.chapter}:${v.verse}`,
     }));
     
     return { verses };

@@ -20,7 +20,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useBibleVersion } from '@/contexts/BibleVersionContext';
 import { VerseCategory } from '@/types/verse';
 import { CATEGORIES } from '@/mocks/verses';
-import { fetchBibleVerse, fetchBibleChapter } from '@/services/bibleApi';
+import { fetchBibleVerse, fetchBibleChapter, getActualTranslation } from '@/services/bibleApi';
 import BibleVersePicker from '@/components/BibleVersePicker';
 
 type InputMode = 'single' | 'chapter';
@@ -277,6 +277,14 @@ export default function AddVerseScreen() {
               </View>
               <ChevronDown color={theme.textSecondary} size={24} />
             </TouchableOpacity>
+
+            {getActualTranslation(selectedVersion.id) !== selectedVersion.abbreviation && (
+              <View style={[styles.warningBox, { backgroundColor: theme.border + '40', borderColor: theme.border }]}>
+                <Text style={[styles.warningText, { color: theme.textSecondary }]}>
+                  ℹ️ {getActualTranslation(selectedVersion.id)} - Free API limitation
+                </Text>
+              </View>
+            )}
 
             <Text style={[styles.label, { color: theme.text }]}>Select {mode === 'single' ? 'Verse' : 'Chapter'}</Text>
             
@@ -666,5 +674,17 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     marginLeft: 12,
+  },
+  warningBox: {
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+  },
+  warningText: {
+    fontSize: 13,
+    lineHeight: 18,
+    textAlign: 'center' as const,
   },
 });
