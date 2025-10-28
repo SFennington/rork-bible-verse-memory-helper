@@ -280,11 +280,11 @@ export default function FillBlankGameScreen() {
                 onPress={() => {
                   // Auto-fill all correct answers
                   const correctAnswers: Record<number, string> = {};
-                  gameData.hiddenWordIndices.forEach((index) => {
-                    correctAnswers[index] = gameData.correctWords[index].toLowerCase();
+                  gameData.blanks.forEach((cleanWordIdx, blankPosition) => {
+                    correctAnswers[blankPosition] = gameData.cleanWords[cleanWordIdx];
                   });
-                  setUserAnswers(correctAnswers);
-                  setTimeout(() => handleSubmit(), 100);
+                  setSelectedWords(correctAnswers);
+                  setTimeout(() => handleCheck(), 100);
                 }}
                 activeOpacity={0.8}
               >
@@ -296,11 +296,11 @@ export default function FillBlankGameScreen() {
                 onPress={() => {
                   // Fill with wrong answers
                   const wrongAnswers: Record<number, string> = {};
-                  gameData.hiddenWordIndices.forEach((index) => {
-                    wrongAnswers[index] = 'wrong';
+                  gameData.blanks.forEach((_, blankPosition) => {
+                    wrongAnswers[blankPosition] = 'wrong';
                   });
-                  setUserAnswers(wrongAnswers);
-                  setTimeout(() => handleSubmit(), 100);
+                  setSelectedWords(wrongAnswers);
+                  setTimeout(() => handleCheck(), 100);
                 }}
                 activeOpacity={0.8}
               >
