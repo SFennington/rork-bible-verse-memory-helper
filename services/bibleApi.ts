@@ -55,10 +55,7 @@ const FALLBACK_VERSION_MAP: Record<string, string> = {
   'ehv': 'kjv',
 };
 
-// Default embedded API key for all users
-const DEFAULT_API_KEY = 'a91be2ec7ed5f7cf61c0f60e5331be8f';
-
-// Store custom API key (optional override)
+// Store custom API key
 let customApiKey: string | null = null;
 
 export function setGlobalApiKey(apiKey: string | null) {
@@ -69,18 +66,26 @@ export function getGlobalApiKey(): string | null {
   return customApiKey;
 }
 
-// Get the active API key (custom or default)
-function getActiveApiKey(): string {
-  return customApiKey || DEFAULT_API_KEY;
-}
-
 /**
  * Get the display name for the actual translation being used
- * All versions are now supported with embedded API key
  */
 export function getActualTranslation(versionId: string): string {
-  // All versions are supported with embedded default API key
-  return versionId.toUpperCase();
+  if (customApiKey) {
+    // With custom API key, all versions are supported
+    return versionId.toUpperCase();
+  }
+  
+  // Without custom API key, show fallback warnings
+  const fallbackId = FALLBACK_VERSION_MAP[versionId.toLowerCase()] || 'kjv';
+  const requestedAbbr = versionId.toUpperCase();
+  
+  if (fallbackId === 'kjv') {
+    return requestedAbbr === 'KJV' ? 'KJV' : `${requestedAbbr} (using KJV)`;
+  }
+  if (fallbackId === 'web') {
+    return `${requestedAbbr} (using WEB)`;
+  }
+  return requestedAbbr;
 }
 
 /**
@@ -94,8 +99,18 @@ export async function fetchBibleVerse(
   versionId: string = 'kjv'
 ): Promise<{ text: string; reference: string; verses: any[] }> {
   try {
-    // Always use API.Bible (we have embedded default key)
-    return await fetchFromApiBible(reference, versionId);
+    // Try API.Bible first if we have a custom API key
+    if (customApiKey) {
+      try {
+        return await fetchFromApiBible(reference, versionId);
+      } catch (apiError) {
+        console.warn('API.Bible failed, falling back to bible-api.com:', apiError);
+        // Fall through to fallback
+      }
+    }
+    
+    // Fallback to bible-api.com (free, no key required, but limited versions)
+    return await fetchFromBibleApiCom(reference, versionId);
   } catch (error) {
     console.error('Error fetching Bible verse:', error);
     throw new Error(
@@ -107,12 +122,16 @@ export async function fetchBibleVerse(
 }
 
 /**
- * Fetch from API.Bible (uses embedded default key or custom key)
+ * Fetch from API.Bible (requires custom API key)
  */
 async function fetchFromApiBible(
   reference: string,
   versionId: string
 ): Promise<{ text: string; reference: string; verses: any[] }> {
+  if (!customApiKey) {
+    throw new Error('API key required');
+  }
+  
   const bibleId = API_BIBLE_VERSION_MAP[versionId.toLowerCase()] || API_BIBLE_VERSION_MAP['kjv'];
   
   // Normalize reference for API.Bible (e.g., "John 3:16" -> "JHN.3.16")
@@ -124,7 +143,7 @@ async function fetchFromApiBible(
   
   const response = await fetch(url, {
     headers: {
-      'api-key': getActiveApiKey(),
+      'api-key': customApiKey,
     },
   });
   
