@@ -14,6 +14,7 @@ import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
 import { BibleVerse } from '@/types/verse';
+import { isDebugEnabled } from '@/constants/debug';
 
 export default function VerseOrderGameScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -176,6 +177,34 @@ export default function VerseOrderGameScreen() {
               {chapter.reference} ({unlockedVerses.length} verse{unlockedVerses.length !== 1 ? 's' : ''})
             </Text>
           </View>
+
+          {/* Debug Buttons */}
+          {isDebugEnabled() && !showResult && (
+            <View style={styles.debugButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.debugButton, styles.debugButtonCorrect]}
+                onPress={async () => {
+                  setOrderedVerses(unlockedVerses);
+                  setTimeout(() => handleCheck(), 100);
+                }}
+                activeOpacity={0.8}
+              >
+                <CheckCircle2 color="#fff" size={18} />
+                <Text style={styles.debugButtonText}>Quick Correct</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.debugButton, styles.debugButtonIncorrect]}
+                onPress={() => {
+                  setOrderedVerses([...unlockedVerses].reverse());
+                  setTimeout(() => handleCheck(), 100);
+                }}
+                activeOpacity={0.8}
+              >
+                <XCircle color="#fff" size={18} />
+                <Text style={styles.debugButtonText}>Quick Incorrect</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Ordered verses area */}
           <View style={[styles.orderedSection, { backgroundColor: theme.cardBackground }]}>
@@ -488,6 +517,32 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 16,
     fontWeight: '700' as const,
+  },
+  debugButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  debugButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  debugButtonCorrect: {
+    backgroundColor: '#10b981',
+  },
+  debugButtonIncorrect: {
+    backgroundColor: '#ef4444',
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
 });
 
