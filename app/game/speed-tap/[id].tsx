@@ -263,6 +263,41 @@ export default function SpeedTapGameScreen() {
                 </View>
               </View>
 
+              {/* Tapped Words History */}
+              {currentWordIndex > 0 && (
+                <View style={[styles.historyCard, { backgroundColor: theme.cardBackground }]}>
+                  <Text style={[styles.historyTitle, { color: theme.textTertiary }]}>
+                    Words you've tapped:
+                  </Text>
+                  <View style={styles.historyWords}>
+                    {gameData.words.slice(0, currentWordIndex).map((word, index) => {
+                      const userAnswer = answers[index];
+                      const correctAnswer = gameData.correctPositions[index];
+                      const isMatch = userAnswer === correctAnswer;
+                      
+                      return (
+                        <View 
+                          key={index}
+                          style={[
+                            styles.historyWordChip,
+                            { backgroundColor: isMatch ? theme.border : theme.buttonError + '30' }
+                          ]}
+                        >
+                          <Text style={[styles.historyWordText, { color: theme.text }]}>
+                            {word}
+                          </Text>
+                          {isMatch ? (
+                            <CheckCircle2 color="#4ade80" size={14} />
+                          ) : (
+                            <XCircle color="#f87171" size={14} />
+                          )}
+                        </View>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
               <Animated.View style={[styles.wordCard, { backgroundColor: theme.cardBackground, transform: [{ scale: scaleAnim }] }]}>
                 <Text style={[styles.wordNumber, { color: theme.textTertiary }]}>
                   Position {currentWordIndex + 1}
@@ -417,6 +452,35 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: 4,
+  },
+  historyCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+  },
+  historyTitle: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase' as const,
+    marginBottom: 12,
+    letterSpacing: 0.5,
+  },
+  historyWords: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  historyWordChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  historyWordText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
   },
   wordCard: {
     borderRadius: 20,
