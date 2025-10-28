@@ -93,7 +93,7 @@ export default function FlashcardGameScreen() {
   // Check if any card is flipped for showing answer buttons
   const isAnyCardFlipped = flippedCards.some(f => f);
 
-  const handleAnswer = (knewIt: boolean) => {
+  const handleAnswer = async (knewIt: boolean) => {
     setUserKnewIt(knewIt);
     setShowResult(true);
     
@@ -103,7 +103,7 @@ export default function FlashcardGameScreen() {
 
     if (knewIt) {
       // For chapters, record progress under chapter ID, not verse ID
-      completeGameSession(progressId, {
+      await completeGameSession(progressId, {
         gameType: 'flashcard',
         completedAt: new Date().toISOString(),
         accuracy,
@@ -118,22 +118,8 @@ export default function FlashcardGameScreen() {
 
   const handleContinue = () => {
     if (userKnewIt) {
-      const requiredGames = verseProgress?.isChapter ? 2 : (verseProgress?.difficultyLevel === 5 ? 1 : 3);
-      const games = verseProgress?.currentDayGames || [];
-      const completedGames = verseProgress?.gameSessions
-        .filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress?.difficultyLevel)
-        .map(s => s.gameType) || [];
-      
-      const nextGame = games.find(g => !completedGames.includes(g));
-      
-      if (nextGame) {
-        // Keep the chapter param when navigating to next game
-        const chapterParam = chapterId ? `?chapterId=${chapterId}` : '';
-        router.replace(`/game/${nextGame}/${id}${chapterParam}`);
-      } else {
-        // Return to the chapter/verse detail page
-        router.push(`/verse/${progressId}`);
-      }
+      // Always return to verse detail page - it will show the next game
+      router.push(`/verse/${progressId}`);
     } else {
       // Try again
       setShowResult(false);

@@ -29,20 +29,24 @@ export default function VerseOrderGameScreen() {
   const chapter = chapters.find(c => c.id === id);
   const category = CATEGORIES.find(c => c.name === chapter?.category);
   const verseProgress = getVerseProgress(id || '');
-  const unlockedVerses = getChapterUnlockedVerses(id || '');
+  
+  // Get unlocked verses once at mount and don't update during gameplay
+  const [initialUnlockedVerses] = useState(() => getChapterUnlockedVerses(id || ''));
 
   const scrambledVerses = useMemo(() => {
-    if (!unlockedVerses || unlockedVerses.length === 0) return [];
+    if (!initialUnlockedVerses || initialUnlockedVerses.length === 0) return [];
     
     // Scramble the unlocked verses
-    const scrambled = [...unlockedVerses];
+    const scrambled = [...initialUnlockedVerses];
     for (let i = scrambled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
     }
     
     return scrambled;
-  }, [unlockedVerses]);
+  }, [initialUnlockedVerses]);
+  
+  const unlockedVerses = initialUnlockedVerses;
 
   if (!chapter || !verseProgress || !verseProgress.isChapter) {
     return (
@@ -79,7 +83,7 @@ export default function VerseOrderGameScreen() {
     setOrderedVerses(newOrdered);
   };
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     const isCorrect = orderedVerses.length === unlockedVerses.length &&
       orderedVerses.every((verse, index) => verse.id === unlockedVerses[index].id);
 
@@ -93,7 +97,7 @@ export default function VerseOrderGameScreen() {
       const timeSpent = Math.floor((Date.now() - startTime) / 1000);
       const totalWords = unlockedVerses.reduce((sum, v) => sum + v.text.split(' ').length, 0);
       
-      completeGameSession(id || '', {
+      await completeGameSession(id || '', {
         gameType: 'verse-order',
         completedAt: new Date().toISOString(),
         accuracy: mistakes === 0 ? 100 : Math.max(0, 100 - (mistakes * 10)),
@@ -106,23 +110,12 @@ export default function VerseOrderGameScreen() {
     }
   };
 
-  const handleContinue = async () => {
+  const handleContinue = () => {
     const isCorrect = orderedVerses.length === unlockedVerses.length &&
       orderedVerses.every((verse, index) => verse.id === unlockedVerses[index].id);
 
     if (isCorrect) {
-      // Check if we should unlock next verse
-      const completedToday = (verseProgress.completedGamesToday || 0) + 1;
-      const requiredGames = 2; // Require 2 games per day for chapter memorization
-
-      if (completedToday >= requiredGames) {
-        // Unlock next verse
-        const unlocked = await unlockNextVerseInChapter(id || '');
-        if (unlocked) {
-          // Show success message or just continue
-        }
-      }
-
+      // completeGameSession already handles unlocking - just navigate back
       router.push(`/verse/${id}` as any);
     } else {
       setShowResult(false);

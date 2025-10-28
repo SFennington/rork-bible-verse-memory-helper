@@ -189,9 +189,8 @@ export default function HomeScreen() {
 
   // Better stats calculation
   const totalStreak = versesInProgress.reduce((sum, item) => sum + item.progress.streakDays, 0);
-  const masteredCount = versesInProgress.filter(item => item.progress.overallProgress === 100).length;
   const masteredPercent = versesInProgress.length > 0
-    ? (masteredCount / versesInProgress.length) * 100
+    ? versesInProgress.reduce((sum, item) => sum + item.progress.overallProgress, 0) / versesInProgress.length
     : 0;
 
   return (

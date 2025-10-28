@@ -60,7 +60,9 @@ export default function ProgressiveReviewGameScreen() {
   const chapter = chapters.find(c => c.id === id);
   const category = CATEGORIES.find(c => c.name === chapter?.category);
   const verseProgress = getVerseProgress(id || '');
-  const unlockedVerses = getChapterUnlockedVerses(id || '');
+  // Get unlocked verses once at mount and don't update during gameplay
+  const [initialUnlockedVerses] = useState(() => getChapterUnlockedVerses(id || ''));
+  const unlockedVerses = initialUnlockedVerses;
 
   if (!chapter || !verseProgress || !verseProgress.isChapter) {
     return (
@@ -113,7 +115,7 @@ export default function ProgressiveReviewGameScreen() {
           return sum + (verseResults[idx]?.correct ? v.text.split(' ').length : 0);
         }, currentVerse.text.split(' ').length); // Add current verse
         
-        completeGameSession(id || '', {
+        await completeGameSession(id || '', {
           gameType: 'progressive-review',
           completedAt: new Date().toISOString(),
           accuracy: Math.round((correctWords / totalWords) * 100),
@@ -145,16 +147,8 @@ export default function ProgressiveReviewGameScreen() {
     setShowVerse(false);
   };
 
-  const handleContinue = async () => {
-    // Check if we should unlock next verse
-    const completedToday = (verseProgress.completedGamesToday || 0) + 1;
-    const requiredGames = 2; // Require 2 games per day for chapter memorization
-
-    if (completedToday >= requiredGames) {
-      // Unlock next verse
-      await unlockNextVerseInChapter(id || '');
-    }
-
+  const handleContinue = () => {
+    // completeGameSession already handles unlocking - just navigate back
     router.push(`/verse/${id}` as any);
   };
 

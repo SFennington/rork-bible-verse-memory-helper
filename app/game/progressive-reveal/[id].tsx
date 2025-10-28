@@ -94,7 +94,7 @@ export default function ProgressiveRevealGameScreen() {
     }
   };
 
-  const handleIKnowIt = () => {
+  const handleIKnowIt = async () => {
     setShowResult(true);
     
     const percentRevealed = (revealedCount / words.length) * 100;
@@ -107,7 +107,7 @@ export default function ProgressiveRevealGameScreen() {
     if (isCorrect) {
       // For chapters, record progress under chapter ID, not verse ID
       const progressId = chapterId || id || '';
-      completeGameSession(progressId, {
+      await completeGameSession(progressId, {
         gameType: 'progressive-reveal',
         completedAt: new Date().toISOString(),
         accuracy,
@@ -125,22 +125,9 @@ export default function ProgressiveRevealGameScreen() {
     const isCorrect = percentRevealed <= 75;
 
     if (isCorrect) {
-      const requiredGames = verseProgress?.isChapter ? 2 : (verseProgress?.difficultyLevel === 5 ? 1 : 3);
-      const games = verseProgress?.currentDayGames || [];
-      const completedGames = verseProgress?.gameSessions
-        .filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress?.difficultyLevel)
-        .map(s => s.gameType) || [];
-      
-      const nextGame = games.find(g => !completedGames.includes(g));
-      
-      if (nextGame) {
-        // Keep the chapter param when navigating to next game
-        const chapterParam = chapterId ? `?chapterId=${chapterId}` : '';
-        router.replace(`/game/${nextGame}/${id}${chapterParam}`);
-      } else {
-        // Return to the chapter/verse detail page
-        router.push(`/verse/${progressId}`);
-      }
+      // Always return to verse detail page - it will show the next game
+      const progressId = chapterId || id || '';
+      router.push(`/verse/${progressId}`);
     } else {
       // Try again
       setRevealedCount(initialRevealCount);
