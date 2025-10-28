@@ -28,21 +28,9 @@ const GAME_INFO: Record<GameType, { title: string; description: string }> = {
     title: 'Word Order',
     description: 'Arrange the words in the correct order',
   },
-  'first-letter': {
-    title: 'First Letter',
-    description: 'Type words using first letter hints',
-  },
   'full-verse': {
     title: 'Full Verse',
     description: 'Type the entire verse from memory',
-  },
-  'word-scramble': {
-    title: 'Word Scramble',
-    description: 'Unscramble the words in each phrase',
-  },
-  'missing-vowels': {
-    title: 'Missing Vowels',
-    description: 'Fill in the missing vowels to complete words',
   },
   'flashcard': {
     title: 'Flashcard',

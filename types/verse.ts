@@ -1,6 +1,6 @@
 export type VerseCategory = 'Comfort' | 'Strength' | 'Peace' | 'Love' | 'Faith' | 'Hope' | 'Promises' | 'Custom';
 
-export type GameType = 'fill-blank' | 'word-order' | 'first-letter' | 'full-verse' | 'word-scramble' | 'missing-vowels' | 'flashcard' | 'speed-tap' | 'progressive-reveal' | 'verse-order' | 'progressive-review';
+export type GameType = 'fill-blank' | 'word-order' | 'full-verse' | 'flashcard' | 'speed-tap' | 'progressive-reveal' | 'verse-order' | 'progressive-review';
 
 export const DIFFICULTY_LEVELS: Record<DifficultyLevel, GameType[]> = {
   1: ['flashcard', 'fill-blank', 'word-order'],          // Easy: Simple memorization and selection
