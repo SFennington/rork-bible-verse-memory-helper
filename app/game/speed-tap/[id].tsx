@@ -274,58 +274,48 @@ export default function SpeedTapGameScreen() {
                 </View>
               </View>
 
-              {/* Tapped Words History */}
-              {currentWordIndex > 0 && (
-                <View style={[styles.historyCard, { backgroundColor: theme.cardBackground }]}>
-                  <Text style={[styles.historyTitle, { color: theme.textTertiary }]}>
-                    Words you've tapped:
-                  </Text>
-                  <ScrollView 
-                    style={styles.historyScrollView}
-                    contentContainerStyle={styles.historyWords}
-                    showsVerticalScrollIndicator={false}
-                    nestedScrollEnabled={true}
-                  >
-                    {gameData.words.slice(0, currentWordIndex).map((word, index) => {
-                      const userAnswer = answers[index];
-                      const correctAnswer = gameData.correctPositions[index];
-                      const isMatch = userAnswer === correctAnswer;
-                      const actualCorrectWord = gameData.correctWords[index];
-                      
-                      return (
-                        <View 
-                          key={index}
-                          style={[
-                            styles.historyWordChip,
-                            { backgroundColor: isMatch ? theme.border : theme.buttonError + '30' }
-                          ]}
-                        >
-                          {isMatch ? (
-                            <>
-                              <Text style={[styles.historyWordText, { color: theme.text }]}>
-                                {word}
-                              </Text>
-                              <CheckCircle2 color="#4ade80" size={14} />
-                            </>
+              {/* Verse Progress Display */}
+              <View style={[styles.verseProgressCard, { backgroundColor: theme.cardBackground }]}>
+                <Text style={[styles.verseProgressTitle, { color: theme.textTertiary }]}>
+                  Verse Progress:
+                </Text>
+                <View style={styles.verseProgressText}>
+                  {gameData.correctWords.map((correctWord, index) => {
+                    // Check if we've tapped this position yet
+                    const hasTapped = index < currentWordIndex;
+                    const userAnswer = answers[index];
+                    const correctAnswer = gameData.correctPositions[index];
+                    const isMatch = hasTapped && userAnswer === correctAnswer;
+                    const isWrong = hasTapped && !isMatch;
+                    const userWord = gameData.words[index];
+                    
+                    return (
+                      <Text key={index}>
+                        {hasTapped ? (
+                          isMatch ? (
+                            <Text style={[styles.verseWord, { color: '#4ade80', fontWeight: '700' }]}>
+                              {correctWord}{' '}
+                            </Text>
                           ) : (
-                            <>
-                              <View style={styles.wrongWordContainer}>
-                                <Text style={[styles.historyWordText, styles.crossedOutText, { color: theme.textSecondary }]}>
-                                  {word}
-                                </Text>
-                                <Text style={[styles.historyWordText, { color: '#4ade80', marginLeft: 6 }]}>
-                                  {actualCorrectWord}
-                                </Text>
-                              </View>
-                              <XCircle color="#f87171" size={14} />
-                            </>
-                          )}
-                        </View>
-                      );
-                    })}
-                  </ScrollView>
+                            <Text>
+                              <Text style={[styles.verseWord, styles.crossedOutWord, { color: '#f87171' }]}>
+                                {userWord}
+                              </Text>
+                              <Text style={[styles.verseWord, { color: '#4ade80', fontWeight: '700' }]}>
+                                {correctWord}{' '}
+                              </Text>
+                            </Text>
+                          )
+                        ) : (
+                          <Text style={[styles.verseWord, { color: theme.textSecondary }]}>
+                            {correctWord}{' '}
+                          </Text>
+                        )}
+                      </Text>
+                    );
+                  })}
                 </View>
-              )}
+              </View>
 
               <Animated.View style={[styles.wordCard, { backgroundColor: theme.cardBackground, transform: [{ scale: scaleAnim }] }]}>
                 <Text style={[styles.wordNumber, { color: theme.textTertiary }]}>
@@ -497,45 +487,31 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
   },
-  historyCard: {
+  verseProgressCard: {
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
   },
-  historyTitle: {
+  verseProgressTitle: {
     fontSize: 12,
     fontWeight: '600' as const,
     textTransform: 'uppercase' as const,
     marginBottom: 12,
     letterSpacing: 0.5,
   },
-  historyScrollView: {
-    maxHeight: 120, // Fixed height to prevent pushing buttons down
-  },
-  historyWords: {
+  verseProgressText: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    lineHeight: 28,
   },
-  historyWordChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+  verseWord: {
+    fontSize: 16,
+    lineHeight: 28,
   },
-  historyWordText: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-  },
-  wrongWordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  crossedOutText: {
+  crossedOutWord: {
     textDecorationLine: 'line-through' as const,
-    opacity: 0.6,
+    opacity: 0.7,
+    marginRight: 4,
   },
   wordCard: {
     borderRadius: 20,

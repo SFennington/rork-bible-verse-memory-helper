@@ -25,8 +25,6 @@ export default function FlashcardGameScreen() {
   const router = useRouter();
   const { verses, completeGameSession, getVerseProgress } = useVerses();
   const { theme } = useTheme();
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [flipAnim] = useState(new Animated.Value(0));
   const [showResult, setShowResult] = useState(false);
   const [userKnewIt, setUserKnewIt] = useState<boolean | null>(null);
   const [startTime] = useState(Date.now());
@@ -46,16 +44,16 @@ export default function FlashcardGameScreen() {
     );
   }
 
-  // Split verse into 2 equal parts by word count
+  // Split verse into 2 equal parts by word count (only for extra long verses)
   const splitVerseIntoCards = (text: string): string[] => {
     const words = text.split(' ');
     
-    // If verse is short (less than 10 words), keep it as one card
-    if (words.length < 10) {
+    // If verse is not extra long (less than 25 words), keep it as one card
+    if (words.length < 25) {
       return [text];
     }
     
-    // Split in half by word count
+    // Split in half by word count for extra long verses
     const midpoint = Math.ceil(words.length / 2);
     const firstHalf = words.slice(0, midpoint).join(' ');
     const secondHalf = words.slice(midpoint).join(' ');
@@ -66,18 +64,34 @@ export default function FlashcardGameScreen() {
   const verseCards = splitVerseIntoCards(verse.text);
   const totalCards = verseCards.length;
 
-  const handleFlip = () => {
+  // Track flip state for each card separately
+  const [flippedCards, setFlippedCards] = React.useState<boolean[]>(new Array(totalCards).fill(false));
+  
+  // Create separate animations for each card
+  const cardAnims = React.useRef(
+    verseCards.map(() => new Animated.Value(0))
+  ).current;
+
+  const handleFlip = (cardIndex: number) => {
     if (showResult) return; // Don't flip when showing results
     
-    const toValue = isFlipped ? 0 : 1;
-    Animated.spring(flipAnim, {
+    const isCurrentlyFlipped = flippedCards[cardIndex];
+    const toValue = isCurrentlyFlipped ? 0 : 1;
+    
+    Animated.spring(cardAnims[cardIndex], {
       toValue,
       friction: 8,
       tension: 10,
       useNativeDriver: true,
     }).start();
-    setIsFlipped(!isFlipped);
+    
+    const newFlippedCards = [...flippedCards];
+    newFlippedCards[cardIndex] = !isCurrentlyFlipped;
+    setFlippedCards(newFlippedCards);
   };
+  
+  // Check if any card is flipped for showing answer buttons
+  const isAnyCardFlipped = flippedCards.some(f => f);
 
   const handleAnswer = (knewIt: boolean) => {
     setUserKnewIt(knewIt);
@@ -124,34 +138,15 @@ export default function FlashcardGameScreen() {
       // Try again
       setShowResult(false);
       setUserKnewIt(null);
-      setIsFlipped(false);
-      flipAnim.setValue(0);
+      // Reset all cards to unflipped state
+      setFlippedCards(new Array(totalCards).fill(false));
+      cardAnims.forEach(anim => anim.setValue(0));
     }
   };
 
   const handleExit = () => {
     router.push('/(tabs)/verses');
   };
-
-  const frontRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['0deg', '180deg'],
-  });
-
-  const backRotate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['180deg', '360deg'],
-  });
-
-  const frontOpacity = flipAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 0, 0],
-  });
-
-  const backOpacity = flipAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [0, 0, 1],
-  });
 
   return (
     <View style={styles.container}>
@@ -189,8 +184,8 @@ export default function FlashcardGameScreen() {
           <View style={styles.topBar}>
             <View style={[styles.instructionCard, { backgroundColor: theme.cardBackground }]}>
               <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
-                {!isFlipped 
-                  ? "Try to recall the verse, then tap to flip and check"
+                {!isAnyCardFlipped
+                  ? "Try to recall the verse, then tap each card to flip and check"
                   : "Did you remember the verse correctly?"}
               </Text>
             </View>
@@ -205,69 +200,92 @@ export default function FlashcardGameScreen() {
           </View>
 
           {/* Show all cards stacked vertically */}
-          {verseCards.map((cardText, index) => (
-            <TouchableOpacity 
-              key={index}
-              activeOpacity={0.9} 
-              onPress={handleFlip}
-              disabled={showResult}
-              style={styles.cardContainer}
-            >
-              {/* Front of card - Reference */}
-              <Animated.View
-                style={[
-                  styles.card,
-                  { backgroundColor: theme.cardBackground },
-                  {
-                    transform: [{ rotateY: frontRotate }],
-                    opacity: frontOpacity,
-                  },
-                ]}
-                pointerEvents={isFlipped ? 'none' : 'auto'}
+          {verseCards.map((cardText, index) => {
+            const cardFlipAnim = cardAnims[index];
+            const isCardFlipped = flippedCards[index];
+            
+            // Calculate rotation for this specific card
+            const cardFrontRotate = cardFlipAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['0deg', '180deg'],
+            });
+            const cardBackRotate = cardFlipAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['180deg', '360deg'],
+            });
+            const cardFrontOpacity = cardFlipAnim.interpolate({
+              inputRange: [0, 0.5, 1],
+              outputRange: [1, 0, 0],
+            });
+            const cardBackOpacity = cardFlipAnim.interpolate({
+              inputRange: [0, 0.5, 1],
+              outputRange: [0, 0, 1],
+            });
+            
+            return (
+              <TouchableOpacity 
+                key={index}
+                activeOpacity={0.9} 
+                onPress={() => handleFlip(index)}
+                disabled={showResult}
+                style={styles.cardContainer}
               >
-                <View style={styles.cardIcon}>
-                  <Eye color={category?.color || '#667eea'} size={36} />
-                </View>
-                <Text style={[styles.cardReference, { color: theme.text }]}>
-                  {verse.reference}
-                </Text>
-                {totalCards > 1 && (
-                  <Text style={[styles.cardPartLabel, { color: theme.textSecondary }]}>
-                    Part {index + 1} of {totalCards}
+                {/* Front of card - Reference */}
+                <Animated.View
+                  style={[
+                    styles.card,
+                    { backgroundColor: theme.cardBackground },
+                    {
+                      transform: [{ rotateY: cardFrontRotate }],
+                      opacity: cardFrontOpacity,
+                    },
+                  ]}
+                  pointerEvents={isCardFlipped ? 'none' : 'auto'}
+                >
+                  <View style={styles.cardIcon}>
+                    <Eye color={category?.color || '#667eea'} size={36} />
+                  </View>
+                  <Text style={[styles.cardReference, { color: theme.text }]}>
+                    {verse.reference}
                   </Text>
-                )}
-                <Text style={[styles.cardHint, { color: theme.textTertiary }]}>
-                  Tap to reveal
-                </Text>
-              </Animated.View>
+                  {totalCards > 1 && (
+                    <Text style={[styles.cardPartLabel, { color: theme.textSecondary }]}>
+                      Part {index + 1} of {totalCards}
+                    </Text>
+                  )}
+                  <Text style={[styles.cardHint, { color: theme.textTertiary }]}>
+                    Tap to reveal
+                  </Text>
+                </Animated.View>
 
-              {/* Back of card - Verse text */}
-              <Animated.View
-                style={[
-                  styles.card,
-                  styles.cardBack,
-                  { backgroundColor: theme.cardBackground },
-                  {
-                    transform: [{ rotateY: backRotate }],
-                    opacity: backOpacity,
-                  },
-                ]}
-                pointerEvents={!isFlipped ? 'none' : 'auto'}
-              >
-                <View style={styles.cardIcon}>
-                  <EyeOff color={category?.color || '#667eea'} size={36} />
-                </View>
-                <Text style={[styles.verseText, { color: theme.text }]}>
-                  {cardText}
-                </Text>
-                <Text style={[styles.verseReferenceSmall, { color: theme.textSecondary }]}>
-                  — {verse.reference}
-                </Text>
-              </Animated.View>
-            </TouchableOpacity>
-          ))}
+                {/* Back of card - Verse text */}
+                <Animated.View
+                  style={[
+                    styles.card,
+                    styles.cardBack,
+                    { backgroundColor: theme.cardBackground },
+                    {
+                      transform: [{ rotateY: cardBackRotate }],
+                      opacity: cardBackOpacity,
+                    },
+                  ]}
+                  pointerEvents={!isCardFlipped ? 'none' : 'auto'}
+                >
+                  <View style={styles.cardIcon}>
+                    <EyeOff color={category?.color || '#667eea'} size={36} />
+                  </View>
+                  <Text style={[styles.verseText, { color: theme.text }]}>
+                    {cardText}
+                  </Text>
+                  <Text style={[styles.verseReferenceSmall, { color: theme.textSecondary }]}>
+                    — {verse.reference}
+                  </Text>
+                </Animated.View>
+              </TouchableOpacity>
+            );
+          })}
 
-          {isFlipped && !showResult && (
+          {isAnyCardFlipped && !showResult && (
             <View style={styles.answerButtons}>
               <TouchableOpacity
                 style={[styles.answerButton, styles.wrongButton, { backgroundColor: theme.buttonError }]}
