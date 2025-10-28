@@ -269,11 +269,17 @@ export default function SpeedTapGameScreen() {
                   <Text style={[styles.historyTitle, { color: theme.textTertiary }]}>
                     Words you've tapped:
                   </Text>
-                  <View style={styles.historyWords}>
+                  <ScrollView 
+                    style={styles.historyScrollView}
+                    contentContainerStyle={styles.historyWords}
+                    showsVerticalScrollIndicator={false}
+                    nestedScrollEnabled={true}
+                  >
                     {gameData.words.slice(0, currentWordIndex).map((word, index) => {
                       const userAnswer = answers[index];
                       const correctAnswer = gameData.correctPositions[index];
                       const isMatch = userAnswer === correctAnswer;
+                      const actualCorrectWord = gameData.correctWords[index];
                       
                       return (
                         <View 
@@ -283,18 +289,30 @@ export default function SpeedTapGameScreen() {
                             { backgroundColor: isMatch ? theme.border : theme.buttonError + '30' }
                           ]}
                         >
-                          <Text style={[styles.historyWordText, { color: theme.text }]}>
-                            {word}
-                          </Text>
                           {isMatch ? (
-                            <CheckCircle2 color="#4ade80" size={14} />
+                            <>
+                              <Text style={[styles.historyWordText, { color: theme.text }]}>
+                                {word}
+                              </Text>
+                              <CheckCircle2 color="#4ade80" size={14} />
+                            </>
                           ) : (
-                            <XCircle color="#f87171" size={14} />
+                            <>
+                              <View style={styles.wrongWordContainer}>
+                                <Text style={[styles.historyWordText, styles.crossedOutText, { color: theme.textSecondary }]}>
+                                  {word}
+                                </Text>
+                                <Text style={[styles.historyWordText, { color: '#4ade80', marginLeft: 6 }]}>
+                                  {actualCorrectWord}
+                                </Text>
+                              </View>
+                              <XCircle color="#f87171" size={14} />
+                            </>
                           )}
                         </View>
                       );
                     })}
-                  </View>
+                  </ScrollView>
                 </View>
               )}
 
@@ -465,6 +483,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     letterSpacing: 0.5,
   },
+  historyScrollView: {
+    maxHeight: 120, // Fixed height to prevent pushing buttons down
+  },
   historyWords: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -481,6 +502,14 @@ const styles = StyleSheet.create({
   historyWordText: {
     fontSize: 14,
     fontWeight: '500' as const,
+  },
+  wrongWordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  crossedOutText: {
+    textDecorationLine: 'line-through' as const,
+    opacity: 0.6,
   },
   wordCard: {
     borderRadius: 20,
