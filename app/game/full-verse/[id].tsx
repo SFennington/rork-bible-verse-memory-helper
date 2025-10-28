@@ -168,10 +168,21 @@ export default function FullVerseGameScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.instructionCard}>
-            <Text style={styles.instructionText}>
-              Type the entire verse from memory. This is the ultimate test!
-            </Text>
+          <View style={styles.topBar}>
+            <View style={styles.instructionCard}>
+              <Text style={styles.instructionText}>
+                Type the entire verse from memory. This is the ultimate test!
+              </Text>
+            </View>
+            {!showResult && (
+              <TouchableOpacity
+                style={styles.exitButtonTop}
+                onPress={handleExit}
+                activeOpacity={0.8}
+              >
+                <Home color="rgba(0, 0, 0, 0.6)" size={20} />
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={styles.verseCard}>
@@ -292,11 +303,28 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
+  topBar: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+    alignItems: 'flex-start',
+  },
   instructionCard: {
+    flex: 1,
     backgroundColor: 'rgba(255, 255, 255, 0.95)',
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+  },
+  exitButtonTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 2,
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
   },
   instructionText: {
     fontSize: 15,
