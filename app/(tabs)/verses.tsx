@@ -572,9 +572,9 @@ export default function HomeScreen() {
               >
                 <View style={styles.addCustomContent}>
                   <PlusCircle color="#fff" size={32} />
-                  <Text style={styles.addCustomTitle}>Add a custom verse/chapter</Text>
+                  <Text style={styles.addCustomTitle}>Add a custom verse</Text>
                   <Text style={styles.addCustomText}>
-                    Add your own verses or chapters to memorize
+                    Add your own verses to memorize
                   </Text>
                 </View>
               </TouchableOpacity>

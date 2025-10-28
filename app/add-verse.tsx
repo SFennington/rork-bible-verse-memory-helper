@@ -213,7 +213,8 @@ export default function AddVerseScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.modeSelector}>
+          {/* Chapter mode disabled for now - future feature */}
+          {/* <View style={styles.modeSelector}>
             <TouchableOpacity
               style={[
                 styles.modeButton,
@@ -258,7 +259,7 @@ export default function AddVerseScreen() {
                 Chapter
               </Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
             <View style={[styles.card, { backgroundColor: theme.cardBackground }]}>
             <Text style={[styles.label, { color: theme.text }]}>Bible Version</Text>
