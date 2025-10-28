@@ -66,7 +66,7 @@ const DIFFICULTY_LABELS = [
 export default function VerseDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { verses, chapters, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse, getChapterUnlockedVerses } = useVerses();
+  const { verses, chapters, getVerseProgress, addToProgress, advanceToNextLevel, getFirstIncompleteLevel, resetToLevel, deleteVerse, archiveVerse, getChapterUnlockedVerses, unlockNextVerseInChapter } = useVerses();
   const { addPrayerRequest, reloadPrayers } = usePrayer();
   const { theme } = useTheme();
   const [showDayCompleteModal, setShowDayCompleteModal] = useState(false);

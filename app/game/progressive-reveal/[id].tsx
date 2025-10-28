@@ -219,8 +219,7 @@ export default function ProgressiveRevealGameScreen() {
                 style={[styles.debugButton, styles.debugButtonIncorrect]}
                 onPress={() => {
                   // Reveal all words first, then click "I Know It!" (simulating poor performance)
-                  const allRevealed = new Set(words.map((_, idx) => idx));
-                  setRevealedWords(allRevealed);
+                  setRevealedCount(words.length);
                   setTimeout(() => handleIKnowIt(), 100);
                 }}
                 activeOpacity={0.8}
