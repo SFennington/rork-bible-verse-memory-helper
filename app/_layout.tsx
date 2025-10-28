@@ -21,7 +21,7 @@ export default function RootLayout() {
         <BibleVersionProvider>
           <VerseProvider>
             <PrayerProvider>
-              <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+              <StatusBar barStyle="light-content" backgroundColor="#667eea" />
               <Stack 
                 screenOptions={{ 
                   headerShown: true,
