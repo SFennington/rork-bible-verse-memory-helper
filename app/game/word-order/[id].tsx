@@ -171,7 +171,7 @@ export default function WordOrderGameScreen() {
     setMistakes(0);
   };
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     setShowResult(true);
     const userText = orderedWords.join(' ');
     const correctText = correctWords.join(' '); // Compare to stripped version, not original
@@ -186,7 +186,7 @@ export default function WordOrderGameScreen() {
 
     if (isCorrect) {
       const verseProgress = getVerseProgress(id || '');
-      completeGameSession(id || '', {
+      await completeGameSession(id || '', {
         gameType: 'word-order',
         completedAt: new Date().toISOString(),
         accuracy,
@@ -201,20 +201,8 @@ export default function WordOrderGameScreen() {
 
   const handleContinue = () => {
     if (isCorrect) {
-      const verseProgress = getVerseProgress(id || '');
-      const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
-      const games = verseProgress?.currentDayGames || [];
-      const completedGames = verseProgress?.gameSessions
-        .filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress?.difficultyLevel)
-        .map(s => s.gameType) || [];
-      
-      const nextGame = games.find(g => !completedGames.includes(g));
-      
-      if (nextGame) {
-        router.replace(`/game/${nextGame}/${id}`);
-      } else {
-        router.push(`/verse/${id}`);
-      }
+      // Navigate back to verse detail screen - let it handle next game logic
+      router.push(`/verse/${id}` as any);
     } else {
       // Return incorrect words to available pool, keep correct ones
       const correctWordsArray = correctWords;

@@ -74,7 +74,7 @@ export default function FullVerseGameScreen() {
     return Math.round((correctCount / correctWords.length) * 100);
   };
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     const accuracy = calculateAccuracy();
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
     const totalWords = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0).length;
@@ -84,7 +84,7 @@ export default function FullVerseGameScreen() {
     
     if (accuracy >= 80) {
       const verseProgress = getVerseProgress(id || '');
-      completeGameSession(id || '', {
+      await completeGameSession(id || '', {
         gameType: 'full-verse',
         completedAt: new Date().toISOString(),
         accuracy,
@@ -105,20 +105,8 @@ export default function FullVerseGameScreen() {
 
   const handleContinue = () => {
     if (isCorrect) {
-      const verseProgress = getVerseProgress(id || '');
-      const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
-      const games = verseProgress?.currentDayGames || [];
-      const completedGames = verseProgress?.gameSessions
-        .filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress?.difficultyLevel)
-        .map(s => s.gameType) || [];
-      
-      const nextGame = games.find(g => !completedGames.includes(g));
-      
-      if (nextGame) {
-        router.replace(`/game/${nextGame}/${id}`);
-      } else {
-        router.push(`/verse/${id}`);
-      }
+      // Navigate back to verse detail screen - let it handle next game logic
+      router.push(`/verse/${id}` as any);
     } else {
       router.replace(`/game/full-verse/${id}`);
     }

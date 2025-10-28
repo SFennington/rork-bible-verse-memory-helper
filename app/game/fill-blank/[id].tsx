@@ -166,7 +166,7 @@ export default function FillBlankGameScreen() {
     ]).start();
   };
 
-  const handleCheck = () => {
+  const handleCheck = async () => {
     setShowResult(true);
     const isCorrect = gameData.blanks.every(
       (cleanWordIdx, blankPosition) => (selectedWords[blankPosition] || '').toLowerCase() === gameData.cleanWords[cleanWordIdx].toLowerCase()
@@ -183,7 +183,7 @@ export default function FillBlankGameScreen() {
 
     if (isCorrect) {
       const verseProgress = getVerseProgress(id || '');
-      completeGameSession(id || '', {
+      await completeGameSession(id || '', {
         gameType: 'fill-blank',
         completedAt: new Date().toISOString(),
         accuracy,
@@ -198,20 +198,8 @@ export default function FillBlankGameScreen() {
 
   const handleContinue = () => {
     if (isCorrect) {
-      const verseProgress = getVerseProgress(id || '');
-      const requiredGames = verseProgress?.difficultyLevel === 5 ? 1 : 3;
-      const games = verseProgress?.currentDayGames || [];
-      const completedGames = verseProgress?.gameSessions
-        .filter(s => isToday(s.completedAt) && s.difficultyLevel === verseProgress?.difficultyLevel)
-        .map(s => s.gameType) || [];
-      
-      const nextGame = games.find(g => !completedGames.includes(g));
-      
-      if (nextGame) {
-        router.replace(`/game/${nextGame}/${id}`);
-      } else {
-        router.push(`/verse/${id}`);
-      }
+      // Navigate back to verse detail screen - let it handle next game logic
+      router.push(`/verse/${id}` as any);
     } else {
       // Only clear incorrect answers, keep correct ones
       const newSelectedWords: Record<number, string> = {};
