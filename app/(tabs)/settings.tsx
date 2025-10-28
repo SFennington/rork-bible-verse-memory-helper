@@ -6,21 +6,39 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
+  TextInput,
+  Alert,
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Moon, Sun, ArrowLeft, Book, ChevronRight } from 'lucide-react-native';
+import { Moon, Sun, ArrowLeft, Book, ChevronRight, Key } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useBibleVersion } from '@/contexts/BibleVersionContext';
+import { useApiKey } from '@/contexts/ApiKeyContext';
 import Constants from 'expo-constants';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { theme, themeMode, toggleTheme } = useTheme();
-  const { selectedVersion, setSelectedVersion, availableVersions } = useBibleVersion();
+  const { selectedVersion, setSelectedVersion, availableVersions} = useBibleVersion();
+  const { apiKey, setApiKey } = useApiKey();
   const insets = useSafeAreaInsets();
   const [showVersionPicker, setShowVersionPicker] = React.useState(false);
+  const [apiKeyInput, setApiKeyInput] = React.useState(apiKey || '');
+  const [isSavingKey, setIsSavingKey] = React.useState(false);
+
+  const handleSaveApiKey = async () => {
+    setIsSavingKey(true);
+    try {
+      await setApiKey(apiKeyInput);
+      Alert.alert('Success', 'API key saved! You can now fetch all Bible versions.');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save API key. Please try again.');
+    } finally {
+      setIsSavingKey(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -101,6 +119,58 @@ export default function SettingsScreen() {
                     )}
                   </TouchableOpacity>
                 ))}
+              </View>
+            )}
+          </View>
+
+          <View style={[styles.section, { backgroundColor: theme.cardBackground }]}>
+            <Text style={[styles.sectionTitle, { color: theme.text }]}>
+              API.Bible Key
+            </Text>
+            <Text style={[styles.sectionDescription, { color: theme.textSecondary }]}>
+              Get your free API key at scripture.api.bible to access all Bible versions (NASB, NIV, ESV, etc.)
+            </Text>
+
+            <View style={styles.apiKeyContainer}>
+              <View style={[styles.iconContainer, { backgroundColor: '#8b5cf6' }]}>
+                <Key color="#fff" size={20} />
+              </View>
+              <View style={styles.apiKeyInputContainer}>
+                <TextInput
+                  style={[styles.apiKeyInput, { 
+                    color: theme.text,
+                    backgroundColor: theme.background,
+                    borderColor: theme.border,
+                  }]}
+                  value={apiKeyInput}
+                  onChangeText={setApiKeyInput}
+                  placeholder="Paste your API key here"
+                  placeholderTextColor={theme.textSecondary}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveButton, { 
+                backgroundColor: apiKeyInput.trim() ? '#8b5cf6' : theme.border,
+                opacity: isSavingKey ? 0.6 : 1,
+              }]}
+              onPress={handleSaveApiKey}
+              disabled={!apiKeyInput.trim() || isSavingKey}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.saveButtonText}>
+                {isSavingKey ? 'Saving...' : (apiKey ? 'Update API Key' : 'Save API Key')}
+              </Text>
+            </TouchableOpacity>
+
+            {apiKey && (
+              <View style={[styles.statusBadge, { backgroundColor: '#10b981' + '20' }]}>
+                <Text style={[styles.statusText, { color: '#10b981' }]}>
+                  ✓ API Key Configured
+                </Text>
               </View>
             )}
           </View>
@@ -282,5 +352,46 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     backgroundColor: '#10b981',
+  },
+  sectionDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
+  },
+  apiKeyContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  apiKeyInputContainer: {
+    flex: 1,
+  },
+  apiKeyInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    fontFamily: 'monospace' as const,
+  },
+  saveButton: {
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600' as const,
+  },
+  statusBadge: {
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
 });

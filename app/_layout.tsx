@@ -5,6 +5,7 @@ import { VerseProvider } from "@/contexts/VerseContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { PrayerProvider } from "@/contexts/PrayerContext";
 import { BibleVersionProvider } from "@/contexts/BibleVersionContext";
+import { ApiKeyProvider } from "@/contexts/ApiKeyContext";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,13 +16,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <BibleVersionProvider>
-        <VerseProvider>
-          <PrayerProvider>
-            <Slot />
-          </PrayerProvider>
-        </VerseProvider>
-      </BibleVersionProvider>
+      <ApiKeyProvider>
+        <BibleVersionProvider>
+          <VerseProvider>
+            <PrayerProvider>
+              <Slot />
+            </PrayerProvider>
+          </VerseProvider>
+        </BibleVersionProvider>
+      </ApiKeyProvider>
     </ThemeProvider>
   );
 }
