@@ -53,6 +53,9 @@ export default function ProgressiveReviewGameScreen() {
   const [currentVerseIndex, setCurrentVerseIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
   const [showVerse, setShowVerse] = useState(false);
+  const [isPeeking, setIsPeeking] = useState(false);
+  const [hasChecked, setHasChecked] = useState(false);
+  const [lastCheckResult, setLastCheckResult] = useState<boolean | null>(null);
   const [verseResults, setVerseResults] = useState<{ correct: boolean; attempts: number }[]>([]);
   const [showFinalResult, setShowFinalResult] = useState(false);
   const [startTime] = useState(Date.now());
@@ -94,6 +97,12 @@ export default function ProgressiveReviewGameScreen() {
     
     const isCorrect = accuracy >= 85;
     
+    // Set visual feedback
+    setHasChecked(true);
+    setLastCheckResult(isCorrect);
+    setShowVerse(true);
+    setIsPeeking(false);
+    
     const currentAttempts = verseResults[currentVerseIndex]?.attempts || 0;
     const newResults = [...verseResults];
     newResults[currentVerseIndex] = {
@@ -104,35 +113,40 @@ export default function ProgressiveReviewGameScreen() {
 
     if (!isCorrect) {
       setMistakes(mistakes + 1);
-      setShowVerse(true);
+      // Show verse and action buttons (already done above)
     } else {
       if (isLastVerse) {
-        // Finish the game
-        setShowFinalResult(true);
-        
-        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
-        const totalWords = unlockedVerses.reduce((sum, v) => sum + v.text.split(' ').length, 0);
-        const correctWords = unlockedVerses.reduce((sum, v, idx) => {
-          return sum + (verseResults[idx]?.correct ? v.text.split(' ').length : 0);
-        }, currentVerse.text.split(' ').length); // Add current verse
-        
-        await completeGameSession(id || '', {
-          gameType: 'progressive-review',
-          completedAt: new Date().toISOString(),
-          accuracy: Math.round((correctWords / totalWords) * 100),
-          timeSpent,
-          mistakeCount: mistakes,
-          correctWords,
-          totalWords,
-          difficultyLevel: verseProgress.difficultyLevel,
-        });
+        // Finish the game after a short delay for visual feedback
+        setTimeout(async () => {
+          setShowFinalResult(true);
+          
+          const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+          const totalWords = unlockedVerses.reduce((sum, v) => sum + v.text.split(' ').length, 0);
+          const correctWords = unlockedVerses.reduce((sum, v, idx) => {
+            return sum + (verseResults[idx]?.correct ? v.text.split(' ').length : 0);
+          }, currentVerse.text.split(' ').length); // Add current verse
+          
+          await completeGameSession(id || '', {
+            gameType: 'progressive-review',
+            completedAt: new Date().toISOString(),
+            accuracy: Math.round((correctWords / totalWords) * 100),
+            timeSpent,
+            mistakeCount: mistakes,
+            correctWords,
+            totalWords,
+            difficultyLevel: verseProgress.difficultyLevel,
+          });
+        }, 800);
       } else {
-        // Move to next verse
+        // Move to next verse after showing success
         setTimeout(() => {
           setCurrentVerseIndex(currentVerseIndex + 1);
           setUserInput('');
           setShowVerse(false);
-        }, 500);
+          setHasChecked(false);
+          setLastCheckResult(null);
+          setIsPeeking(false);
+        }, 800);
       }
     }
   };
@@ -140,12 +154,18 @@ export default function ProgressiveReviewGameScreen() {
   const handleTryAgain = () => {
     setUserInput('');
     setShowVerse(false);
+    setHasChecked(false);
+    setLastCheckResult(null);
+    setIsPeeking(false);
   };
 
   const handleNextVerse = () => {
     setCurrentVerseIndex(currentVerseIndex + 1);
     setUserInput('');
     setShowVerse(false);
+    setHasChecked(false);
+    setLastCheckResult(null);
+    setIsPeeking(false);
   };
 
   const handleContinue = () => {
@@ -246,7 +266,7 @@ export default function ProgressiveReviewGameScreen() {
                 </View>
               )}
 
-              {showVerse && (
+              {(showVerse || isPeeking) && (
                 <View style={[styles.verseCard, { backgroundColor: theme.cardBackground }]}>
                   <Text style={[styles.verseText, { color: theme.text }]}>
                     {currentVerse?.text}
@@ -254,7 +274,12 @@ export default function ProgressiveReviewGameScreen() {
                 </View>
               )}
 
-              <View style={[styles.inputCard, { backgroundColor: theme.cardBackground }]}>
+              <View style={[
+                styles.inputCard, 
+                { backgroundColor: theme.cardBackground },
+                hasChecked && lastCheckResult === true && styles.inputCardCorrect,
+                hasChecked && lastCheckResult === false && styles.inputCardIncorrect,
+              ]}>
                 <TextInput
                   style={[styles.input, { color: theme.text, borderColor: theme.border }]}
                   value={userInput}
@@ -265,13 +290,16 @@ export default function ProgressiveReviewGameScreen() {
                   textAlignVertical="top"
                   autoCapitalize="sentences"
                   autoCorrect={false}
-                  editable={!showVerse}
+                  editable={!hasChecked}
                 />
                 
-                {!showVerse && (
+                {!hasChecked && !isPeeking && (
                   <TouchableOpacity
                     style={[styles.peekButton, { borderColor: theme.border }]}
-                    onPress={() => setShowVerse(true)}
+                    onPress={() => {
+                      setIsPeeking(true);
+                      setShowVerse(true);
+                    }}
                     activeOpacity={0.7}
                   >
                     <Eye color={theme.text} size={20} />
@@ -282,7 +310,7 @@ export default function ProgressiveReviewGameScreen() {
                 )}
               </View>
 
-              {showVerse ? (
+              {hasChecked ? (
                 <View style={styles.buttonGroup}>
                   {!isLastVerse ? (
                     <TouchableOpacity
@@ -472,6 +500,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
+  },
+  inputCardCorrect: {
+    borderWidth: 3,
+    borderColor: '#4ade80',
+  },
+  inputCardIncorrect: {
+    borderWidth: 3,
+    borderColor: '#f87171',
   },
   input: {
     minHeight: 150,
