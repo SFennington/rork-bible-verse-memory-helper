@@ -125,12 +125,11 @@ export default function SettingsScreen() {
 
           <View style={[styles.section, { backgroundColor: theme.cardBackground }]}>
             <Text style={[styles.sectionTitle, { color: theme.text }]}>
-              Get All Bible Versions (Free!)
+              Custom API Key (Optional)
             </Text>
             <Text style={[styles.sectionDescription, { color: theme.textSecondary }]}>
-              Without an API key: KJV and WEB only.{'\n'}
-              With FREE API key: NASB, NIV, ESV, NKJV, NLT, CSB, MSG, AMP, TPT and more!{'\n\n'}
-              Get your free key at: scripture.api.bible
+              All Bible versions (NASB, NIV, ESV, NKJV, NLT, CSB, MSG, AMP, TPT) already work!{'\n\n'}
+              Optionally add your own API.Bible key from scripture.api.bible for higher personal rate limits.
             </Text>
 
             <View style={styles.apiKeyContainer}>
