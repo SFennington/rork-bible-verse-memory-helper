@@ -13,6 +13,7 @@ import { CheckCircle2, XCircle, ArrowRight, Home, ArrowLeft, Zap } from 'lucide-
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
+import { isDebugEnabled } from '@/constants/debug';
 
 function isToday(dateString: string): boolean {
   const date = new Date(dateString);
@@ -249,6 +250,45 @@ export default function SpeedTapGameScreen() {
               </TouchableOpacity>
             )}
           </View>
+
+          {isDebugEnabled() && !showResult && (
+            <View style={styles.debugButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.debugButton, styles.debugButtonCorrect]}
+                onPress={() => {
+                  // Auto-complete all remaining words correctly
+                  const newAnswers = [...answers];
+                  for (let i = currentWordIndex; i < gameData.correctPositions.length; i++) {
+                    newAnswers[i] = gameData.correctPositions[i];
+                  }
+                  setAnswers(newAnswers);
+                  setCurrentWordIndex(gameData.correctPositions.length);
+                  setTimeout(() => handleIKnowIt(), 100);
+                }}
+                activeOpacity={0.8}
+              >
+                <Zap color="#fff" size={16} />
+                <Text style={styles.debugButtonText}>Quick Correct</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.debugButton, styles.debugButtonIncorrect]}
+                onPress={() => {
+                  // Set a few wrong answers and finish
+                  const newAnswers = [...answers];
+                  for (let i = currentWordIndex; i < gameData.correctPositions.length; i++) {
+                    newAnswers[i] = gameData.correctPositions[i] === 0 ? 1 : 0; // Toggle wrong
+                  }
+                  setAnswers(newAnswers);
+                  setCurrentWordIndex(gameData.correctPositions.length);
+                  setTimeout(() => handleIKnowIt(), 100);
+                }}
+                activeOpacity={0.8}
+              >
+                <XCircle color="#fff" size={16} />
+                <Text style={styles.debugButtonText}>Quick Incorrect</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {!showResult && (
             <>
@@ -631,6 +671,32 @@ const styles = StyleSheet.create({
   exitButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
+  },
+  debugButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  debugButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  debugButtonCorrect: {
+    backgroundColor: '#10b981',
+  },
+  debugButtonIncorrect: {
+    backgroundColor: '#ef4444',
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
 });
 

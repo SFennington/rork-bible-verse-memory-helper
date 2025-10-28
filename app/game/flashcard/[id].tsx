@@ -9,10 +9,11 @@ import {
 } from 'react-native';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Home, ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
+import { CheckCircle2, XCircle, ArrowRight, RotateCcw, Home, ArrowLeft, Eye, EyeOff, Zap } from 'lucide-react-native';
 import { useVerses } from '@/contexts/VerseContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { CATEGORIES } from '@/mocks/verses';
+import { isDebugEnabled } from '@/constants/debug';
 
 function isToday(dateString: string): boolean {
   const date = new Date(dateString);
@@ -184,6 +185,33 @@ export default function FlashcardGameScreen() {
               <Text style={[styles.exitButtonTopText, { color: theme.textSecondary }]}>Exit</Text>
             </TouchableOpacity>
           </View>
+
+          {isDebugEnabled() && !showResult && (
+            <View style={styles.debugButtonsContainer}>
+              <TouchableOpacity
+                style={[styles.debugButton, styles.debugButtonCorrect]}
+                onPress={() => {
+                  // Auto-answer "I Got It!"
+                  setTimeout(() => handleAnswer(true), 100);
+                }}
+                activeOpacity={0.8}
+              >
+                <Zap color="#fff" size={16} />
+                <Text style={styles.debugButtonText}>Quick Correct</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.debugButton, styles.debugButtonIncorrect]}
+                onPress={() => {
+                  // Auto-answer "Need More Practice"
+                  setTimeout(() => handleAnswer(false), 100);
+                }}
+                activeOpacity={0.8}
+              >
+                <XCircle color="#fff" size={16} />
+                <Text style={styles.debugButtonText}>Quick Incorrect</Text>
+              </TouchableOpacity>
+            </View>
+          )}
 
           {/* Show all cards stacked vertically */}
           {verseCards.map((cardText, index) => {
@@ -559,6 +587,32 @@ const styles = StyleSheet.create({
   exitButtonText: {
     fontSize: 18,
     fontWeight: '700' as const,
+  },
+  debugButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  debugButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  debugButtonCorrect: {
+    backgroundColor: '#10b981',
+  },
+  debugButtonIncorrect: {
+    backgroundColor: '#ef4444',
+  },
+  debugButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600' as const,
   },
 });
 
