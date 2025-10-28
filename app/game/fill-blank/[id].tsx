@@ -277,14 +277,30 @@ export default function FillBlankGameScreen() {
             <View style={styles.debugButtonsContainer}>
               <TouchableOpacity
                 style={[styles.debugButton, styles.debugButtonCorrect]}
-                onPress={() => {
+                onPress={async () => {
                   // Auto-fill all correct answers
                   const correctAnswers: Record<number, string> = {};
                   gameData.blanks.forEach((cleanWordIdx, blankPosition) => {
                     correctAnswers[blankPosition] = gameData.cleanWords[cleanWordIdx];
                   });
                   setSelectedWords(correctAnswers);
-                  setTimeout(() => handleCheck(), 100);
+                  setShowResult(true);
+                  
+                  // Complete game session directly
+                  const verseProgress = getVerseProgress(id || '');
+                  const timeSpent = Math.round((Date.now() - startTime) / 1000);
+                  const totalWords = gameData.cleanWords.length;
+                  
+                  await completeGameSession(id || '', {
+                    gameType: 'fill-blank',
+                    completedAt: new Date().toISOString(),
+                    accuracy: 100,
+                    timeSpent,
+                    mistakeCount: 0,
+                    correctWords: totalWords,
+                    totalWords,
+                    difficultyLevel: verseProgress?.difficultyLevel || 1,
+                  });
                 }}
                 activeOpacity={0.8}
               >
