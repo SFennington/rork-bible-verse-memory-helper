@@ -83,7 +83,7 @@ export default function ProgressiveReviewGameScreen() {
       .trim();
   };
 
-  const checkAnswer = () => {
+  const checkAnswer = async () => {
     const normalizedUser = normalizeText(userInput);
     const normalizedCorrect = normalizeText(currentVerse.text);
     
