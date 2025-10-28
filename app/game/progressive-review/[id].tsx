@@ -199,16 +199,27 @@ export default function ProgressiveReviewGameScreen() {
         >
           {!showFinalResult ? (
             <>
-              <View style={[styles.instructionCard, { backgroundColor: theme.cardBackground }]}>
-                <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
-                  Type each verse from memory
-                </Text>
-                <Text style={[styles.progressText, { color: theme.text }]}>
-                  Verse {currentVerseIndex + 1} of {unlockedVerses.length}
-                </Text>
-                <Text style={[styles.referenceText, { color: theme.text }]}>
-                  {currentVerse?.reference}
-                </Text>
+              <View style={styles.topBar}>
+                <View style={[styles.instructionCard, { backgroundColor: theme.cardBackground }]}>
+                  <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
+                    Type each verse from memory
+                  </Text>
+                  <Text style={[styles.progressText, { color: theme.text }]}>
+                    Verse {currentVerseIndex + 1} of {unlockedVerses.length}
+                  </Text>
+                  <Text style={[styles.referenceText, { color: theme.text }]}>
+                    {currentVerse?.reference}
+                  </Text>
+                </View>
+                {currentVerseIndex < unlockedVerses.length && (
+                  <TouchableOpacity
+                    style={[styles.exitButtonTop, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                    onPress={handleExit}
+                    activeOpacity={0.8}
+                  >
+                    <Home color={theme.textSecondary} size={20} />
+                  </TouchableOpacity>
+                )}
               </View>
 
               {showVerse && (
@@ -356,10 +367,25 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
+  topBar: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+    alignItems: 'flex-start',
+  },
   instructionCard: {
+    flex: 1,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
+  },
+  exitButtonTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 2,
   },
   instructionText: {
     fontSize: 15,
