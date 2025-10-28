@@ -211,14 +211,24 @@ export default function PrayerDetailScreen() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.actionButton, styles.answeredButton]}
-              onPress={handleMarkAnswered}
-              activeOpacity={0.9}
-            >
-              <CheckCircle2 color="#10b981" size={20} />
-              <Text style={[styles.buttonTextSecondary, { color: '#10b981' }]}>Mark Answered</Text>
-            </TouchableOpacity>
+            {prayedToday ? (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.backButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                onPress={() => router.push('/(tabs)/prayers')}
+                activeOpacity={0.9}
+              >
+                <Text style={[styles.buttonTextSecondary, { color: theme.text }]}>Back to Prayers</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.actionButton, styles.answeredButton]}
+                onPress={handleMarkAnswered}
+                activeOpacity={0.9}
+              >
+                <CheckCircle2 color="#10b981" size={20} />
+                <Text style={[styles.buttonTextSecondary, { color: '#10b981' }]}>Mark Answered</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -390,6 +400,15 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#10b981',
     backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 16,
+    borderRadius: 16,
+  },
+  backButton: {
+    borderWidth: 2,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
