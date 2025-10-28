@@ -276,10 +276,21 @@ export default function WordOrderGameScreen() {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          <View style={[styles.instructionCard, { backgroundColor: theme.cardBackground }]}>
-            <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
-              Tap the words in the correct order to complete the verse
-            </Text>
+          <View style={styles.topBar}>
+            <View style={[styles.instructionCard, { backgroundColor: theme.cardBackground }]}>
+              <Text style={[styles.instructionText, { color: theme.textSecondary }]}>
+                Tap the words in the correct order to complete the verse
+              </Text>
+            </View>
+            {!showResult && (
+              <TouchableOpacity
+                style={[styles.exitButtonTop, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+                onPress={handleExit}
+                activeOpacity={0.8}
+              >
+                <Home color={theme.textSecondary} size={20} />
+              </TouchableOpacity>
+            )}
           </View>
 
           <View style={[styles.verseCard, { backgroundColor: theme.cardBackground }]}>
@@ -423,15 +434,30 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
+  topBar: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+    alignItems: 'flex-start',
+  },
   instructionCard: {
+    flex: 1,
     borderRadius: 12,
     padding: 16,
-    marginBottom: 20,
   },
   instructionText: {
     fontSize: 15,
     textAlign: 'center',
     fontWeight: '500' as const,
+  },
+  exitButtonTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    borderWidth: 2,
   },
   verseCard: {
     borderRadius: 20,
