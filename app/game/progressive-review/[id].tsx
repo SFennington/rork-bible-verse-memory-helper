@@ -217,7 +217,7 @@ export default function ProgressiveReviewGameScreen() {
                 )}
               </View>
 
-              {isDebugEnabled() && currentVerseIndex < unlockedVerses.length && (
+              {isDebugEnabled() && !showFinalResult && (
                 <View style={styles.debugButtonsContainer}>
                   <TouchableOpacity
                     style={[styles.debugButton, styles.debugButtonCorrect]}
@@ -284,7 +284,7 @@ export default function ProgressiveReviewGameScreen() {
 
               {showVerse ? (
                 <View style={styles.buttonGroup}>
-                  {!isLastVerse && (
+                  {!isLastVerse ? (
                     <TouchableOpacity
                       style={[styles.actionButton, { backgroundColor: theme.cardBackground, borderWidth: 2, borderColor: theme.border }]}
                       onPress={handleNextVerse}
@@ -294,6 +294,36 @@ export default function ProgressiveReviewGameScreen() {
                         Next Verse
                       </Text>
                       <ArrowRight color={theme.text} size={20} />
+                    </TouchableOpacity>
+                  ) : (
+                    <TouchableOpacity
+                      style={[styles.actionButton, { backgroundColor: theme.cardBackground, borderWidth: 2, borderColor: theme.border }]}
+                      onPress={async () => {
+                        // Finish game even if not all correct
+                        setShowFinalResult(true);
+                        const timeSpent = Math.floor((Date.now() - startTime) / 1000);
+                        const totalWords = unlockedVerses.reduce((sum, v) => sum + v.text.split(' ').length, 0);
+                        const correctWords = unlockedVerses.reduce((sum, v, idx) => {
+                          return sum + (verseResults[idx]?.correct ? v.text.split(' ').length : 0);
+                        }, 0);
+                        
+                        await completeGameSession(id || '', {
+                          gameType: 'progressive-review',
+                          completedAt: new Date().toISOString(),
+                          accuracy: Math.round((correctWords / totalWords) * 100),
+                          timeSpent,
+                          mistakeCount: mistakes,
+                          correctWords,
+                          totalWords,
+                          difficultyLevel: verseProgress.difficultyLevel,
+                        });
+                      }}
+                      activeOpacity={0.9}
+                    >
+                      <Text style={[styles.actionButtonText, { color: theme.text }]}>
+                        Finish Game
+                      </Text>
+                      <CheckCircle2 color={theme.text} size={20} />
                     </TouchableOpacity>
                   )}
                   <TouchableOpacity
