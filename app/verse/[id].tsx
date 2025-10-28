@@ -130,9 +130,23 @@ export default function VerseDetailScreen() {
   const handleAdvanceLevel = async () => {
     if (id) {
       if (isChapter) {
-        // For chapters: unlock next verse
-        await unlockNextVerseInChapter(id);
-        setShowDayCompleteModal(false);
+        // For chapters: unlock verses first, then advance levels
+        const currentVerseIndex = verseProgress?.chapterProgress?.currentVerseIndex || 0;
+        const totalVerses = chapter?.verses.length || 0;
+        const allVersesUnlocked = currentVerseIndex >= totalVerses - 1;
+        
+        if (!allVersesUnlocked) {
+          // Still have verses to unlock - unlock next verse
+          await unlockNextVerseInChapter(id);
+          setShowDayCompleteModal(false);
+        } else if (verseProgress.difficultyLevel < 5) {
+          // All verses unlocked - advance difficulty level
+          advanceToNextLevel(id);
+          setShowDayCompleteModal(false);
+        } else {
+          // Already at max level and all verses unlocked
+          setShowDayCompleteModal(false);
+        }
       } else {
         // For regular verses: advance to next level
         const firstIncompleteLevel = getFirstIncompleteLevel(id);
