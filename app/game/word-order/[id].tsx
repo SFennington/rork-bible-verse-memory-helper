@@ -173,7 +173,7 @@ export default function WordOrderGameScreen() {
   const handleCheck = () => {
     setShowResult(true);
     const userText = orderedWords.join(' ');
-    const correctText = verse.text;
+    const correctText = correctWords.join(' '); // Compare to stripped version, not original
     const isCorrect = userText.toLowerCase() === correctText.toLowerCase();
     
     const distance = levenshteinDistance(userText.toLowerCase(), correctText.toLowerCase());
@@ -241,7 +241,7 @@ export default function WordOrderGameScreen() {
   };
 
   const isComplete = orderedWords.length === correctWords.length;
-  const isCorrect = showResult && orderedWords.join(' ').toLowerCase() === verse.text.toLowerCase();
+  const isCorrect = showResult && orderedWords.join(' ').toLowerCase() === correctWords.join(' ').toLowerCase();
 
   return (
     <View style={styles.container}>
