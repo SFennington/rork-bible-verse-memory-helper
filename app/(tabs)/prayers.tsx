@@ -82,7 +82,7 @@ export default function PrayersScreen() {
       <StatusBar
         barStyle="light-content"
         backgroundColor="transparent"
-        translucent={false}
+        translucent={true}
       />
       <LinearGradient
         colors={theme.gradient as any}

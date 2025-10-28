@@ -220,15 +220,13 @@ export default function PrayerDetailScreen() {
               <Text style={[styles.buttonTextSecondary, { color: '#10b981' }]}>Mark Answered</Text>
             </TouchableOpacity>
 
-            {prayedToday && (
-              <TouchableOpacity
-                style={[styles.actionButton, styles.backButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
-                onPress={() => router.push('/(tabs)/prayers')}
-                activeOpacity={0.9}
-              >
-                <Text style={[styles.buttonTextSecondary, { color: theme.text }]}>Back to Prayers</Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity
+              style={[styles.actionButton, styles.backButton, { backgroundColor: theme.cardBackground, borderColor: theme.border }]}
+              onPress={() => router.push('/(tabs)/prayers')}
+              activeOpacity={0.9}
+            >
+              <Text style={[styles.buttonTextSecondary, { color: theme.text }]}>Back to Prayers</Text>
+            </TouchableOpacity>
           </View>
         )}
 

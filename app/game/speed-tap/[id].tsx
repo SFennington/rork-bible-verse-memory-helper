@@ -275,24 +275,22 @@ export default function SpeedTapGameScreen() {
               </View>
 
               {/* Verse Progress Display */}
-              <View style={[styles.verseProgressCard, { backgroundColor: theme.cardBackground }]}>
-                <Text style={[styles.verseProgressTitle, { color: theme.textTertiary }]}>
-                  Verse Progress:
-                </Text>
-                <View style={styles.verseProgressText}>
-                  {gameData.correctWords.map((correctWord, index) => {
-                    // Check if we've tapped this position yet
-                    const hasTapped = index < currentWordIndex;
-                    const userAnswer = answers[index];
-                    const correctAnswer = gameData.correctPositions[index];
-                    const isMatch = hasTapped && userAnswer === correctAnswer;
-                    const isWrong = hasTapped && !isMatch;
-                    const userWord = gameData.words[index];
-                    
-                    return (
-                      <Text key={index}>
-                        {hasTapped ? (
-                          isMatch ? (
+              {currentWordIndex > 0 && (
+                <View style={[styles.verseProgressCard, { backgroundColor: theme.cardBackground }]}>
+                  <Text style={[styles.verseProgressTitle, { color: theme.textTertiary }]}>
+                    Verse Progress:
+                  </Text>
+                  <View style={styles.verseProgressText}>
+                    {gameData.correctWords.slice(0, currentWordIndex).map((correctWord, index) => {
+                      // Only show words we've already tapped
+                      const userAnswer = answers[index];
+                      const correctAnswer = gameData.correctPositions[index];
+                      const isMatch = userAnswer === correctAnswer;
+                      const userWord = gameData.words[index];
+                      
+                      return (
+                        <Text key={index}>
+                          {isMatch ? (
                             <Text style={[styles.verseWord, { color: '#4ade80', fontWeight: '700' }]}>
                               {correctWord}{' '}
                             </Text>
@@ -305,17 +303,13 @@ export default function SpeedTapGameScreen() {
                                 {correctWord}{' '}
                               </Text>
                             </Text>
-                          )
-                        ) : (
-                          <Text style={[styles.verseWord, { color: theme.textSecondary }]}>
-                            {correctWord}{' '}
-                          </Text>
-                        )}
-                      </Text>
-                    );
-                  })}
+                          )}
+                        </Text>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
+              )}
 
               <Animated.View style={[styles.wordCard, { backgroundColor: theme.cardBackground, transform: [{ scale: scaleAnim }] }]}>
                 <Text style={[styles.wordNumber, { color: theme.textTertiary }]}>

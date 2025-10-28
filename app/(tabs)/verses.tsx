@@ -189,8 +189,9 @@ export default function HomeScreen() {
 
   // Better stats calculation
   const totalStreak = versesInProgress.reduce((sum, item) => sum + item.progress.streakDays, 0);
-  const avgProgress = versesInProgress.length > 0
-    ? versesInProgress.reduce((sum, item) => sum + item.progress.overallProgress, 0) / versesInProgress.length
+  const masteredCount = versesInProgress.filter(item => item.progress.overallProgress === 100).length;
+  const masteredPercent = versesInProgress.length > 0
+    ? (masteredCount / versesInProgress.length) * 100
     : 0;
 
   return (
@@ -198,7 +199,7 @@ export default function HomeScreen() {
       <StatusBar 
         barStyle="light-content" 
         backgroundColor="transparent" 
-        translucent={false}
+        translucent={true}
       />
       <LinearGradient
         colors={theme.gradient as any}
@@ -234,8 +235,8 @@ export default function HomeScreen() {
               </View>
               <View style={[styles.statCard, themeMode === 'dark' && styles.statCardDark]}>
                 <TrendingUp color="#8b5cf6" size={16} />
-                <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{avgProgress.toFixed(0)}%</Text>
-                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Avg</Text>
+                <Text style={[styles.statValue, themeMode === 'dark' && styles.statValueDark]}>{masteredPercent.toFixed(0)}%</Text>
+                <Text style={[styles.statLabel, themeMode === 'dark' && styles.statLabelDark]}>Mastered</Text>
               </View>
             </View>
           )}
