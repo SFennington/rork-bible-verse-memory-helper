@@ -1,4 +1,4 @@
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { VerseProvider } from "@/contexts/VerseContext";
@@ -18,7 +18,11 @@ export default function RootLayout() {
       <BibleVersionProvider>
         <VerseProvider>
           <PrayerProvider>
-            <Slot />
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" options={{ headerShown: false }} />
+            </Stack>
           </PrayerProvider>
         </VerseProvider>
       </BibleVersionProvider>
