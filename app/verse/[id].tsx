@@ -139,16 +139,23 @@ export default function VerseDetailScreen() {
   const hasIncompleteLevels = firstIncompleteLevel !== null && verseProgress && firstIncompleteLevel < verseProgress.difficultyLevel;
   const isStuck = !isChapter && hasIncompleteLevels && isDayComplete;
 
-  const handleAdvanceLevel = () => {
+  const handleAdvanceLevel = async () => {
     if (id) {
-      const firstIncompleteLevel = getFirstIncompleteLevel(id);
-      if (firstIncompleteLevel && firstIncompleteLevel < (verseProgress?.difficultyLevel || 1)) {
-        setShowIncompleteWarning(true);
+      if (isChapter) {
+        // For chapters: unlock next verse
+        await unlockNextVerseInChapter(id);
         setShowDayCompleteModal(false);
-        return;
+      } else {
+        // For regular verses: advance to next level
+        const firstIncompleteLevel = getFirstIncompleteLevel(id);
+        if (firstIncompleteLevel && firstIncompleteLevel < (verseProgress?.difficultyLevel || 1)) {
+          setShowIncompleteWarning(true);
+          setShowDayCompleteModal(false);
+          return;
+        }
+        advanceToNextLevel(id);
+        setShowDayCompleteModal(false);
       }
-      advanceToNextLevel(id);
-      setShowDayCompleteModal(false);
     }
   };
 
@@ -494,11 +501,21 @@ export default function VerseDetailScreen() {
                       <Text style={[styles.dayCompleteText, { color: theme.textSecondary }]}>
                         {isChapter
                           ? verseProgress?.chapterProgress?.currentVerseIndex < (chapter?.verses.length || 0) - 1
-                            ? `Great job! Next verse unlocked. Complete ${requiredGames} games to continue.`
+                            ? 'Great job! Ready to continue to the next verse?'
                             : 'Amazing! You\'ve completed all verses in this chapter!'
                           : 'Great job! You\'ve completed all games for today.'
                         }
                       </Text>
+                      {isChapter && canAdvanceToNextLevel && verseProgress?.chapterProgress?.currentVerseIndex < (chapter?.verses.length || 0) - 1 && (
+                        <TouchableOpacity
+                          style={styles.advanceButton}
+                          onPress={() => setShowDayCompleteModal(true)}
+                          activeOpacity={0.9}
+                        >
+                          <Text style={styles.advanceButtonText}>Continue to Next Verse</Text>
+                          <ArrowRight color="#fff" size={20} />
+                        </TouchableOpacity>
+                      )}
                       {!isChapter && canAdvanceToNextLevel && verseProgress.difficultyLevel < 5 && (
                         <TouchableOpacity
                           style={styles.advanceButton}
@@ -589,12 +606,20 @@ export default function VerseDetailScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: theme.cardBackground }]}>
             <Trophy color="#f59e0b" size={64} />
-            <Text style={[styles.modalTitle, { color: theme.text }]}>Day Complete!</Text>
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
+              {isChapter ? 'Verse Complete!' : 'Day Complete!'}
+            </Text>
             <Text style={[styles.modalText, { color: theme.textSecondary }]}>
-              You&apos;ve completed Level {verseProgress?.difficultyLevel}. Ready to advance?
+              {isChapter
+                ? `You've completed Verse ${(verseProgress?.chapterProgress?.currentVerseIndex || 0) + 1}. Ready to continue?`
+                : `You've completed Level ${verseProgress?.difficultyLevel}. Ready to advance?`
+              }
             </Text>
             <Text style={[styles.modalSubtext, { color: theme.textTertiary }]}>
-              If you don&apos;t continue now, the next level will unlock tomorrow morning.
+              {isChapter
+                ? 'If you don\'t continue now, the next verse will unlock tomorrow morning.'
+                : 'If you don\'t continue now, the next level will unlock tomorrow morning.'
+              }
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity

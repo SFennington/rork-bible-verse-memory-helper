@@ -336,26 +336,8 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
 
     await saveProgress(updatedProgress);
 
-    // For chapters: if all games completed today AND high accuracy, unlock next verse
-    if (verseProgress.isChapter && verseProgress.chapterProgress && allGamesCompletedToday && !wasCompletedBefore) {
-      if (avgAccuracyToday >= 80) {
-        const chapter = chapters.find(c => c.id === verseId);
-        if (chapter) {
-          const currentVerseIndex = verseProgress.chapterProgress.currentVerseIndex;
-          const hasMoreVerses = currentVerseIndex < chapter.verses.length - 1;
-          
-          if (hasMoreVerses) {
-            console.log('✅ Chapter verse completed with good accuracy! Unlocking next verse...');
-            // Mark current verse as mastered and unlock next
-            await unlockNextVerseInChapter(verseId);
-          } else {
-            console.log('✅ Final verse in chapter completed!');
-            // Mark as complete
-            await advanceChapterProgress(verseId, currentVerseIndex);
-          }
-        }
-      }
-    }
+    // Removed auto-unlock logic for chapters
+    // User should manually choose to continue or wait via the UI modal
   }, [progress, customVerses, chapters]);
 
   const advanceToNextLevel = useCallback((verseId: string) => {
