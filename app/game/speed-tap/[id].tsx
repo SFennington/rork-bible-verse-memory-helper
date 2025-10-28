@@ -263,7 +263,7 @@ export default function SpeedTapGameScreen() {
                   }
                   setAnswers(newAnswers);
                   setCurrentWordIndex(gameData.correctPositions.length);
-                  setTimeout(() => handleIKnowIt(), 100);
+                  setTimeout(() => handleGameComplete(newAnswers), 100);
                 }}
                 activeOpacity={0.8}
               >
@@ -280,7 +280,7 @@ export default function SpeedTapGameScreen() {
                   }
                   setAnswers(newAnswers);
                   setCurrentWordIndex(gameData.correctPositions.length);
-                  setTimeout(() => handleIKnowIt(), 100);
+                  setTimeout(() => handleGameComplete(newAnswers), 100);
                 }}
                 activeOpacity={0.8}
               >
