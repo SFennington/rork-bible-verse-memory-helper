@@ -485,11 +485,21 @@ export default function VerseDetailScreen() {
                   <View style={styles.dayCompleteSection}>
                     <View style={[styles.dayCompleteCard, { backgroundColor: theme.cardBackground }]}>
                       <Trophy color="#f59e0b" size={48} />
-                      <Text style={[styles.dayCompleteTitle, { color: theme.text }]}>Level {verseProgress.difficultyLevel} Complete!</Text>
-                      <Text style={[styles.dayCompleteText, { color: theme.textSecondary }]}>
-                        Great job! You&apos;ve completed all games for today.
+                      <Text style={[styles.dayCompleteTitle, { color: theme.text }]}>
+                        {isChapter 
+                          ? `Verse ${(verseProgress?.chapterProgress?.currentVerseIndex || 0) + 1} Complete!`
+                          : `Level ${verseProgress.difficultyLevel} Complete!`
+                        }
                       </Text>
-                      {canAdvanceToNextLevel && verseProgress.difficultyLevel < 5 && (
+                      <Text style={[styles.dayCompleteText, { color: theme.textSecondary }]}>
+                        {isChapter
+                          ? verseProgress?.chapterProgress?.currentVerseIndex < (chapter?.verses.length || 0) - 1
+                            ? `Great job! Next verse unlocked. Complete ${requiredGames} games to continue.`
+                            : 'Amazing! You\'ve completed all verses in this chapter!'
+                          : 'Great job! You\'ve completed all games for today.'
+                        }
+                      </Text>
+                      {!isChapter && canAdvanceToNextLevel && verseProgress.difficultyLevel < 5 && (
                         <TouchableOpacity
                           style={styles.advanceButton}
                           onPress={() => setShowDayCompleteModal(true)}
@@ -500,13 +510,18 @@ export default function VerseDetailScreen() {
                         </TouchableOpacity>
                       )}
                       {isMastered && (
-                        <Text style={[styles.masteredText, { color: '#10b981' }]}>You&apos;ve mastered this verse! 🎉</Text>
+                        <Text style={[styles.masteredText, { color: '#10b981' }]}>
+                          {isChapter ? 'You\'ve mastered this chapter! 🎉' : 'You\'ve mastered this verse! 🎉'}
+                        </Text>
                       )}
                     </View>
                   </View>
                 ) : (
                   <Text style={styles.gamesSubtitle}>
-                    Complete all {requiredGames} {requiredGames === 1 ? 'game' : 'games'} to finish Level {verseProgress.difficultyLevel}
+                    {isChapter
+                      ? `Complete all ${requiredGames} games for Verse ${(verseProgress?.chapterProgress?.currentVerseIndex || 0) + 1}`
+                      : `Complete all ${requiredGames} ${requiredGames === 1 ? 'game' : 'games'} to finish Level ${verseProgress.difficultyLevel}`
+                    }
                   </Text>
                 )}
 

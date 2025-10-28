@@ -62,7 +62,7 @@ export default function WordScrambleGameScreen() {
     }
 
     const scrambledPhrases = phrasesWithoutPunctuation.map((phrase) => {
-      const words = phrase.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
+      const words = phrase.split(/\s+/).map(word => stripPunctuation(word)).filter(word => word.length > 0);
       
       let scrambledWords: string[];
       let scramblePercentage = 1.0;

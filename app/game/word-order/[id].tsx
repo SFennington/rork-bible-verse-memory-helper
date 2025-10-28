@@ -71,7 +71,7 @@ export default function WordOrderGameScreen() {
 
   const scrambledWords = useMemo(() => {
     if (!verse) return [];
-    const words = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
+    const words = verse.text.split(/\s+/).map(word => stripPunctuation(word)).filter(word => word.length > 0);
     let scrambledArray = [...words];
     
     // More scramble iterations = harder to recognize original order
@@ -134,7 +134,7 @@ export default function WordOrderGameScreen() {
     );
   }
 
-  const correctWords = verse.text.split(' ').map(word => stripPunctuation(word)).filter(word => word.length > 0);
+  const correctWords = verse.text.split(/\s+/).map(word => stripPunctuation(word)).filter(word => word.length > 0);
 
   const handleWordSelect = (word: string, fromAvailable: boolean, index: number) => {
     Animated.sequence([
