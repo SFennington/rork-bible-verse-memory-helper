@@ -55,39 +55,32 @@ const FALLBACK_VERSION_MAP: Record<string, string> = {
   'ehv': 'kjv',
 };
 
-// Store API key globally
-let globalApiKey: string | null = null;
+// Default embedded API key for all users
+const DEFAULT_API_KEY = 'a91be2ec7ed5f7cf61c0f60e5331be8f';
+
+// Store custom API key (optional override)
+let customApiKey: string | null = null;
 
 export function setGlobalApiKey(apiKey: string | null) {
-  globalApiKey = apiKey;
+  customApiKey = apiKey;
 }
 
 export function getGlobalApiKey(): string | null {
-  return globalApiKey;
+  return customApiKey;
+}
+
+// Get the active API key (custom or default)
+function getActiveApiKey(): string {
+  return customApiKey || DEFAULT_API_KEY;
 }
 
 /**
  * Get the display name for the actual translation being used
+ * All versions are now supported with embedded API key
  */
 export function getActualTranslation(versionId: string): string {
-  const hasApiKey = !!globalApiKey;
-  
-  if (hasApiKey) {
-    // With API key, all versions are supported
-    return versionId.toUpperCase();
-  }
-  
-  // Without API key, show fallback warnings
-  const fallbackId = FALLBACK_VERSION_MAP[versionId.toLowerCase()] || 'kjv';
-  const requestedAbbr = versionId.toUpperCase();
-  
-  if (fallbackId === 'kjv') {
-    return requestedAbbr === 'KJV' ? 'KJV' : `${requestedAbbr} (using KJV)`;
-  }
-  if (fallbackId === 'web') {
-    return `${requestedAbbr} (using WEB)`;
-  }
-  return requestedAbbr;
+  // All versions are supported with embedded default API key
+  return versionId.toUpperCase();
 }
 
 /**
@@ -101,13 +94,8 @@ export async function fetchBibleVerse(
   versionId: string = 'kjv'
 ): Promise<{ text: string; reference: string; verses: any[] }> {
   try {
-    if (globalApiKey) {
-      // Use API.Bible with API key
-      return await fetchFromApiBible(reference, versionId);
-    } else {
-      // Fallback to bible-api.com
-      return await fetchFromBibleApiCom(reference, versionId);
-    }
+    // Always use API.Bible (we have embedded default key)
+    return await fetchFromApiBible(reference, versionId);
   } catch (error) {
     console.error('Error fetching Bible verse:', error);
     throw new Error(
@@ -119,7 +107,7 @@ export async function fetchBibleVerse(
 }
 
 /**
- * Fetch from API.Bible (requires API key)
+ * Fetch from API.Bible (uses embedded default key or custom key)
  */
 async function fetchFromApiBible(
   reference: string,
@@ -136,7 +124,7 @@ async function fetchFromApiBible(
   
   const response = await fetch(url, {
     headers: {
-      'api-key': globalApiKey!,
+      'api-key': getActiveApiKey(),
     },
   });
   
@@ -243,39 +231,29 @@ export async function fetchBibleChapter(
   versionId: string = 'kjv'
 ): Promise<{ verses: Array<{ verse: number; text: string; reference: string }> }> {
   try {
-    if (globalApiKey) {
-      // Use API.Bible for chapter fetch (fetch verse range)
-      const reference = `${book} ${chapter}`;
-      const result = await fetchFromBibleApiCom(reference, versionId);
-      return { verses: result.verses.map(v => ({
-        verse: v.verse,
-        text: v.text.trim(),
-        reference: `${v.book_name} ${v.chapter}:${v.verse}`,
-      })) };
-    } else {
-      // Fallback to bible-api.com
-      const translation = FALLBACK_VERSION_MAP[versionId.toLowerCase()] || 'kjv';
-      const reference = `${book}%20${chapter}`;
-      const url = `https://bible-api.com/${reference}?translation=${translation}`;
-      
-      console.log('Fetching chapter:', url);
-      
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch chapter: ${response.status}`);
-      }
-      
-      const data: BibleApiVerse = await response.json();
-      
-      const verses = data.verses.map(v => ({
-        verse: v.verse,
-        text: v.text.trim(),
-        reference: `${v.book_name} ${v.chapter}:${v.verse}`,
-      }));
-      
-      return { verses };
+    // For chapters, we use bible-api.com as it returns full chapters easily
+    // API.Bible requires fetching verse by verse which is inefficient
+    const translation = FALLBACK_VERSION_MAP[versionId.toLowerCase()] || 'kjv';
+    const reference = `${book}%20${chapter}`;
+    const url = `https://bible-api.com/${reference}?translation=${translation}`;
+    
+    console.log('Fetching chapter:', url);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch chapter: ${response.status}`);
     }
+    
+    const data: BibleApiVerse = await response.json();
+    
+    const verses = data.verses.map(v => ({
+      verse: v.verse,
+      text: v.text.trim(),
+      reference: `${v.book_name} ${v.chapter}:${v.verse}`,
+    }));
+    
+    return { verses };
   } catch (error) {
     console.error('Error fetching Bible chapter:', error);
     throw new Error(
