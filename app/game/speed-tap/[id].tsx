@@ -314,42 +314,52 @@ export default function SpeedTapGameScreen() {
                 </View>
               </View>
 
-              {/* Verse Progress Display */}
-              {currentWordIndex > 0 && (
-                <View style={[styles.verseProgressCard, { backgroundColor: theme.cardBackground }]}>
-                  <Text style={[styles.verseProgressTitle, { color: theme.textTertiary }]}>
-                    Verse Progress:
-                  </Text>
-                  <View style={styles.verseProgressText}>
-                    {gameData.correctWords.slice(0, currentWordIndex).map((correctWord, index) => {
-                      // Only show words we've already tapped
-                      const userAnswer = answers[index];
-                      const correctAnswer = gameData.correctPositions[index];
-                      const isMatch = userAnswer === correctAnswer;
-                      const userWord = gameData.words[index];
-                      
-                      return (
-                        <Text key={index}>
-                          {isMatch ? (
-                            <Text style={[styles.verseWord, { color: '#4ade80', fontWeight: '700' }]}>
-                              {correctWord}{' '}
-                            </Text>
-                          ) : (
-                            <Text>
-                              <Text style={[styles.verseWord, styles.crossedOutWord, { color: '#f87171' }]}>
-                                {userWord}
-                              </Text>
+              {/* Verse Progress Display - Fixed height to prevent button movement */}
+              <View style={[styles.verseProgressCard, { backgroundColor: theme.cardBackground }]}>
+                <Text style={[styles.verseProgressTitle, { color: theme.textTertiary }]}>
+                  Verse Progress:
+                </Text>
+                <ScrollView 
+                  style={styles.verseProgressScroll}
+                  contentContainerStyle={styles.verseProgressScrollContent}
+                  showsVerticalScrollIndicator={false}
+                >
+                  {currentWordIndex > 0 ? (
+                    <View style={styles.verseProgressText}>
+                      {gameData.correctWords.slice(0, currentWordIndex).map((correctWord, index) => {
+                        // Only show words we've already tapped
+                        const userAnswer = answers[index];
+                        const correctAnswer = gameData.correctPositions[index];
+                        const isMatch = userAnswer === correctAnswer;
+                        const userWord = gameData.words[index];
+                        
+                        return (
+                          <Text key={index}>
+                            {isMatch ? (
                               <Text style={[styles.verseWord, { color: '#4ade80', fontWeight: '700' }]}>
                                 {correctWord}{' '}
                               </Text>
-                            </Text>
-                          )}
-                        </Text>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
+                            ) : (
+                              <Text>
+                                <Text style={[styles.verseWord, styles.crossedOutWord, { color: '#f87171' }]}>
+                                  {userWord}
+                                </Text>
+                                <Text style={[styles.verseWord, { color: '#4ade80', fontWeight: '700' }]}>
+                                  {correctWord}{' '}
+                                </Text>
+                              </Text>
+                            )}
+                          </Text>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <Text style={[styles.verseWord, { color: theme.textTertiary, fontStyle: 'italic' }]}>
+                      Words will appear here as you tap...
+                    </Text>
+                  )}
+                </ScrollView>
+              </View>
 
               <Animated.View style={[styles.wordCard, { backgroundColor: theme.cardBackground, transform: [{ scale: scaleAnim }] }]}>
                 <Text style={[styles.wordNumber, { color: theme.textTertiary }]}>
@@ -525,6 +535,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
+    height: 140, // Fixed height to prevent button movement
   },
   verseProgressTitle: {
     fontSize: 12,
@@ -532,6 +543,12 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase' as const,
     marginBottom: 12,
     letterSpacing: 0.5,
+  },
+  verseProgressScroll: {
+    flex: 1,
+  },
+  verseProgressScrollContent: {
+    paddingBottom: 8,
   },
   verseProgressText: {
     flexDirection: 'row',
@@ -548,26 +565,26 @@ const styles = StyleSheet.create({
     marginRight: 4,
   },
   wordCard: {
-    borderRadius: 20,
-    padding: 40,
+    borderRadius: 16,
+    padding: 24, // Reduced from 40
     marginBottom: 24,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 12,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
   wordNumber: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600' as const,
-    marginBottom: 12,
+    marginBottom: 8,
     textTransform: 'uppercase' as const,
   },
   currentWord: {
-    fontSize: 48,
+    fontSize: 36, // Reduced from 48
     fontWeight: '700' as const,
-    marginBottom: 16,
+    marginBottom: 12, // Reduced from 16
   },
   wordHint: {
     fontSize: 16,
