@@ -70,27 +70,27 @@ export default function FillBlankGameScreen() {
     switch (difficultyLevel) {
       case 1:
         blankPercentage = 0.20;  // 20% blanks - easiest
-        extraOptionsCount = 8;    // Many extra words to choose from
+        extraOptionsCount = 0;    // No extra words - easiest
         break;
       case 2:
         blankPercentage = 0.35;  // 35% blanks
-        extraOptionsCount = 5;    // Some extra words
+        extraOptionsCount = 2;    // Few extra words
         break;
       case 3:
         blankPercentage = 0.50;  // 50% blanks
-        extraOptionsCount = 3;    // Few extra words
+        extraOptionsCount = 3;    // Some extra words
         break;
       case 4:
         blankPercentage = 0.70;  // 70% blanks - very challenging
-        extraOptionsCount = 2;    // Very few extra words
+        extraOptionsCount = 5;    // Many extra words
         break;
       case 5:
         blankPercentage = 0.85;  // 85% blanks - extremely hard
-        extraOptionsCount = 0;    // No extra words - exact match needed
+        extraOptionsCount = 8;    // Most extra words - hardest
         break;
       default:
         blankPercentage = 0.3;
-        extraOptionsCount = 4;
+        extraOptionsCount = 2;
     }
 
     const blanksCount = Math.max(2, Math.floor(cleanWords.length * blankPercentage));

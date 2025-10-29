@@ -82,27 +82,27 @@ export default function WordOrderGameScreen() {
     switch (difficultyLevel) {
       case 1:
         scrambleIterations = 2;   // Lightly scrambled
-        extraDistractorCount = 6; // Many extra words to make it easier to spot patterns
+        extraDistractorCount = 0; // No extra words - easiest
         break;
       case 2:
         scrambleIterations = 3;   // Moderately scrambled
-        extraDistractorCount = 4; // Some extra words
+        extraDistractorCount = 1; // Very few extra words
         break;
       case 3:
         scrambleIterations = 5;   // Well scrambled
-        extraDistractorCount = 2; // Few extra words
+        extraDistractorCount = 2; // Some extra words
         break;
       case 4:
         scrambleIterations = 7;   // Heavily scrambled
-        extraDistractorCount = 1; // Very few extra words
+        extraDistractorCount = 4; // Many extra words
         break;
       case 5:
         scrambleIterations = 10;  // Completely randomized
-        extraDistractorCount = 0; // No extra words
+        extraDistractorCount = 6; // Most extra words - hardest
         break;
       default:
         scrambleIterations = 3;
-        extraDistractorCount = 3;
+        extraDistractorCount = 2;
     }
     
     for (let i = 0; i < scrambleIterations; i++) {
