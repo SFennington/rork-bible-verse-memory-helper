@@ -244,13 +244,24 @@ export const [VerseProvider, useVerses] = createContextHook(() => {
     const currentLevelSessions = sessionsForCurrentLevel.length;
     const currentLevelRequired = requiredGamesPerLevel[verseProgress.difficultyLevel];
     
-    const completedLevelsWords = totalCompletedLevels * 3 * totalWordsInVerse;
-    const currentLevelCorrectWords = sessionsForCurrentLevel.reduce((sum, s) => sum + (s.correctWords || 0), 0);
+    // Calculate progress based on COMPLETED LEVELS ONLY, not current level progress
+    // This prevents replaying games from inflating progress before level is complete
+    const completedLevelsWords = totalCompletedLevels * 3 * totalWordsInVerse; // Each completed level has 3 games
+    
+    // For current level: only count up to the maximum possible words for this level
+    // This prevents duplicate games from counting multiple times
+    const maxWordsForCurrentLevel = currentLevelRequired * totalWordsInVerse;
+    const currentLevelCorrectWords = Math.min(
+      maxWordsForCurrentLevel,
+      sessionsForCurrentLevel.reduce((sum, s) => sum + (s.correctWords || 0), 0)
+    );
     
     const totalCorrectWords = completedLevelsWords + currentLevelCorrectWords;
     const totalRequiredGames = requiredGamesPerLevel.reduce((sum, count) => sum + count, 0);
     const totalPossibleWords = totalRequiredGames * totalWordsInVerse;
     
+    // Progress calculation: Only fully completed levels count toward mastery
+    // A verse is only mastered when difficultyLevel === 5 AND all level 5 games are done
     const overallProgress = totalPossibleWords > 0 
       ? Math.min(100, Math.round((totalCorrectWords / totalPossibleWords) * 100))
       : 0;
