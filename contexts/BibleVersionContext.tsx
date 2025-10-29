@@ -8,24 +8,29 @@ export type BibleVersion = {
   id: string;
   name: string;
   abbreviation: string;
+  canFetch?: boolean; // Whether this version can be fetched from API
 };
 
 export const BIBLE_VERSIONS: BibleVersion[] = [
-  { id: 'nasb', name: 'New American Standard Bible', abbreviation: 'NASB' },
-  { id: 'kjv', name: 'King James Version', abbreviation: 'KJV' },
-  { id: 'niv', name: 'New International Version', abbreviation: 'NIV' },
-  { id: 'esv', name: 'English Standard Version', abbreviation: 'ESV' },
-  { id: 'nkjv', name: 'New King James Version', abbreviation: 'NKJV' },
-  { id: 'nlt', name: 'New Living Translation', abbreviation: 'NLT' },
-  { id: 'csb', name: 'Christian Standard Bible', abbreviation: 'CSB' },
-  { id: 'msg', name: 'The Message', abbreviation: 'MSG' },
-  { id: 'amp', name: 'Amplified Bible', abbreviation: 'AMP' },
-  { id: 'tpt', name: 'The Passion Translation', abbreviation: 'TPT' },
-  { id: 'ehv', name: 'English Heritage Version', abbreviation: 'EHV' },
+  // Fetchable versions first
+  { id: 'kjv', name: 'King James Version', abbreviation: 'KJV', canFetch: true },
+  { id: 'web', name: 'World English Bible', abbreviation: 'WEB', canFetch: true },
+  
+  // Paste-only versions (alphabetically)
+  { id: 'amp', name: 'Amplified Bible', abbreviation: 'AMP', canFetch: false },
+  { id: 'csb', name: 'Christian Standard Bible', abbreviation: 'CSB', canFetch: false },
+  { id: 'ehv', name: 'English Heritage Version', abbreviation: 'EHV', canFetch: false },
+  { id: 'esv', name: 'English Standard Version', abbreviation: 'ESV', canFetch: false },
+  { id: 'msg', name: 'The Message', abbreviation: 'MSG', canFetch: false },
+  { id: 'nasb', name: 'New American Standard Bible', abbreviation: 'NASB', canFetch: false },
+  { id: 'niv', name: 'New International Version', abbreviation: 'NIV', canFetch: false },
+  { id: 'nkjv', name: 'New King James Version', abbreviation: 'NKJV', canFetch: false },
+  { id: 'nlt', name: 'New Living Translation', abbreviation: 'NLT', canFetch: false },
+  { id: 'tpt', name: 'The Passion Translation', abbreviation: 'TPT', canFetch: false },
 ];
 
 export const [BibleVersionProvider, useBibleVersion] = createContextHook(() => {
-  const [selectedVersion, setSelectedVersion] = useState<BibleVersion>(BIBLE_VERSIONS[0]); // Now defaults to NASB
+  const [selectedVersion, setSelectedVersion] = useState<BibleVersion>(BIBLE_VERSIONS[0]); // Now defaults to KJV
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

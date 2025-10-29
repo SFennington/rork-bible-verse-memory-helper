@@ -279,10 +279,10 @@ export default function AddVerseScreen() {
               <ChevronDown color={theme.textSecondary} size={24} />
             </TouchableOpacity>
 
-            {getActualTranslation(selectedVersion.id) !== selectedVersion.abbreviation && (
-              <View style={[styles.warningBox, { backgroundColor: theme.border + '40', borderColor: theme.border }]}>
-                <Text style={[styles.warningText, { color: theme.textSecondary }]}>
-                  ℹ️ {getActualTranslation(selectedVersion.id)} - Free API limitation
+            {!selectedVersion.canFetch && (
+              <View style={[styles.pasteNoticeBox, { backgroundColor: '#fbbf24' + '20', borderColor: '#fbbf24' }]}>
+                <Text style={[styles.pasteNoticeText, { color: '#92400e' }]}>
+                  ℹ️ Paste or type your verse in the box below
                 </Text>
               </View>
             )}
@@ -299,17 +299,25 @@ export default function AddVerseScreen() {
             />
 
             <TouchableOpacity
-              style={[styles.fetchButton, { backgroundColor: '#667eea' }]}
+              style={[
+                styles.fetchButton, 
+                selectedVersion.canFetch 
+                  ? { backgroundColor: '#667eea' } 
+                  : { backgroundColor: theme.border }
+              ]}
               onPress={handleFetchVerse}
-              activeOpacity={0.8}
-              disabled={isLoading}
+              activeOpacity={selectedVersion.canFetch ? 0.8 : 1}
+              disabled={isLoading || !selectedVersion.canFetch}
             >
               {isLoading ? (
                 <ActivityIndicator color="#fff" size="small" />
               ) : (
                 <>
-                  <RefreshCw color="#fff" size={20} />
-                  <Text style={styles.fetchButtonText}>
+                  <RefreshCw color={selectedVersion.canFetch ? "#fff" : theme.textSecondary} size={20} />
+                  <Text style={[
+                    styles.fetchButtonText,
+                    !selectedVersion.canFetch && { color: theme.textSecondary }
+                  ]}>
                     {mode === 'single' ? 'Fetch Verse' : 'Fetch Chapter'}
                   </Text>
                 </>
@@ -438,7 +446,52 @@ export default function AddVerseScreen() {
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalScroll}>
-              {availableVersions.map((version) => (
+              {/* Fetchable Versions */}
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionHeaderText, { color: theme.textSecondary }]}>
+                  AVAILABLE (AUTO-FETCH)
+                </Text>
+              </View>
+              {availableVersions.filter(v => v.canFetch).map((version) => (
+                <TouchableOpacity
+                  key={version.id}
+                  style={[
+                    styles.versionItem,
+                    selectedVersion.id === version.id && { backgroundColor: 'rgba(102, 126, 234, 0.1)' },
+                  ]}
+                  onPress={() => {
+                    setSelectedVersion(version);
+                    setShowVersionPicker(false);
+                  }}
+                >
+                  <View>
+                    <Text
+                      style={[
+                        styles.versionItemTitle,
+                        { color: selectedVersion.id === version.id ? '#667eea' : theme.text },
+                      ]}
+                    >
+                      {version.abbreviation}
+                    </Text>
+                    <Text style={[styles.versionItemSubtitle, { color: theme.textSecondary }]}>
+                      {version.name}
+                    </Text>
+                  </View>
+                  {selectedVersion.id === version.id && (
+                    <View style={styles.checkmark}>
+                      <Text style={{ color: '#667eea', fontSize: 20 }}>✓</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              ))}
+              
+              {/* Paste-Only Versions */}
+              <View style={[styles.sectionHeader, { marginTop: 16 }]}>
+                <Text style={[styles.sectionHeaderText, { color: theme.textSecondary }]}>
+                  PASTE ONLY (COMING SOON)
+                </Text>
+              </View>
+              {availableVersions.filter(v => !v.canFetch).map((version) => (
                 <TouchableOpacity
                   key={version.id}
                   style={[
@@ -676,16 +729,26 @@ const styles = StyleSheet.create({
   checkmark: {
     marginLeft: 12,
   },
-  warningBox: {
+  pasteNoticeBox: {
     padding: 12,
     borderRadius: 8,
     marginTop: 12,
     marginBottom: 8,
     borderWidth: 1,
   },
-  warningText: {
+  pasteNoticeText: {
     fontSize: 13,
     lineHeight: 18,
     textAlign: 'center' as const,
+    fontWeight: '600' as const,
+  },
+  sectionHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  sectionHeaderText: {
+    fontSize: 12,
+    fontWeight: '700' as const,
+    letterSpacing: 0.5,
   },
 });
