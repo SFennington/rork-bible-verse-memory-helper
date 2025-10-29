@@ -454,9 +454,9 @@ export default function FillBlankGameScreen() {
 
         {/* Fixed Word Bank at Bottom - Hide when results are shown */}
         {!showResult && (
-          <View style={styles.fixedBottomSection}>
+          <View style={[styles.fixedBottomSection, { backgroundColor: theme.background }]}>
             <View style={styles.optionsSection}>
-              <Text style={styles.optionsTitle}>Word Bank</Text>
+              <Text style={[styles.optionsTitle, { color: theme.text }]}>Word Bank</Text>
               <View style={styles.optionsGrid}>
                 {gameData.options.map((word, index) => {
                   const timesUsed = Object.values(selectedWords).filter(w => w === word).length;
@@ -533,7 +533,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 24,
@@ -626,7 +625,6 @@ const styles = StyleSheet.create({
   optionsTitle: {
     fontSize: 18,
     fontWeight: '700' as const,
-    color: '#fff',
     marginBottom: 16,
   },
   optionsGrid: {
