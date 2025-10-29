@@ -119,9 +119,14 @@ export default function VerseDetailScreen() {
   const requiredGames = isChapter ? 2 : (verseProgress?.difficultyLevel === 5 ? 1 : 3);
   const isDue = verseProgress ? verseProgress.completedGamesToday < requiredGames : false;
   const isDayComplete = verseProgress ? areAllGamesCompleted() : false;
+  // A verse is mastered when all 5 levels are completed (at level 5 with all games done)
+  // Not based on 100% overall progress, since games can be completed with 85%+ accuracy
+  const hasCompletedAllLevel5Games = verseProgress?.difficultyLevel === 5 && 
+    verseProgress.gameSessions.filter(s => s.difficultyLevel === 5).length >= 1; // Level 5 requires 1 game
+  
   const isMastered = isChapter 
     ? (verseProgress?.chapterProgress?.isComplete || false)
-    : (verseProgress ? verseProgress.difficultyLevel === 5 && verseProgress.overallProgress === 100 : false);
+    : hasCompletedAllLevel5Games;
   const canAdvanceToNextLevel = verseProgress ? isDayComplete && verseProgress.completedGamesToday >= requiredGames : false;
   const firstIncompleteLevel = id ? getFirstIncompleteLevel(id) : null;
   const hasIncompleteLevels = firstIncompleteLevel !== null && verseProgress && firstIncompleteLevel < verseProgress.difficultyLevel;

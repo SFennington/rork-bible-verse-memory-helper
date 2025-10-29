@@ -535,7 +535,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 20,
-    height: 140, // Fixed height to prevent button movement
+    // No fixed height - card sizes to content naturally
   },
   verseProgressTitle: {
     fontSize: 12,
@@ -545,10 +545,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   verseProgressScroll: {
-    flex: 1,
+    height: 100, // Fixed height to keep buttons in same position
   },
   verseProgressScrollContent: {
-    paddingBottom: 8,
+    paddingBottom: 4,
   },
   verseProgressText: {
     flexDirection: 'row',
